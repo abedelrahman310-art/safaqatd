@@ -1,0 +1,84 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}إدارة المستخدمين | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_regulator.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="margin: 0;"><i class="fas fa-users-cog" style="color: var(--accent-primary); margin-left: 0.5rem;"></i> إدارة المستخدمين</h2>
+    </div>
+
+    {% if messages %}
+    <div style="margin-bottom: 2rem;">
+        {% for message in messages %}
+        <div style="padding: 1rem; border-radius: 8px; margin-bottom: 1rem; {% if message.tags == 'success' %}background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success);{% else %}background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger);{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; text-align: right;">
+            <thead>
+                <tr style="background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <th style="padding: 1rem; color: var(--text-secondary);">الاسم الكامل</th>
+                    <th style="padding: 1rem; color: var(--text-secondary);">الدور (Role)</th>
+                    <th style="padding: 1rem; color: var(--text-secondary);">تاريخ الانضمام</th>
+                    <th style="padding: 1rem; color: var(--text-secondary);">الحالة</th>
+                    <th style="padding: 1rem; color: var(--text-secondary); text-align: left;">إجراءات (حظر)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for target_user in users %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 1rem;">
+                        <strong>{{ target_user.get_full_name|default:target_user.username }}</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ target_user.email }}</div>
+                    </td>
+                    <td style="padding: 1rem;">
+                        {% if target_user.role == 'supplier' %}
+                            <span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">متعامل</span>
+                        {% elif target_user.role == 'authority' %}
+                            <span style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">مصلحة متعاقدة</span>
+                        {% else %}
+                            <span style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">{{ target_user.role }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; color: var(--text-secondary);">{{ target_user.date_joined|date:"Y/m/d" }}</td>
+                    <td style="padding: 1rem;">
+                        {% if target_user.is_active %}
+                            <span style="color: var(--success);"><i class="fas fa-check-circle"></i> نشط</span>
+                        {% else %}
+                            <span style="color: var(--danger);"><i class="fas fa-ban"></i> محظور</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; text-align: left;">
+                        <form action="{% url 'dashboard:toggle_user_status' target_user.id %}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من تغيير حالة هذا المستخدم؟');">
+                            {% csrf_token %}
+                            {% if target_user.is_active %}
+                                <button type="submit" class="btn btn-secondary" style="border-color: var(--danger); color: var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                    <i class="fas fa-lock"></i> حظر
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-secondary" style="border-color: var(--success); color: var(--success); padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                    <i class="fas fa-unlock"></i> فك الحظر
+                                </button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-secondary);">لا يوجد مستخدمين مسجلين بعد.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

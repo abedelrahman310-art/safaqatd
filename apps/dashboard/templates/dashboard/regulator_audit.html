@@ -1,0 +1,82 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}سجل الرقابة | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_regulator.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="margin: 0;"><i class="fas fa-search" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> سجل رقابة الصفقات الوطنية</h2>
+        <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة التقرير</button>
+    </div>
+
+    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem;">
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">
+            <i class="fas fa-info-circle"></i> يتيح هذا السجل لسلطة الضبط معاينة جميع الصفقات العمومية المطروحة في المنصة من طرف جميع المصالح لضمان النزاهة والشفافية.
+        </p>
+    </div>
+
+    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; text-align: right;">
+            <thead>
+                <tr style="background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <th style="padding: 1rem; color: var(--text-secondary);">رقم الصفقة (المرجع)</th>
+                    <th style="padding: 1rem; color: var(--text-secondary);">المصلحة المتعاقدة</th>
+                    <th style="padding: 1rem; color: var(--text-secondary);">الموضوع</th>
+                    <th style="padding: 1rem; color: var(--text-secondary);">الميزانية (دج)</th>
+                    <th style="padding: 1rem; color: var(--text-secondary);">الحالة</th>
+                    <th style="padding: 1rem; color: var(--text-secondary); text-align: left;">تفاصيل</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tender in tenders %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 1rem; font-weight: bold;">{{ tender.reference_number }}</td>
+                    <td style="padding: 1rem;">
+                        {{ tender.created_by.institution_name|default:tender.created_by.username }}
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">نشرت في: {{ tender.created_at|date:"Y/m/d" }}</div>
+                    </td>
+                    <td style="padding: 1rem; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ tender.title }}">
+                        {{ tender.title }}
+                    </td>
+                    <td style="padding: 1rem; color: var(--warning);">{{ tender.budget }}</td>
+                    <td style="padding: 1rem;">
+                        {% if tender.status == 'published' %}
+                            <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem;">مفتوحة</span>
+                        {% elif tender.status == 'evaluating' %}
+                            <span style="background: rgba(245, 158, 11, 0.2); color: var(--warning); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem;">في التقييم</span>
+                        {% elif tender.status == 'closed' %}
+                            <span style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem;">مغلقة</span>
+                        {% else %}
+                            <span style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem;">مسودة</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; text-align: left;">
+                        <!-- For the regulator, they should be able to view the details just like anyone -->
+                        <a href="{% url 'procurement:tender_detail' tender.id %}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;"><i class="fas fa-eye"></i> معاينة</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">لا توجد صفقات في قاعدة البيانات حالياً.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<style>
+    @media print {
+        .sidebar, .btn, .top-navbar { display: none !important; }
+        body { background: white !important; color: black !important; padding: 0; }
+        .dashboard-page { margin: 0; }
+        table { border: 1px solid #ccc; }
+        th, td { border: 1px solid #eee; color: black !important; }
+        span { background: none !important; color: black !important; font-weight: bold; }
+    }
+</style>
+{% endblock %}

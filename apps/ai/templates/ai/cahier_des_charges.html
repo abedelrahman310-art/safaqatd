@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دفتر الشروط - {{ tender.title }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.8;
+        }
+        
+        .document-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 4rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-top: 8px solid #ec4899; /* AI pink touch */
+            position: relative;
+        }
+        
+        .ai-watermark {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(236, 72, 153, 0.1);
+            color: #ec4899;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .header h2 {
+            font-size: 1.5rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .section-title {
+            color: #3b82f6;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.5rem;
+            margin-top: 2.5rem;
+            font-size: 1.4rem;
+        }
+        
+        .content p {
+            font-size: 1.05rem;
+            color: #334155;
+            text-align: justify;
+        }
+        
+        .meta-info {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+        
+        .meta-info div {
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .meta-info strong {
+            color: #0f172a;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .document-container { box-shadow: none; padding: 2rem 0; border-top: none; }
+            .no-print { display: none !important; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    
+    <div style="text-align: center; margin-bottom: 2rem;" class="no-print">
+        <button onclick="window.print()" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; border: none; padding: 1rem 2rem; border-radius: 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer; font-family: 'Tajawal', sans-serif; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);"><i class="fas fa-print"></i> طباعة / حفظ كملف PDF</button>
+    </div>
+
+    <div class="document-container">
+        <div class="ai-watermark">
+            <i class="fas fa-magic"></i> تم التوليد بواسطة الذكاء الاصطناعي
+        </div>
+        
+        <div class="header">
+            <h3 style="margin-bottom: 2rem; font-weight: normal;">الجمهورية الجزائرية الديمقراطية الشعبية</h3>
+            <h1>دفتر الشروط الإدارية والتقنية</h1>
+            <h2>موضوع الصفقة: {{ tender.title }}</h2>
+        </div>
+        
+        <div class="meta-info">
+            <div><strong>رقم المرجع:</strong> <span>TND-{{ tender.id|stringformat:"04d" }}-2026</span></div>
+            <div><strong>المصلحة المتعاقدة:</strong> <span>{{ request.user.full_name|default:"الإدارة العامة" }}</span></div>
+            <div><strong>تاريخ النشر:</strong> <span>{{ tender.created_at|date:"Y/m/d" }}</span></div>
+            <div><strong>تاريخ التوليد (AI):</strong> <span>{{ generation_date }}</span></div>
+        </div>
+
+        <div class="content">
+            <h3 class="section-title">المادة 1: موضوع الصفقة</h3>
+            <p>
+                يهدف دفتر الشروط هذا إلى تحديد الشروط الإدارية والتقنية والمالية التي تحكم إبرام وتنفيذ صفقة <strong>"{{ tender.title }}"</strong> لفائدة المصلحة المتعاقدة. 
+                ويندرج هذا المشروع ضمن قطاع {{ tender.get_sector_display|default:tender.sector }}.
+            </p>
+            
+            <h3 class="section-title">المادة 2: الإطار التنظيمي والقانوني</h3>
+            <p>
+                تُبرم هذه الصفقة وتُنفذ وفقاً للتشريع والتنظيم المعمول بهما في الجزائر، ولا سيما:
+                <br>- القانون رقم 23-12 المؤرخ في 05 أوت 2023 المحدد للقواعد العامة للصفقات العمومية.
+                <br>- كل النصوص التطبيقية اللاحقة ذات الصلة.
+            </p>
+
+            <h3 class="section-title">المادة 3: التفاصيل التقنية الخاصة بالذكاء الاصطناعي</h3>
+            <p>
+                تم تلخيص ووصف الحاجيات التقنية الخاصة بالمشروع بناءً على معطيات المصلحة المتعاقدة كالتالي:
+                <br>
+                {{ tender.description|linebreaksbr }}
+            </p>
+            
+            <h3 class="section-title">المادة 4: كيفية تقديم العروض</h3>
+            <p>
+                يجب أن يحتوي عرض المتعهد على ثلاثة (03) أظرفة منفصلة ومقفلة تبين كل منها تسمية المؤسسة وموضوع الصفقة:
+                <br>1- <strong>ظرف الترشح:</strong> يحتوي على الوثائق الإدارية (السجل التجاري، البطاقة الجبائية، الخ).
+                <br>2- <strong>العرض التقني:</strong> يحتوي على المذكرة التقنية والموارد البشرية والمادية.
+                <br>3- <strong>العرض المالي:</strong> يحتوي على رسالة التعهد وجدول الأسعار الوحدوية.
+            </p>
+
+            <h3 class="section-title">المادة 5: معايير التقييم الذكية</h3>
+            <p>
+                تُقيّم العروض بناءً على نظام النقطة (100 نقطة) مقسمة كالتالي:
+                <br>- <strong>العرض المالي:</strong> 40 نقطة.
+                <br>- <strong>العرض التقني:</strong> 60 نقطة (موزعة على الآجال، الضمان، الخبرة، وتعداد الطاقم).
+                <br><em>*ملاحظة:* تستخدم المصلحة المتعاقدة نظام التقييم الذكي (AI) في منصة صفقات ذكية للمساعدة في عملية التقييم الأولي للعروض.</em>
+            </p>
+            
+            <div style="margin-top: 5rem; text-align: left;">
+                <p><strong>إمضاء ومصادقة المصلحة المتعاقدة</strong></p>
+                <div style="width: 200px; height: 100px; border: 1px dashed #cbd5e1; margin-left: 0; display: flex; align-items: center; justify-content: center; color: #94a3b8;">ختم الإدارة</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

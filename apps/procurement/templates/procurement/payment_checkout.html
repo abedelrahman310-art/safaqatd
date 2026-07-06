@@ -1,0 +1,45 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}بوابة الدفع الإلكتروني | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_supplier.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+    <div class="auth-card" style="width: 100%; max-width: 500px; padding: 2rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <i class="fas fa-shield-alt fa-3x" style="color: var(--success); margin-bottom: 1rem;"></i>
+            <h2 style="color: var(--text-primary); margin-bottom: 0.5rem;">الدفع الآمن</h2>
+            <p style="color: var(--text-secondary);">دفع رسوم سحب دفتر الشروط الخاص بصفقة:</p>
+            <h3 style="color: var(--accent-primary); font-size: 1.1rem; margin-top: 0.5rem;">{{ tender.title }}</h3>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem; border: 1px dashed var(--glass-border); text-align: center;">
+            <span style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">المبلغ المطلوب للدفع:</span>
+            <span style="font-size: 2rem; font-weight: bold; color: #d4af37;">{{ tender.document_fee }} دج</span>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <p style="color: var(--text-primary); margin-bottom: 1.5rem;">ستتم إعادة توجيهك الآن إلى بوابة الدفع الوطنية الآمنة SATIM لإتمام العملية.</p>
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <!-- Mock Logos -->
+                <div style="background: white; padding: 0.5rem 1rem; border-radius: 8px;">
+                    <span style="color: #003366; font-weight: 900; font-size: 1.2rem;">CIB</span>
+                </div>
+                <div style="background: #FFD700; padding: 0.5rem 1rem; border-radius: 8px;">
+                    <span style="color: #003366; font-weight: 900; font-size: 1.2rem;">الذهبية</span>
+                </div>
+            </div>
+        </div>
+
+        <a href="{% url 'procurement:satim_gateway' tender.id %}" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem; justify-content: center; background: #003366; border-color: #003366; text-decoration: none;">
+            <i class="fas fa-external-link-alt"></i> الانتقال لبوابة SATIM
+        </a>
+        <div style="text-align: center; margin-top: 1rem;">
+            <a href="{% url 'procurement:tender_detail' tender.id %}" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;">إلغاء والعودة</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

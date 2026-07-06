@@ -1,0 +1,140 @@
+{% extends 'core/base.html' %}
+
+{% block title %}تسجيل الدخول{% endblock %}
+
+{% block content %}
+<!-- Sky Blue Premium Background -->
+<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; background: linear-gradient(270deg, #0284c7, #0369a1, #0ea5e9, #38bdf8); background-size: 400% 400%; animation: waveColors 15s ease infinite; overflow: hidden;">
+    <div style="position: absolute; top: -10%; left: -10%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 60%); filter: blur(60px); animation: orbFloat 20s infinite ease-in-out alternate;"></div>
+    <div style="position: absolute; bottom: -20%; right: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, transparent 60%); filter: blur(80px); animation: orbFloat 25s infinite ease-in-out alternate-reverse;"></div>
+    <!-- Subtle Starfield -->
+    <div style="position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.4;"></div>
+</div>
+
+<section style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 5%; position: relative; z-index: 1;">
+    <!-- Messages -->
+    {% if messages %}
+    <div style="max-width: 450px; margin: 0 auto 1rem auto; width: 100%;">
+        {% for message in messages %}
+        <div style="background: rgba(220, 38, 38, 0.9); color: white; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 0.5rem; backdrop-filter: blur(10px);">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <!-- Premium Auth Card -->
+    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.2); padding: 3rem 2.5rem; border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.5); max-width: 450px; width: 100%; position: relative; color: white;">
+        
+        <!-- Back Button -->
+        <a href="{% url 'core:index' %}" style="position: absolute; top: 1.5rem; right: 1.5rem; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 1.2rem; transition: color 0.3s ease;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" title="عودة للرئيسية">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.2); margin-bottom: 1rem; box-shadow: 0 5px 15px rgba(255,255,255,0.1);">
+                <i class="fas fa-fingerprint fa-2x" style="color: #fff;"></i>
+            </div>
+            <h2 style="margin: 0; font-size: 2rem; font-weight: 800; background: linear-gradient(to right, #ffffff, #e2e8f0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">تسجيل الدخول</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-top: 0.5rem; font-size: 1rem;">أهلاً بك مجدداً في صفقات ذكية</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group premium-input-group">
+                <label><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+                <div class="input-wrapper">
+                    <input type="text" name="username" required placeholder="أدخل البريد الإلكتروني...">
+                </div>
+            </div>
+            <div class="form-group premium-input-group">
+                <label style="display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fas fa-lock"></i> كلمة المرور</span>
+                    <a href="{% url 'accounts:password_reset' %}" style="color: #38bdf8; font-size: 0.85rem; text-decoration: none;">نسيت كلمة المرور؟</a>
+                </label>
+                <div class="input-wrapper" style="position: relative;">
+                    <input type="password" id="password_input" name="password" required placeholder="أدخل كلمة المرور..." style="padding-left: 3rem;">
+                    <button type="button" onclick="togglePassword()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 0.5rem; transition: color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+                        <i class="fas fa-eye" id="toggle_icon"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="premium-btn" style="margin-top: 2rem;">تسجيل الدخول <i class="fas fa-sign-in-alt"></i></button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 2rem;">
+            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.7);">ليس لديك حساب؟ <br><a href="{% url 'accounts:register_supplier' %}" style="color: #fff; font-weight: bold; text-decoration: underline; text-underline-offset: 4px; margin-top: 10px; display: inline-block;">إنشاء حساب متعامل اقتصادي</a></p>
+        </div>
+    </div>
+</section>
+
+<style>
+    @keyframes waveColors {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    @keyframes orbFloat {
+        0% { transform: translate(0, 0) scale(1); }
+        100% { transform: translate(50px, -50px) scale(1.1); }
+    }
+
+    .premium-input-group {
+        margin-bottom: 1.5rem;
+    }
+    .premium-input-group label {
+        display: block;
+        color: rgba(255,255,255,0.8);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .input-wrapper input {
+        width: 100%;
+        padding: 0.9rem 1.2rem;
+        background: rgba(0,0,0,0.25);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        color: #fff;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+    .input-wrapper input:focus {
+        border-color: #38bdf8;
+        background: rgba(0,0,0,0.4);
+        box-shadow: 0 0 0 3px rgba(56,189,248,0.2);
+    }
+    .premium-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #0ea5e9, #2563eb);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(37,99,235,0.3);
+    }
+    .premium-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37,99,235,0.4);
+    }
+</style>
+<script>
+    function togglePassword() {
+        const input = document.getElementById('password_input');
+        const icon = document.getElementById('toggle_icon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %}

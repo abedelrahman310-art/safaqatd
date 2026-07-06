@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}لوحة القيادة | صفقات ذكية{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'core/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'core/css/chatbot.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="dashboard-body">
+    <!-- Top Navbar simplified for Dashboard -->
+    <nav class="dashboard-nav">
+        <div class="nav-brand">
+            <a href="{% url 'core:index' %}" style="text-decoration: none; color: var(--text-primary); font-size: 1.5rem; font-weight: 700;">
+                <i class="fas fa-handshake" style="color: var(--accent-primary);"></i> {% if user.is_authenticated and user.display_name %}{{ user.display_name }}{% else %}صفقات ذكية{% endif %}
+            </a>
+        </div>
+        <div class="nav-user" style="position: relative; display: flex; align-items: center; gap: 1rem;">
+            <!-- Live Clock -->
+            <div id="live-clock" style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; margin-left: 1rem; padding: 0.3rem 0.8rem; background: rgba(0,0,0,0.2); border-radius: 1rem; border: 1px solid var(--glass-border);"></div>
+            <!-- Notifications Bell -->
+            <div style="position: relative; cursor: pointer;" onclick="document.getElementById('notifDropdown').style.display = document.getElementById('notifDropdown').style.display === 'none' ? 'block' : 'none'">
+                <i class="fas fa-bell" style="font-size: 1.2rem; color: var(--text-primary); transition: color 0.3s;" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-primary)'"></i>
+                {% if unread_notifications_count > 0 %}
+                <span style="position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; font-size: 0.7rem; padding: 2px 5px; border-radius: 50%; font-weight: bold;">{{ unread_notifications_count }}</span>
+                {% endif %}
+                
+                <!-- Notifications Dropdown -->
+                <div class="dropdown-menu" id="notifDropdown" style="display: none; position: absolute; left: -50px; top: 100%; margin-top: 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0.5rem; width: 300px; text-align: right; z-index: 1000; backdrop-filter: blur(10px); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                    <div style="padding: 0.8rem 1rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+                        <h4 style="margin: 0; font-size: 0.95rem; color: var(--accent-primary);">الإشعارات</h4>
+                        {% if unread_notifications_count > 0 %}
+                        <a href="{% url 'core:mark_notifications_read' %}" style="font-size: 0.75rem; color: var(--text-secondary); text-decoration: none;">تحديد الكل كمقروء</a>
+                        {% endif %}
+                    </div>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for notif in notifications %}
+                        <a href="{{ notif.link|default:'#' }}" style="display: block; padding: 0.8rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; background: {% if not notif.is_read %}rgba(59, 130, 246, 0.1){% else %}transparent{% endif %};">
+                            <p style="margin: 0 0 0.3rem 0; font-size: 0.85rem; color: var(--text-primary); font-weight: {% if not notif.is_read %}bold{% else %}normal{% endif %};">{{ notif.title }}</p>
+                            <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary);">{{ notif.message|truncatechars:50 }}</p>
+                            <small style="color: rgba(255,255,255,0.3); font-size: 0.65rem; display: block; margin-top: 0.3rem;">{{ notif.created_at|timesince }}</small>
+                        </a>
+                        {% empty %}
+                        <div style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">
+                            <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                            <p style="margin: 0; font-size: 0.85rem;">لا توجد إشعارات حالياً</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <a href="{% url 'core:index' %}" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem;"><i class="fas fa-home"></i> الرئيسية</a>
+            <div style="display: inline-block; position: relative;" onclick="document.getElementById('profileDropdown').style.display = document.getElementById('profileDropdown').style.display === 'none' ? 'block' : 'none'">
+                <img src="https://ui-avatars.com/api/?name=U&background=3b82f6&color=fff" alt="User" style="width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid var(--glass-border); vertical-align: middle;">
+                <div class="dropdown-menu" id="profileDropdown" style="display: none; position: absolute; left: 0; top: 100%; margin-top: 0.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0.5rem; padding: 0.5rem 0; min-width: 150px; text-align: right; z-index: 1000; backdrop-filter: blur(10px);">
+                    {% if user.role != 'authority' %}
+                    <a href="{% url 'accounts:profile' %}" style="display: block; padding: 0.5rem 1rem; color: var(--text-primary); text-decoration: none;"><i class="fas fa-user" style="margin-left: 0.5rem; color: var(--accent-primary);"></i> الملف الشخصي</a>
+                    {% endif %}
+                    <a href="#" style="display: block; padding: 0.5rem 1rem; color: var(--text-primary); text-decoration: none;"><i class="fas fa-cog" style="margin-left: 0.5rem;"></i> الإعدادات</a>
+                    <div style="height: 1px; background: var(--glass-border); margin: 0.5rem 0;"></div>
+                    <a href="{% url 'accounts:logout' %}" style="display: block; padding: 0.5rem 1rem; color: var(--danger); text-decoration: none;"><i class="fas fa-sign-out-alt" style="margin-left: 0.5rem;"></i> تسجيل الخروج</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            {% block sidebar %}{% endblock %}
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget" style="position: fixed; bottom: 2rem; left: 2rem; z-index: 1000; font-family: 'Tajawal', sans-serif;">
+        <!-- Chatbot Window -->
+        <div id="chatbot-window" style="display: none; width: 350px; height: 500px; background: rgba(15, 20, 30, 0.95); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); flex-direction: column; overflow: hidden; margin-bottom: 1rem; transition: all 0.3s ease;">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #8b5cf6, #ec4899); padding: 1rem; display: flex; justify-content: space-between; align-items: center; color: white;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 35px; height: 35px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <strong style="font-size: 1rem;">المساعد الذكي</strong>
+                        <span style="font-size: 0.7rem; color: rgba(255,255,255,0.8);">متصل الآن</span>
+                    </div>
+                </div>
+                <button onclick="toggleChatbot()" style="background: none; border: none; color: white; cursor: pointer;"><i class="fas fa-times fa-lg"></i></button>
+            </div>
+            
+            <!-- Messages Area -->
+            <div id="chatbot-messages" style="flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                    <div style="width: 30px; height: 30px; background: linear-gradient(135deg, #8b5cf6, #ec4899); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: white; font-size: 0.8rem;">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 0.8rem 1rem; border-radius: 15px; border-top-right-radius: 0; color: #e2e8f0; font-size: 0.9rem; line-height: 1.5;">
+                        مرحباً! أنا المساعد الذكي الخاص بمنصة "صفقات ذكية". كيف يمكنني مساعدتك اليوم؟ (اسألني عن القوانين أو الإجراءات)
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div style="padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 0.5rem;">
+                <input type="text" id="chatbot-input" placeholder="اكتب رسالتك هنا..." style="flex: 1; padding: 0.8rem 1rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; outline: none; font-family: 'Tajawal', sans-serif;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        
+        <!-- Floating Button -->
+        <button id="chatbot-btn" onclick="toggleChatbot()" style="width: 65px; height: 65px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none; color: white; font-size: 1.8rem; cursor: pointer; box-shadow: 0 10px 20px rgba(236, 72, 153, 0.4); display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease; animation: pulse 2s infinite;">
+            <i class="fas fa-comment-dots"></i>
+        </button>
+    </div>
+
+    <script src="{% static 'core/js/chatbot.js' %}"></script>
+    <script src="{% static 'core/js/main.js' %}"></script>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateString = now.toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('live-clock').textContent = dateString + ' - ' + timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

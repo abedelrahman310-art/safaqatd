@@ -1,0 +1,72 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}إدارة الصفقات | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>إدارة الصفقات</h2>
+            <p style="color: var(--text-secondary);">استعراض ومتابعة الصفقات الخاصة بك</p>
+        </div>
+        <a href="{% url 'procurement:tender_create' %}" class="btn btn-primary">إضافة صفقة جديدة <i class="fas fa-plus"></i></a>
+    </div>
+
+    <div class="auth-card" style="max-width: 100%; padding: 0;">
+        <div style="overflow-x: auto; padding: 1.5rem;">
+            <table style="width: 100%; border-collapse: collapse; text-align: right;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--glass-border); color: var(--text-secondary);">
+                        <th style="padding: 1rem;">العنوان</th>
+                        <th style="padding: 1rem;">تاريخ الإنشاء</th>
+                        <th style="padding: 1rem;">الميزانية</th>
+                        <th style="padding: 1rem;">آخر أجل</th>
+                        <th style="padding: 1rem;">الحالة</th>
+                        <th style="padding: 1rem;">العروض</th>
+                        <th style="padding: 1rem;">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tender in tenders %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem; font-weight: 500;">{{ tender.title }}</td>
+                        <td style="padding: 1rem; color: var(--text-secondary);">{{ tender.created_at|date:"Y/m/d" }}</td>
+                        <td style="padding: 1rem;">{{ tender.budget }} دج</td>
+                        <td style="padding: 1rem;">{{ tender.deadline|date:"Y/m/d" }}</td>
+                        <td style="padding: 1rem;">
+                            {% if tender.status == 'published' %}
+                                <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 0.2rem 0.8rem; border-radius: 1rem; font-size: 0.85rem;">منشورة</span>
+                            {% elif tender.status == 'draft' %}
+                                <span style="background: rgba(212, 175, 55, 0.2); color: var(--warning); padding: 0.2rem 0.8rem; border-radius: 1rem; font-size: 0.85rem;">مسودة</span>
+                            {% else %}
+                                <span style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.2rem 0.8rem; border-radius: 1rem; font-size: 0.85rem;">{{ tender.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <a href="{% url 'procurement:authority_tender_bids' tender.id %}" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; border-radius: 2rem;">
+                                <i class="fas fa-gavel"></i> العروض ({{ tender.bids.count }})
+                            </a>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <a href="{% url 'ai:generate_cahier' tender.id %}" target="_blank" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; padding: 0.3rem 0.8rem; font-size: 0.85rem; border-radius: 2rem; border: none; margin-left: 0.5rem;" title="توليد دفتر الشروط بالذكاء الاصطناعي"><i class="fas fa-magic"></i> دفتر AI</a>
+                            <a href="#" style="color: var(--accent-primary); margin-left: 0.5rem;" title="تعديل"><i class="fas fa-edit"></i></a>
+                            <a href="#" style="color: var(--danger);" title="حذف"><i class="fas fa-trash-alt"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                            لا توجد صفقات مضافة حالياً.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

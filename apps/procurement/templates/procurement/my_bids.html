@@ -1,0 +1,79 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}عروضي | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_supplier.html' %}
+{% endblock %}
+
+{% block content %}
+<div style="padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="margin: 0; color: var(--text-primary);"><i class="fas fa-file-signature" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> عروضي المقدمة</h2>
+    </div>
+
+    {% if bids %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+        {% for bid in bids %}
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">{{ bid.tender.title }}</h3>
+                {% if bid.status == 'accepted' %}
+                    <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">مقبول</span>
+                {% elif bid.status == 'rejected' %}
+                    <span style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">مرفوض</span>
+                {% else %}
+                    <span style="background: rgba(245, 158, 11, 0.2); color: var(--warning); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">قيد الدراسة</span>
+                {% endif %}
+            </div>
+            
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;"><i class="far fa-clock"></i> تم التقديم في: {{ bid.submitted_at|date:"Y/m/d H:i" }}</p>
+            
+            {% if bid.is_blockchain_verified %}
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem; font-size: 0.8rem; color: #10b981; display: flex; align-items: center; justify-content: space-between;" title="هذا العرض مشفر ومسجل في قاعدة بيانات غير قابلة للتغيير">
+                <span><i class="fas fa-link"></i> موثق عبر البلوكتشين</span>
+                <code style="background: rgba(0,0,0,0.2); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.7rem;">{{ bid.blockchain_tx_hash|truncatechars:12 }}</code>
+            </div>
+            {% else %}
+            <div style="margin-bottom: 1.5rem;"></div>
+            {% endif %}
+            
+            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">العرض المالي</span>
+                    <span style="font-weight: bold; color: var(--text-primary);">{{ bid.financial_offer }} دج</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">مدة الإنجاز</span>
+                    <span style="font-weight: bold; color: var(--text-primary);">{{ bid.delivery_time_days }} يوم</span>
+                </div>
+            </div>
+            
+            {% if bid.tender.is_deadline_passed %}
+            <a href="{% url 'procurement:virtual_opening_room' bid.tender.id %}" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.5rem; background: var(--accent-primary); border-color: var(--accent-primary);">
+                <i class="fas fa-door-open"></i> دخول قاعة الافتتاح
+            </a>
+            {% endif %}
+            
+            <a href="{% url 'procurement:tender_detail' bid.tender.id %}" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: auto;"><i class="fas fa-eye"></i> تفاصيل الصفقة</a>
+            
+            {% if bid.status == 'rejected' and not bid.appeal %}
+            <a href="{% url 'procurement:submit_appeal' bid.id %}" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 0.5rem; background: var(--danger); border-color: var(--danger);"><i class="fas fa-gavel"></i> تقديم طعن</a>
+            {% elif bid.appeal %}
+            <div style="margin-top: 0.5rem; text-align: center; font-size: 0.85rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 4px;">
+                <i class="fas fa-balance-scale text-accent"></i> حالة الطعن: {{ bid.appeal.get_status_display }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem; background: var(--glass-bg); border: 1px dashed var(--glass-border); border-radius: 15px;">
+        <i class="fas fa-file-contract fa-3x" style="color: var(--text-secondary); margin-bottom: 1rem; opacity: 0.5;"></i>
+        <h3 style="margin: 0; color: var(--text-primary);">لم تقم بتقديم أي عروض بعد</h3>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">يمكنك البدء باستكشاف الصفقات المتاحة وتقديم عروضك.</p>
+        <a href="{% url 'procurement:tender_list' %}" class="btn btn-primary" style="margin-top: 1.5rem; display: inline-flex;"><i class="fas fa-search"></i> استكشاف الصفقات</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

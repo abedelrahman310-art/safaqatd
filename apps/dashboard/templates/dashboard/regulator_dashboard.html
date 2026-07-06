@@ -1,0 +1,86 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}لوحة القيادة العليا (سلطة الضبط) | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_regulator.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>مرحباً، سلطة الضبط</h2>
+            <p style="color: var(--text-secondary);">نظرة عامة على أداء المنصة والصفقات العمومية.</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="stat-card" style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 1rem;">
+            <h3 style="color: var(--text-secondary); font-size: 1rem;">إجمالي الصفقات</h3>
+            <p style="font-size: 2.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0;">{{ total_tenders }}</p>
+        </div>
+        <div class="stat-card" style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 1rem;">
+            <h3 style="color: var(--text-secondary); font-size: 1rem;">إجمالي العروض المقدمة</h3>
+            <p style="font-size: 2.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0;">{{ total_bids }}</p>
+        </div>
+        <div class="stat-card" style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 1rem;">
+            <h3 style="color: var(--text-secondary); font-size: 1rem;">إجمالي المستخدمين</h3>
+            <p style="font-size: 2.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0;">{{ total_users }}</p>
+        </div>
+        <div class="stat-card" style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 1rem;">
+            <h3 style="color: var(--text-secondary); font-size: 1rem;">المتعاملين الاقتصاديين</h3>
+            <p style="font-size: 2.5rem; font-weight: 800; color: #38bdf8; margin: 0.5rem 0;">{{ active_suppliers }}</p>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 2rem; border-radius: 1rem; margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1.5rem;">توزيع الصفقات حسب الولاية</h3>
+        <canvas id="wilayaChart" height="100"></canvas>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const wilayaData = JSON.parse('{{ tenders_by_wilaya|escapejs }}');
+    
+    // Process wilaya codes to names (simplified)
+    const labels = Object.keys(wilayaData).map(k => 'ولاية ' + (k || 'غير محدد'));
+    const data = Object.values(wilayaData);
+
+    const ctx = document.getElementById('wilayaChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'عدد الصفقات',
+                data: data,
+                backgroundColor: 'rgba(56, 189, 248, 0.6)',
+                borderColor: 'rgba(56, 189, 248, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8' }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

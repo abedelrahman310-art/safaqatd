@@ -1,0 +1,46 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}الأرشيف | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    <!-- Include the correct sidebar based on user role -->
+    {% if user.role == 'authority' %}
+        {% include 'includes/sidebar_authority.html' %}
+    {% else %}
+        {% include 'includes/sidebar_supplier.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="margin: 0; color: var(--text-primary);"><i class="fas fa-archive" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> أرشيف الصفقات المنتهية</h2>
+    </div>
+
+    {% if tenders %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+        {% for tender in tenders %}
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1.5rem; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">{{ tender.title }}</h3>
+                <span style="background: rgba(100, 116, 139, 0.2); color: #94a3b8; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
+                    مغلقة
+                </span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">{{ tender.description|truncatewords:15 }}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; margin-top: auto;">
+                <span style="font-weight: bold; color: var(--text-primary); font-size: 0.95rem;">{{ tender.budget }} دج</span>
+                <a href="{% url 'procurement:tender_detail' tender.id %}" style="color: var(--accent-primary); text-decoration: none; font-size: 0.9rem;"><i class="fas fa-eye"></i> التفاصيل</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem; background: var(--glass-bg); border: 1px dashed var(--glass-border); border-radius: 15px;">
+        <i class="fas fa-box-open fa-3x" style="color: var(--text-secondary); margin-bottom: 1rem; opacity: 0.5;"></i>
+        <h3 style="margin: 0; color: var(--text-primary);">الأرشيف فارغ</h3>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">لا توجد صفقات مغلقة حالياً.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

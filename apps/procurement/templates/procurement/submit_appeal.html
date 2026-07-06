@@ -1,0 +1,46 @@
+{% extends 'dashboard_base.html' %}
+{% load form_tags %}
+
+{% block title %}تقديم طعن | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_supplier.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>تقديم طعن ⚖️</h2>
+            <p style="color: var(--text-secondary);">استئناف نتيجة التقييم لصفقة: {{ bid.tender.title }}</p>
+        </div>
+        <a href="{% url 'procurement:my_bids' %}" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> عودة لعروضي</a>
+    </div>
+
+    <div class="auth-card" style="max-width: 800px; margin: 2rem auto;">
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+            <h4 style="color: var(--danger); margin-bottom: 0.5rem;"><i class="fas fa-exclamation-triangle"></i> تنبيه قانوني</h4>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0;">يجب تقديم الطعن في الآجال القانونية المحددة في قانون الصفقات العمومية. يعتبر تقديم طعن كيدي أو بغير أدلة مبرراً لاتخاذ إجراءات من طرف المصلحة المتعاقدة.</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label>مضمون ومبررات الطعن</label>
+                {{ form.reason }}
+                {% if form.reason.errors %}
+                <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.5rem;">{{ form.reason.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label>وثائق أو أدلة داعمة (اختياري)</label>
+                {{ form.attachment }}
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 1rem; background: var(--danger); border-color: var(--danger);">
+                تأكيد إرسال الطعن <i class="fas fa-gavel" style="margin-right: 0.5rem;"></i>
+            </button>
+        </form>
+    </div>
+</section>
+{% endblock %}

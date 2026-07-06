@@ -1,0 +1,276 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}الرئيسية | صفقات ذكية{% endblock %}
+
+{% block content %}
+<!-- Sky Blue Premium Background -->
+<div class="dazzling-bg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; background: linear-gradient(270deg, #0284c7, #0369a1, #0ea5e9, #38bdf8); background-size: 400% 400%; animation: waveColors 15s ease infinite; overflow: hidden;">
+    <!-- Animated Orbs (Blue/White theme) -->
+    <div style="position: absolute; top: -10%; left: -10%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 60%); filter: blur(60px); animation: orbFloat 20s infinite ease-in-out alternate;"></div>
+    <div style="position: absolute; bottom: -20%; right: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, transparent 60%); filter: blur(80px); animation: orbFloat 25s infinite ease-in-out alternate-reverse;"></div>
+    
+
+
+    <!-- Algerian Geometric Abstract Lines -->
+    <div class="algerian-lines-container" style="position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; opacity: 0.7;">
+        <svg viewBox="0 0 1000 1000" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <!-- Green Lines (Algerian Green #006233, but brightened for dark theme #10b981) -->
+            <path d="M -100 200 L 400 600 L 1100 300" fill="none" stroke="#10b981" stroke-width="2.5" class="algerian-line" style="animation-delay: 0s;" />
+            <path d="M 0 1000 Q 500 0 1000 1000" fill="none" stroke="#10b981" stroke-width="1.5" class="algerian-line" style="opacity: 0.5;" />
+            
+            <!-- Red Lines (Algerian Red #D21034, brightened to #ef4444) -->
+            <path d="M -100 800 L 300 500 L 1100 700" fill="none" stroke="#ef4444" stroke-width="2.5" class="algerian-line" style="animation-delay: 1.5s;" />
+            <path d="M 0 0 Q 500 1000 1000 0" fill="none" stroke="#ef4444" stroke-width="1.5" class="algerian-line" style="opacity: 0.5; animation-delay: 2s;" />
+            
+            <!-- White Lines -->
+            <path d="M 200 -100 L 500 500 L 800 1100" fill="none" stroke="#ffffff" stroke-width="2" class="algerian-line" style="animation-delay: 3s;" />
+            
+            <!-- Glowing Nodes at Intersections -->
+            <circle cx="400" cy="600" r="5" fill="#10b981" class="algerian-node" />
+            <circle cx="300" cy="500" r="5" fill="#ef4444" class="algerian-node" style="animation-delay: 1s;" />
+            <circle cx="500" cy="500" r="5" fill="#ffffff" class="algerian-node" style="animation-delay: 2s;" />
+
+            <!-- Connecting Mesh -->
+            <polygon points="400,600 300,500 500,500" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" class="algerian-mesh" />
+        </svg>
+    </div>
+
+    <!-- Subtle Starfield/Particles -->
+    <div style="position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.4;"></div>
+</div>
+
+<section style="min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 5% 4rem 5%; position: relative; z-index: 1; overflow-x: hidden;">
+    
+    <!-- About Platform Button -->
+    <a href="{% url 'core:about' %}" style="position: absolute; top: 2rem; left: 2rem; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.6rem 1.2rem; border-radius: 30px; text-decoration: none; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.3)';" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)';">
+        <i class="fas fa-info-circle"></i>
+        عن المنصة
+    </a>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div style="position: absolute; top: 1rem; width: 100%; display: flex; justify-content: center; z-index: 100;">
+        {% for message in messages %}
+        <div style="background: rgba(220, 38, 38, 0.9); color: white; padding: 1rem 2rem; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); backdrop-filter: blur(5px);">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Centered Platform Name -->
+    <div style="text-align: center; margin-bottom: 4rem; margin-top: 2rem;">
+        <div style="display: inline-block; position: relative; padding: 2px; border-radius: 20px; background: linear-gradient(90deg, #10b981, rgba(255,255,255,0.8), #ef4444); background-size: 200% auto; animation: borderGlow 6s linear infinite; box-shadow: 0 15px 50px rgba(255,255,255,0.15);">
+            <div style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px); padding: 2.5rem 8rem; border-radius: 18px; border: 1px solid rgba(255,255,255,1); box-shadow: inset 0 0 20px rgba(255,255,255,0.8);">
+                <h1 style="font-size: clamp(3rem, 6vw, 4.5rem); white-space: nowrap; margin: 0; font-weight: 900; background: linear-gradient(to bottom, #0f172a 0%, #334155 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0px 4px 15px rgba(0,0,0,0.15); line-height: 1.2; letter-spacing: 2px;">
+                    صفقات ذكية
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Cards Container -->
+    <div style="display: flex; justify-content: center; gap: 5rem; flex-wrap: wrap; max-width: 800px; width: 100%; margin: 0 auto;">
+        
+        <!-- Authority Card (Green Theme) -->
+        <a href="{% url 'accounts:register_authority' %}" class="role-card" style="text-decoration: none; flex: 1; min-width: 220px; max-width: 280px; text-align: center;">
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.05)); backdrop-filter: blur(25px); border: 1px solid rgba(16, 185, 129, 0.3); border-top: 1px solid rgba(16, 185, 129, 0.6); padding: 2rem 1.5rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2); transition: transform 0.3s ease, box-shadow 0.3s ease; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;" class="role-card-inner">
+                <div style="width: 65px; height: 65px; margin-bottom: 1.5rem; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);">
+                    <i class="fas fa-building fa-2x" style="color: #fff;"></i>
+                </div>
+                <h2 style="font-size: 1.25rem; margin: 0; color: #fff; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">مصلحة متعاقدة</h2>
+            </div>
+        </a>
+
+        <!-- Supplier Card (Red Theme) -->
+        <a href="{% url 'accounts:register_supplier' %}" class="role-card" style="text-decoration: none; flex: 1; min-width: 220px; max-width: 280px; text-align: center;">
+            <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.05)); backdrop-filter: blur(25px); border: 1px solid rgba(239, 68, 68, 0.3); border-top: 1px solid rgba(239, 68, 68, 0.6); padding: 2rem 1.5rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2); transition: transform 0.3s ease, box-shadow 0.3s ease; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;" class="role-card-inner">
+                <div style="width: 65px; height: 65px; margin-bottom: 1.5rem; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);">
+                    <i class="fas fa-briefcase fa-2x" style="color: #fff;"></i>
+                </div>
+                <h2 style="font-size: 1.25rem; margin: 0; color: #fff; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">متعامل اقتصادي</h2>
+            </div>
+        </a>
+
+    </div>
+
+    <!-- News Ticker -->
+    <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 15, 26, 0.85); border-top: 1px solid rgba(255,255,255,0.15); padding: 0.3rem 0; overflow: hidden; z-index: 100; display: flex; align-items: center; backdrop-filter: blur(10px);">
+        <div style="background: linear-gradient(135deg, #ffffff, #e2e8f0); color: #0f172a; padding: 0.4rem 1.5rem; font-weight: 800; z-index: 2; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border-radius: 20px 0 0 20px; font-size: 0.9rem; margin-right: -10px; white-space: nowrap; display: flex; align-items: center; gap: 0.8rem;">
+            <span><i class="fas fa-bolt"></i> الأخبار</span>
+            <span id="live-clock" style="background: rgba(0,0,0,0.1); color: #0f172a; padding: 0.1rem 0.6rem; border-radius: 15px; font-family: 'Courier New', monospace; font-size: 0.8rem; letter-spacing: 1px; font-weight: 900;">00:00:00</span>
+        </div>
+        <div style="flex: 1; overflow: hidden;">
+            <marquee direction="right" scrollamount="6" style="color: rgba(255,255,255,0.9); font-size: 0.95rem; display: flex; align-items: center; padding-top: 2px;">
+                <span style="margin-left: 5rem;"><i class="fas fa-bullhorn" style="color: #10b981; margin-left: 0.5rem;"></i> <b>إعلان:</b> إطلاق النسخة التجريبية لمنصة صفقات ذكية قريباً جداً!</span>
+                <span style="margin-left: 5rem;"><i class="fas fa-file-contract" style="color: #38bdf8; margin-left: 0.5rem;"></i> <b>تحديث:</b> تمديد آجال إيداع العروض لصفقة تجهيزات الإعلام الآلي لولاية الجزائر بـ 15 يوماً</span>
+                <span style="margin-left: 5rem;"><i class="fas fa-trophy" style="color: #ef4444; margin-left: 0.5rem;"></i> <b>نتائج:</b> الإعلان عن فوز "شركة التقنية الرائدة" بصفقة تطوير النظام المعلوماتي</span>
+                <span style="margin-left: 5rem;"><i class="fas fa-bell" style="color: #10b981; margin-left: 0.5rem;"></i> <b>تنبيه هام:</b> يرجى من جميع المتعاملين تحديث ملفاتهم الإدارية عبر لوحة القيادة قبل نهاية الشهر</span>
+            </marquee>
+        </div>
+    </div>
+</section>
+
+<script>
+    function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('ar-DZ', { hour12: false });
+        const clockEl = document.getElementById('live-clock');
+        if (clockEl) {
+            clockEl.textContent = timeString;
+        }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
+
+<style>
+    /* Dazzling Animations */
+    @keyframes waveColors {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes orbFloat {
+        0% { transform: translate(0, 0) scale(1); }
+        100% { transform: translate(50px, -50px) scale(1.1); }
+    }
+    
+    @keyframes borderGlow {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+    }
+    
+    @keyframes shine {
+        to { background-position: 200% center; }
+    }
+
+    /* Algerian Geometric Animations */
+    .algerian-line {
+        stroke-dasharray: 2000;
+        stroke-dashoffset: 2000;
+        animation: drawAlgerianLine 8s ease-in-out infinite alternate;
+    }
+    .algerian-node {
+        animation: pulseNode 3s infinite alternate;
+    }
+    .algerian-mesh {
+        opacity: 0;
+        animation: fadeInMesh 6s ease-in-out infinite alternate;
+        animation-delay: 2s;
+    }
+    
+    @keyframes drawAlgerianLine {
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes pulseNode {
+        from { transform: scale(1); opacity: 0.5; filter: drop-shadow(0 0 2px currentColor); }
+        to { transform: scale(1.5); opacity: 1; filter: drop-shadow(0 0 10px currentColor); }
+    }
+    @keyframes fadeInMesh {
+        to { opacity: 1; }
+    }
+
+    /* Premium Form Styles */
+    .premium-auth-card:hover {
+        transform: perspective(1000px) rotateY(0deg) !important;
+    }
+    
+    .premium-input-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .premium-input-group label {
+        display: block;
+        color: rgba(255,255,255,0.7);
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .input-wrapper {
+        position: relative;
+    }
+    
+    .input-wrapper .icon {
+        position: absolute;
+        right: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,0.4);
+        transition: color 0.3s;
+        z-index: 2;
+    }
+    
+    .input-wrapper .icon-left {
+        position: absolute;
+        left: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,0.4);
+        pointer-events: none;
+    }
+    
+    .input-wrapper input, .input-wrapper select {
+        width: 100%;
+        padding: 0.8rem 2.5rem 0.8rem 1rem;
+        background: rgba(0,0,0,0.25);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 10px;
+        color: #fff;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        outline: none;
+        appearance: none;
+    }
+    
+    .input-wrapper input:focus, .input-wrapper select:focus {
+        background: rgba(0,0,0,0.4);
+        border-color: rgba(255,255,255,0.5);
+        box-shadow: 0 0 0 3px rgba(255,255,255,0.1);
+    }
+    
+    .input-wrapper input:focus + .icon, .input-wrapper select:focus ~ .icon {
+        color: #fff;
+    }
+    
+    .premium-btn {
+        width: 100%;
+        padding: 0.8rem;
+        margin-top: 0.5rem;
+        background: linear-gradient(135deg, #ffffff, #e2e8f0);
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 0.95rem;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.8rem;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+        transition: all 0.3s ease;
+    }
+    
+    .premium-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(255,255,255,0.3);
+        background: #ffffff;
+    }
+    
+    /* Role Cards Hover */
+    .role-card:hover .role-card-inner {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+        border-color: rgba(255,255,255,0.5);
+    }
+    .role-card:hover .role-action-btn {
+        background: rgba(255,255,255,0.1);
+        color: #fff !important;
+        border-color: #fff !important;
+    }
+</style>
+{% endblock %}

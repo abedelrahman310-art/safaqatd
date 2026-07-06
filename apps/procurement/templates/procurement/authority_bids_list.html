@@ -1,0 +1,232 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}تقييم العروض | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>العروض المقدمة: {{ tender.title }}</h2>
+            <p style="color: var(--text-secondary);">استعراض وتقييم العروض المقدمة من طرف المتعاملين الاقتصاديين</p>
+            {% if not tender.is_deadline_passed %}
+            <div style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--warning); border-radius: 8px; display: inline-flex; align-items: center; gap: 0.5rem; color: var(--warning);">
+                <i class="fas fa-lock"></i> السرية مفعلة: العروض التقنية والمالية مشفرة حتى تاريخ فتح الأظرفة ({{ tender.deadline|date:"Y/m/d" }})
+            </div>
+            {% endif %}
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            {% if tender.is_deadline_passed %}
+            <a href="{% url 'procurement:virtual_opening_room' tender.id %}" class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: var(--accent-primary); border: none; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
+                <i class="fas fa-door-open"></i> دخول قاعة الافتتاح
+            </a>
+            <form method="POST" action="{% url 'procurement:sign_evaluation' tender.id %}" style="display: inline-block;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: var(--warning); border-color: var(--warning); color: #000;">
+                    <i class="fas fa-pen-nib"></i> توقيع المحضر
+                </button>
+            </form>
+            <button onclick="evaluateBidsAI({{ tender.id }})" class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);">
+                <i class="fas fa-robot"></i> تحليل ذكي للعروض
+            </button>
+            <a href="{% url 'procurement:generate_report_view' tender.id %}" target="_blank" class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: var(--success); border-color: var(--success);"><i class="fas fa-file-pdf"></i> استخراج محضر التقييم</a>
+            {% else %}
+            <button disabled class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-secondary); cursor: not-allowed;" title="متوفر بعد فتح الأظرفة">
+                <i class="fas fa-lock"></i> تحليل ذكي للعروض (مغلق)
+            </button>
+            {% endif %}
+            <a href="{% url 'procurement:authority_tender_list' %}" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.75rem 1.5rem;"><i class="fas fa-arrow-right"></i> عودة للصفقات</a>
+        </div>
+    </div>
+
+    <div class="auth-card" style="max-width: 100%; padding: 0;">
+        <div style="overflow-x: auto; padding: 1.5rem;">
+            <table style="width: 100%; border-collapse: collapse; text-align: right;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--glass-border); color: var(--text-secondary);">
+                        <th style="padding: 1rem;">الشركة / المتعامل</th>
+                        <th style="padding: 1rem;">تاريخ التقديم</th>
+                        <th style="padding: 1rem;">العرض المالي</th>
+                        <th style="padding: 1rem;">المدة</th>
+                        <th style="padding: 1rem;">التقنية والكفالة</th>
+                        <th style="padding: 1rem; text-align: center;">التقييم الذكي 🤖</th>
+                        <th style="padding: 1rem;">الحالة</th>
+                        <th style="padding: 1rem; text-align: center;">القرار</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bid in bids %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" id="bid-row-{{ bid.id }}">
+                        <td style="padding: 1rem; font-weight: 500;">{{ bid.supplier_name }}</td>
+                        <td style="padding: 1rem; color: var(--text-secondary);">
+                            {{ bid.submitted_at|date:"Y/m/d H:i" }}
+                            {% if bid.is_blockchain_verified %}
+                                <div style="margin-top: 0.5rem; display: inline-flex; align-items: center; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #10b981;" title="موثق في البلوكتشين: {{ bid.blockchain_tx_hash }}">
+                                    <i class="fas fa-link" style="margin-left: 0.25rem;"></i> موثق (Blockchain)
+                                </div>
+                            {% endif %}
+                        </td>
+                        
+                        {% if tender.is_deadline_passed %}
+                            <td style="padding: 1rem; color: var(--accent-primary); font-weight: bold;">{{ bid.financial_offer }} دج</td>
+                            <td style="padding: 1rem; color: var(--text-secondary);">{{ bid.delivery_time_days|default:"-" }} يوم</td>
+                            <td style="padding: 1rem; color: var(--text-secondary); max-width: 200px;">
+                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="تعداد الطاقم: {{ bid.technical_team_size|default:'-' }} | الملاحظات: {{ bid.technical_notes }}">
+                                    {{ bid.technical_notes|default:"لا توجد" }}
+                                </div>
+                                {% if bid.bank_guarantee_file %}
+                                    <div style="margin-top: 0.5rem; font-size: 0.8rem;">
+                                        <a href="{{ bid.bank_guarantee_file.url }}" target="_blank" style="color: var(--warning);"><i class="fas fa-university"></i> كفالة ({{ bid.bank_name|default:"البنك" }})</a>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem; text-align: center;" class="ai-score-cell">
+                                <span style="color: var(--text-secondary); font-size: 0.85rem;">في انتظار التحليل...</span>
+                            </td>
+                        {% else %}
+                            <td style="padding: 1rem; color: var(--text-secondary);"><i class="fas fa-lock"></i> مشفر</td>
+                            <td style="padding: 1rem; color: var(--text-secondary);"><i class="fas fa-lock"></i> مشفر</td>
+                            <td style="padding: 1rem; color: var(--text-secondary);"><i class="fas fa-lock"></i> مشفر</td>
+                            <td style="padding: 1rem; text-align: center; color: var(--text-secondary);"><i class="fas fa-lock"></i></td>
+                        {% endif %}
+                        
+                        <td style="padding: 1rem;">
+                            {% if bid.status == 'accepted' %}
+                                <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 0.2rem 0.8rem; border-radius: 1rem; font-size: 0.85rem;">مقبول</span>
+                            {% elif bid.status == 'rejected' %}
+                                <span style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.2rem 0.8rem; border-radius: 1rem; font-size: 0.85rem;">مرفوض</span>
+                            {% else %}
+                                <span style="background: rgba(212, 175, 55, 0.2); color: var(--warning); padding: 0.2rem 0.8rem; border-radius: 1rem; font-size: 0.85rem;">قيد الدراسة</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            {% if bid.status == 'accepted' %}
+                                <div style="margin-top: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
+                                    <form method="POST" action="{% url 'procurement:rate_supplier' bid.id %}">
+                                        {% csrf_token %}
+                                        <select name="rating" required style="width: 100%; padding: 0.3rem; margin-bottom: 0.3rem; border-radius: 0.3rem; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--glass-border); font-size: 0.8rem;">
+                                            <option value="">قيّم المتعامل...</option>
+                                            <option value="5">⭐⭐⭐⭐⭐ 5</option>
+                                            <option value="4">⭐⭐⭐⭐ 4</option>
+                                            <option value="3">⭐⭐⭐ 3</option>
+                                            <option value="2">⭐⭐ 2</option>
+                                            <option value="1">⭐ 1</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.2rem; font-size: 0.75rem; justify-content: center;">إرسال التقييم</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <a href="{% url 'procurement:bid_update_status' bid.id 'accepted' %}" class="btn" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem;" title="قبول العرض"><i class="fas fa-check"></i></a>
+                                <a href="{% url 'procurement:bid_update_status' bid.id 'rejected' %}" class="btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem;" title="رفض العرض"><i class="fas fa-times"></i></a>
+                                <a href="{% url 'procurement:bid_update_status' bid.id 'pending' %}" class="btn" style="background: rgba(255, 255, 255, 0.1); color: var(--text-primary); border: 1px solid var(--glass-border); padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="إعادة للتقييم"><i class="fas fa-undo"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="padding: 3rem; text-align: center; color: var(--text-secondary);">
+                            <i class="fas fa-inbox fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i><br>
+                            لا توجد عروض مقدمة لهذه الصفقة حتى الآن.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- AI Loading Overlay -->
+<div id="ai-loading" style="display: none; position: fixed; inset: 0; background: rgba(15, 20, 30, 0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
+    <div style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid rgba(236, 72, 153, 0.2); border-top-color: #ec4899; animation: spin 1s linear infinite; margin-bottom: 2rem;"></div>
+    <h3 style="color: white; margin-bottom: 0.5rem;">يتم تحليل العروض بواسطة الذكاء الاصطناعي...</h3>
+    <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">نحن نقوم بمقارنة الجوانب المالية والتقنية بناءً على خوارزمياتنا المتقدمة.</p>
+</div>
+
+<!-- AI Recommendation Modal -->
+<div id="ai-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 20, 30, 0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: rgba(15, 20, 30, 0.95); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 20px; padding: 2.5rem; max-width: 600px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); text-align: center; position: relative;">
+        <button onclick="document.getElementById('ai-modal').style.display='none'" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #ec4899); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; box-shadow: 0 10px 20px rgba(236, 72, 153, 0.3);">
+            <i class="fas fa-robot fa-2x" style="color: white;"></i>
+        </div>
+        
+        <h2 style="color: white; margin-bottom: 1.5rem;">توصية الذكاء الاصطناعي</h2>
+        
+        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <p id="ai-recommendation-text" style="color: #e2e8f0; font-size: 1.1rem; line-height: 1.8; margin: 0; text-align: right;"></p>
+        </div>
+        
+        <button onclick="document.getElementById('ai-modal').style.display='none'" class="btn btn-primary" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem;">تم، شكراً!</button>
+    </div>
+</div>
+
+<style>
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .ai-highlight { animation: aiGlow 2s ease-in-out infinite alternate; }
+    @keyframes aiGlow { from { box-shadow: inset 0 0 10px rgba(236, 72, 153, 0.1); } to { box-shadow: inset 0 0 30px rgba(236, 72, 153, 0.3); } }
+</style>
+
+<script>
+    function evaluateBidsAI(tenderId) {
+        document.getElementById('ai-loading').style.display = 'flex';
+        
+        fetch(`/ai/evaluate/tender/${tenderId}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('ai-loading').style.display = 'none';
+                
+                if (data.error) {
+                    alert('خطأ: ' + data.error);
+                    return;
+                }
+                
+                // Update table cells
+                data.evaluations.forEach((eval, index) => {
+                    const row = document.getElementById(`bid-row-${eval.bid_id}`);
+                    if (row) {
+                        const cell = row.querySelector('.ai-score-cell');
+                        const isBest = index === 0;
+                        const color = isBest ? '#10b981' : (eval.score > 70 ? '#3b82f6' : '#94a3b8');
+                        
+                        let html = `
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                                <span style="font-weight: bold; font-size: 1.1rem; color: ${color};">
+                                    ${eval.score}%
+                                </span>
+                                <div style="width: 80px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 0.25rem;">
+                                    <div style="width: ${eval.score}%; height: 100%; background: ${color}; transition: width 1s ease-in-out;"></div>
+                                </div>
+                        `;
+                        
+                        if (isBest) {
+                            html += `<span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 0.1rem 0.4rem; border-radius: 1rem;">🏆 الأفضل</span>`;
+                            row.classList.add('ai-highlight');
+                        }
+                        
+                        html += `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; text-align: right; line-height: 1.4;">`;
+                        if (eval.strengths.length > 0) html += `<div style="color: #10b981;"><i class="fas fa-plus-circle"></i> ${eval.strengths[0]}</div>`;
+                        if (eval.weaknesses.length > 0) html += `<div style="color: #ef4444;"><i class="fas fa-minus-circle"></i> ${eval.weaknesses[0]}</div>`;
+                        html += `</div></div>`;
+                        
+                        cell.innerHTML = html;
+                    }
+                });
+                
+                // Show recommendation modal
+                if (data.recommendation) {
+                    document.getElementById('ai-recommendation-text').innerHTML = data.recommendation;
+                    document.getElementById('ai-modal').style.display = 'flex';
+                }
+            })
+            .catch(error => {
+                document.getElementById('ai-loading').style.display = 'none';
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الاتصال بخدمة الذكاء الاصطناعي.');
+            });
+    }
+</script>
+{% endblock %}

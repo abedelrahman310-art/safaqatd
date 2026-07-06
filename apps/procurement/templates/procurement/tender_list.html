@@ -1,0 +1,113 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}استكشاف الصفقات | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_supplier.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>استكشاف الصفقات المفتوحة</h2>
+            <p style="color: var(--text-secondary);">تصفح أحدث الصفقات العمومية وابحث عن الفرص المناسبة لشركتك</p>
+        </div>
+        
+        <!-- Search and Filter Form -->
+        <form method="GET" style="display: flex; gap: 1rem; align-items: center; background: rgba(20, 25, 40, 0.4); padding: 1rem; border-radius: 1rem; border: 1px solid var(--glass-border); flex-wrap: wrap;">
+            <div style="position: relative; flex: 1; min-width: 250px;">
+                <input type="text" name="q" value="{{ query|default:'' }}" placeholder="ابحث عن صفقة (العنوان أو التفاصيل)..." style="width: 100%; padding: 0.75rem 1rem; padding-right: 2.5rem; border-radius: 2rem; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: var(--text-primary); outline: none;">
+                <i class="fas fa-search" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+            </div>
+            
+            <div style="position: relative; min-width: 150px;">
+                <select name="wilaya" style="width: 100%; padding: 0.75rem 1rem; border-radius: 2rem; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: var(--text-primary); appearance: none; outline: none; cursor: pointer;">
+                    <option value="">كل الولايات</option>
+                    <option value="16" {% if wilaya == '16' %}selected{% endif %}>16 - الجزائر العاصمة</option>
+                    <option value="31" {% if wilaya == '31' %}selected{% endif %}>31 - وهران</option>
+                    <option value="25" {% if wilaya == '25' %}selected{% endif %}>25 - قسنطينة</option>
+                    <option value="30" {% if wilaya == '30' %}selected{% endif %}>30 - ورقلة</option>
+                    <option value="47" {% if wilaya == '47' %}selected{% endif %}>47 - غرداية</option>
+                    <option value="other" {% if wilaya == 'other' %}selected{% endif %}>أخرى...</option>
+                </select>
+                <i class="fas fa-map-marker-alt" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
+            </div>
+
+            <div style="position: relative; min-width: 200px;">
+                <select name="sector" style="width: 100%; padding: 0.75rem 1rem; border-radius: 2rem; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: var(--text-primary); appearance: none; outline: none; cursor: pointer;">
+                    <option value="">كل القطاعات</option>
+                    <option value="tech" {% if sector == 'tech' %}selected{% endif %}>إعلام آلي واتصالات</option>
+                    <option value="construction" {% if sector == 'construction' %}selected{% endif %}>بناء وأشغال عمومية</option>
+                    <option value="services" {% if sector == 'services' %}selected{% endif %}>خدمات واستشارات</option>
+                    <option value="equipment" {% if sector == 'equipment' %}selected{% endif %}>توريد معدات وتجهيزات</option>
+                    <option value="other" {% if sector == 'other' %}selected{% endif %}>قطاع آخر</option>
+                </select>
+                <i class="fas fa-layer-group" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem;"><i class="fas fa-filter"></i> تصفية النتائج</button>
+            {% if query or wilaya or sector %}
+            <a href="{% url 'procurement:tender_list' %}" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.75rem 1rem; border-color: rgba(220, 38, 38, 0.5); color: #fca5a5;"><i class="fas fa-times"></i> مسح</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+        {% for tender in tenders %}
+        <div class="stat-card" style="padding: 1.5rem; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <span style="background: rgba(59, 130, 246, 0.2); color: var(--accent-primary); padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 700;">طلب عروض مفتوح</span>
+                <span style="color: var(--text-secondary); font-size: 0.8rem;"><i class="far fa-clock"></i> نشر: {{ tender.created_at|date:"Y/m/d" }}</span>
+            </div>
+            
+            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--text-primary);">{{ tender.title }}</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ tender.description }}
+            </p>
+            
+            <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">الميزانية التقديرية</span>
+                    <span style="font-weight: 700; color: var(--text-primary);">{{ tender.budget }} دج</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">آخر أجل للتقديم</span>
+                    <span style="font-weight: 700; color: var(--danger);">{{ tender.deadline|date:"Y/m/d" }}</span>
+                </div>
+            </div>
+            
+            {% if tender.id in paid_tender_ids or tender.document_fee <= 0 %}
+                {% if tender.document %}
+                    <a href="{{ tender.document.url }}" target="_blank" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem; justify-content: center; background: rgba(59, 130, 246, 0.1); border-color: var(--accent-primary); color: var(--accent-primary);">
+                        <i class="fas fa-download" style="margin-left: 0.5rem;"></i> تحميل دفتر الشروط
+                    </a>
+                {% endif %}
+                <a href="{% url 'procurement:bid_create' tender.id %}" class="btn btn-primary" style="width: 100%; margin-top: auto; justify-content: center;">تقديم عرض <i class="fas fa-paper-plane" style="margin-right: 0.5rem;"></i></a>
+            {% else %}
+                <a href="{% url 'procurement:payment_checkout' tender.id %}" class="btn btn-secondary" style="width: 100%; margin-top: auto; justify-content: center; background: rgba(59, 130, 246, 0.1); border-color: var(--accent-primary); color: var(--accent-primary);">
+                    سحب دفتر الشروط ({{ tender.document_fee }} دج) <i class="fas fa-file-invoice-dollar" style="margin-right: 0.5rem;"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; background: var(--glass-bg); border-radius: 1rem; border: 1px solid var(--glass-border);">
+            <i class="fas fa-box-open fa-3x" style="color: var(--text-secondary); margin-bottom: 1rem;"></i>
+            <h3>لا توجد صفقات منشورة حالياً</h3>
+            <p style="color: var(--text-secondary);">يرجى العودة لاحقاً لاستكشاف الفرص الجديدة.</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<script>
+    function enableBidButton(tenderId) {
+        const btn = document.getElementById(`bid-btn-${tenderId}`);
+        if (btn) {
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+            btn.title = '';
+        }
+    }
+</script>
+{% endblock %}

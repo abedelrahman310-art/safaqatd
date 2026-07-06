@@ -1,0 +1,26 @@
+<div class="sidebar-menu">
+    <a href="{% url 'dashboard:supplier' %}" class="sidebar-item active">
+        <i class="fas fa-tachometer-alt"></i> لوحة القيادة
+    </a>
+    <a href="{% url 'procurement:tender_list' %}" class="sidebar-item">
+        <i class="fas fa-search"></i> استكشاف الصفقات
+    </a>
+    <a href="{% url 'procurement:my_bids' %}" class="sidebar-item">
+        <i class="fas fa-file-signature"></i> عروضي
+    </a>
+    <a href="{% url 'core:notifications_list' %}" class="sidebar-item">
+        <i class="fas fa-bell"></i> الإشعارات
+    </a>
+    <a href="{% url 'accounts:profile' %}" class="sidebar-item">
+        <i class="fas fa-user-circle"></i> الملف الشخصي
+    </a>
+    <a href="{% url 'accounts:settings' %}" class="sidebar-item">
+        <i class="fas fa-cog"></i> الإعدادات
+    </a>
+    <a href="{% url 'dashboard:archive' %}" class="sidebar-item">
+        <i class="fas fa-archive"></i> الأرشيف
+    </a>
+    <a href="{% url 'accounts:logout' %}" class="sidebar-item logout" style="margin-top: auto; color: var(--danger);">
+        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+    </a>
+</div>

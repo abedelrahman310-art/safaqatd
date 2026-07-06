@@ -1,0 +1,13 @@
+/* static/core/css/chatbot.css */
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(236, 72, 153, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
+}
+@keyframes bounce { 
+    0%, 100% { transform: translateY(0); } 
+    50% { transform: translateY(-3px); } 
+}
+#chatbot-widget *::-webkit-scrollbar { width: 6px; }
+#chatbot-widget *::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+#chatbot-widget *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الدفع الإلكتروني | SATIM</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --satim-blue: #004d99;
+            --satim-light-blue: #0066cc;
+            --satim-orange: #ff6600;
+            --bg-color: #f4f7f6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .gateway-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+        .gateway-header {
+            background: var(--satim-blue);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid var(--satim-orange);
+        }
+        .gateway-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .merchant-info {
+            background: #e9ecef;
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .merchant-info p {
+            margin: 5px 0;
+            color: #495057;
+        }
+        .gateway-body {
+            padding: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+            direction: ltr;
+            text-align: right;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--satim-light-blue);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        .payment-methods {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .method-card {
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+        }
+        .method-card.selected {
+            border-color: var(--satim-orange);
+            background: rgba(255, 102, 0, 0.05);
+        }
+        .btn-submit {
+            background: var(--satim-orange);
+            color: white;
+            border: none;
+            padding: 1rem;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-submit:hover {
+            background: #e65c00;
+        }
+        .footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.8rem;
+            color: #6c757d;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+        .btn-cancel {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--satim-blue);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .btn-cancel:hover {
+            text-decoration: underline;
+        }
+        
+        /* Spinner */
+        .spinner-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--satim-orange);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="spinner-overlay" id="spinner">
+        <div class="spinner"></div>
+        <h3 style="color: var(--satim-blue);">جاري الاتصال بالبنك...</h3>
+        <p style="color: #6c757d;">يرجى عدم تحديث الصفحة</p>
+    </div>
+
+    <div class="gateway-container">
+        <div class="gateway-header">
+            <h1><i class="fas fa-lock"></i> SATIM - الدفع الآمن</h1>
+        </div>
+        
+        <div class="merchant-info">
+            <p><strong>التاجر:</strong> منصة صفقات ذكية</p>
+            <p><strong>رقم الطلب:</strong> ORD-{{ tender.id }}</p>
+            <p style="font-size: 1.5rem; font-weight: bold; color: var(--satim-blue); margin-top: 10px;">{{ tender.document_fee }} DZD</p>
+        </div>
+
+        <div class="gateway-body">
+            <form id="paymentForm" method="POST" action="{% url 'procurement:satim_gateway' tender.id %}">
+                {% csrf_token %}
+                
+                <div class="payment-methods">
+                    <div class="method-card selected" onclick="selectMethod(this)">
+                        <span style="color: #003366;">CIB</span>
+                    </div>
+                    <div class="method-card" onclick="selectMethod(this)">
+                        <span style="color: #FFD700; text-shadow: 1px 1px 1px #000;">الذهبية</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>رقم البطاقة</label>
+                    <input type="text" name="card_number" required placeholder="0000 0000 0000 0000" maxlength="19" id="cardInput">
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>تاريخ الانتهاء</label>
+                        <input type="text" name="expiry" required placeholder="MM/YY" maxlength="5" id="expiryInput">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>رمز CVC2 / CVV2</label>
+                        <input type="password" name="cvc" required placeholder="123" maxlength="3">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>الاسم واللقب (كما يظهر على البطاقة)</label>
+                    <input type="text" name="card_name" required placeholder="NOM PRENOM">
+                </div>
+
+                <button type="submit" class="btn-submit">تأكيد الدفع</button>
+                <a href="{% url 'procurement:payment_checkout' tender.id %}" class="btn-cancel">إلغاء العملية والعودة للتاجر</a>
+            </form>
+        </div>
+        
+        <div class="footer">
+            جميع المعاملات مشفرة ومحمية بواسطة SATIM &copy; 2026
+        </div>
+    </div>
+
+    <script>
+        function selectMethod(el) {
+            document.querySelectorAll('.method-card').forEach(card => card.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        document.getElementById('cardInput').addEventListener('input', function(e) {
+            let val = this.value.replace(/\D/g, '');
+            if (val.length > 0) {
+                val = val.match(/.{1,4}/g)?.join(' ') || val;
+            }
+            this.value = val;
+        });
+        
+        document.getElementById('expiryInput').addEventListener('input', function(e) {
+            let val = this.value.replace(/\D/g, '');
+            if (val.length > 2) {
+                val = val.slice(0, 2) + '/' + val.slice(2);
+            }
+            this.value = val;
+        });
+
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('spinner').style.display = 'flex';
+            
+            // Simulate network delay before submitting
+            setTimeout(() => {
+                this.submit();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

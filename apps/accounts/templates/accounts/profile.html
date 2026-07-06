@@ -1,0 +1,94 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}الملف الشخصي | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_supplier.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>الملف الشخصي للشركة</h2>
+            <p style="color: var(--text-secondary);">إدارة وتحديث بيانات شركتك والوثائق الرسمية</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 1rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+                <i class="fas fa-check-circle" style="margin-left: 0.5rem;"></i> {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="auth-card" style="max-width: 900px; margin: 0 auto; text-align: right;">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 2rem;">
+                <div style="position: relative;">
+                    <img src="https://ui-avatars.com/api/?name={{ request.user.full_name|urlencode }}&background=3b82f6&color=fff&size=100" alt="شعار الشركة" style="border-radius: 50%; border: 3px solid var(--glass-border);">
+                    <button type="button" class="btn" style="position: absolute; bottom: 0; right: 0; background: var(--accent-primary); color: white; border-radius: 50%; width: 35px; height: 35px; padding: 0; border: none; cursor: pointer;">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                </div>
+                <div>
+                    <h3 style="margin-bottom: 0.5rem;">{{ request.user.full_name|default:"اسم الشركة غير متوفر" }}</h3>
+                    <p style="color: var(--text-secondary);">{{ request.user.email }}</p>
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: 1rem; color: var(--accent-primary);"><i class="fas fa-building"></i> المعلومات الأساسية</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>الاسم الكامل للشركة</label>
+                    <input type="text" name="full_name" class="form-control" value="{{ request.user.full_name|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" name="email" class="form-control" value="{{ request.user.email }}" readonly style="background: rgba(0,0,0,0.1);">
+                </div>
+                <div class="form-group">
+                    <label>الولاية</label>
+                    <input type="text" name="wilaya" class="form-control" value="{{ request.user.wilaya|default:'' }}">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>نوع الشركة</label>
+                    <input type="text" name="company_type" class="form-control" value="{{ request.user.company_type|default:'' }}">
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: 1rem; color: var(--accent-primary);"><i class="fas fa-file-invoice"></i> السجلات والوثائق الرسمية</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <div class="form-group">
+                    <label>رقم السجل التجاري (RC)</label>
+                    <input type="text" name="commercial_register" class="form-control" value="{{ request.user.commercial_register|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label>الرقم الوطني (NIF / NIS)</label>
+                    <input type="text" name="national_id" class="form-control" value="{{ request.user.national_id|default:'' }}">
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: 1rem; color: var(--accent-primary);"><i class="fas fa-lock"></i> تغيير كلمة المرور</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <div class="form-group">
+                    <label>كلمة المرور الحالية</label>
+                    <input type="password" class="form-control" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور الجديدة</label>
+                    <input type="password" class="form-control" placeholder="••••••••">
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="reset" class="btn btn-secondary">تجاهل التغييرات</button>
+                <button type="submit" class="btn btn-primary">حفظ التغييرات <i class="fas fa-save" style="margin-right: 0.5rem;"></i></button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

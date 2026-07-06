@@ -1,0 +1,27 @@
+<div class="sidebar-menu">
+    <a href="{% url 'dashboard:authority' %}" class="sidebar-item active">
+        <i class="fas fa-tachometer-alt"></i> لوحة القيادة
+    </a>
+    <a href="{% url 'procurement:authority_tender_list' %}" class="sidebar-item">
+        <i class="fas fa-folder-open"></i> إدارة الصفقات
+    </a>
+    <a href="{% url 'procurement:tender_evaluation_list' %}" class="sidebar-item">
+        <i class="fas fa-balance-scale"></i> تقييم العروض
+    </a>
+    <a href="{% url 'procurement:authority_appeals' %}" class="sidebar-item">
+        <i class="fas fa-gavel"></i> الطعون والشكاوى
+    </a>
+
+    <a href="{% url 'dashboard:authority_reports' %}" class="sidebar-item">
+        <i class="fas fa-chart-bar"></i> التقارير
+    </a>
+    <a href="{% url 'accounts:settings' %}" class="sidebar-item">
+        <i class="fas fa-cog"></i> الإعدادات
+    </a>
+    <a href="{% url 'dashboard:archive' %}" class="sidebar-item">
+        <i class="fas fa-archive"></i> الأرشيف
+    </a>
+    <a href="{% url 'accounts:logout' %}" class="sidebar-item logout" style="margin-top: auto; color: var(--danger);">
+        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+    </a>
+</div>

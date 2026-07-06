@@ -1,0 +1,265 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}الدفتر الرقمي للصفقة | صفقات ذكية{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Styling for the Digital Document */
+    .digital-document-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        align-items: center;
+        margin-top: 1rem;
+    }
+    
+    .digital-cahier {
+        background: #fdfbf7; /* Very light ivory color resembling paper */
+        color: #1e293b;
+        width: 100%;
+        max-width: 900px;
+        padding: 4rem;
+        border-radius: 4px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+        font-family: 'Amiri', 'Tajawal', serif;
+        position: relative;
+        line-height: 1.8;
+    }
+    
+    .digital-cahier::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+    
+    .cahier-header {
+        text-align: center;
+        border-bottom: 2px solid #cbd5e1;
+        padding-bottom: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .cahier-header h1 {
+        font-family: 'Tajawal', sans-serif;
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .cahier-header h3 {
+        color: #475569;
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-top: 0;
+    }
+    
+    .republic-text {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 2rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .article-section {
+        margin-bottom: 2.5rem;
+    }
+    
+    .article-title {
+        font-family: 'Tajawal', sans-serif;
+        color: #1e3a8a;
+        font-size: 1.3rem;
+        font-weight: 700;
+        border-right: 4px solid #3b82f6;
+        padding-right: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .article-content {
+        font-size: 1.1rem;
+        color: #334155;
+        text-align: justify;
+    }
+    
+    .cahier-stamp {
+        margin-top: 4rem;
+        text-align: left;
+        padding-left: 2rem;
+        color: #475569;
+        font-style: italic;
+    }
+    
+    /* Toolbar styling */
+    .cahier-toolbar {
+        position: sticky;
+        top: 80px;
+        z-index: 100;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(10px);
+        padding: 1rem;
+        border-radius: 1rem;
+        border: 1px solid var(--glass-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 900px;
+        width: 100%;
+        margin: 0 auto 2rem auto;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    
+    @media print {
+        body * { visibility: hidden; }
+        .digital-cahier, .digital-cahier * { visibility: visible; }
+        .digital-cahier { position: absolute; left: 0; top: 0; width: 100%; padding: 2rem; box-shadow: none; }
+        .cahier-toolbar { display: none; }
+    }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block sidebar %}
+    {% if user.role == 'supplier' %}
+        {% include 'includes/sidebar_supplier.html' %}
+    {% else %}
+        {% include 'includes/sidebar_authority.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    
+    <!-- Floating Toolbar -->
+    <div class="cahier-toolbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button onclick="window.print()" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.5rem 1rem;"><i class="fas fa-print"></i> طباعة الوثيقة</button>
+            <a href="{% url 'procurement:download_tender_pdf' tender.id %}" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.5rem 1rem; color: #ef4444; border-color: #ef4444;"><i class="fas fa-file-pdf"></i> تحميل PDF</a>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            {% if user.role == 'supplier' %}
+                {% if tender.document_fee <= 0 or has_paid %}
+                    {% if tender.document %}
+                        <a href="{{ tender.document.url }}" target="_blank" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.5rem 1rem; color: var(--accent-primary); border-color: var(--accent-primary);"><i class="fas fa-download"></i> المرفقات</a>
+                    {% endif %}
+                    <a href="{% url 'procurement:bid_create' tender.id %}" class="btn btn-primary" style="border-radius: 2rem; padding: 0.5rem 1.5rem;"><i class="fas fa-paper-plane"></i> تقديم العرض الآن</a>
+                {% else %}
+                    <a href="{% url 'procurement:payment_checkout' tender.id %}" class="btn btn-primary" style="border-radius: 2rem; padding: 0.5rem 1.5rem; color: #fff; border-color: #d4af37; background: #d4af37;"><i class="fas fa-file-invoice-dollar"></i> سحب الدفتر ({{ tender.document_fee }} دج)</a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'ai:generate_cahier' tender.id %}" target="_blank" class="btn btn-primary" style="border-radius: 2rem; padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none;"><i class="fas fa-magic"></i> توليد المرفق (AI)</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- The Digital Document -->
+    <div class="digital-document-container">
+        <div class="digital-cahier">
+            <div class="cahier-header">
+                <div class="republic-text">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+                <h3>المصلحة المتعاقدة: {{ tender.authority.full_name|default:"الهيئة الوطنية" }}</h3>
+                <h1 style="margin-top: 1.5rem;">دفتر الشروط الخاص بطلب العروض</h1>
+                <h3>رقم المرجع: TN-{{ tender.id|stringformat:"04d" }} / {{ tender.created_at|date:"Y" }}</h3>
+            </div>
+            
+            <div class="article-section">
+                <div class="article-title">المادة 1: موضوع الصفقة</div>
+                <div class="article-content">
+                    يتمثل موضوع دفتر الشروط الحالي في تحديد القواعد والإجراءات الخاصة بـ: <strong>{{ tender.title }}</strong>.<br>
+                    تم طرح هذا الإعلان لغرض تلبية احتياجات المصلحة المتعاقدة بقطاع ({{ tender.get_sector_display|default:tender.sector }}) على مستوى ولاية ({{ tender.get_wilaya_display|default:tender.wilaya }}).
+                </div>
+
+            
+            <div class="article-section">
+                <div class="article-title">المادة 2: التفاصيل التقنية والوصف</div>
+                <div class="article-content">
+                    {{ tender.description|linebreaksbr }}
+                </div>
+            </div>
+            
+            <div class="article-section">
+                <div class="article-title">المادة 3: التقديرات المالية</div>
+                <div class="article-content">
+                    تم تحديد الميزانية التقديرية القصوى لهذا المشروع بمبلغ قدره: <strong style="color: #b91c1c; font-size: 1.2rem;">{{ tender.budget }} دج</strong> (الدينار الجزائري).
+                    وأي عرض مالي يتجاوز هذا السقف قد يعتبر ملغى وفقاً للتنظيم المعمول به.
+                    <br><br>
+                    رسوم سحب دفتر الشروط والمشاركة: <strong>{{ tender.document_fee }} دج</strong>.
+                </div>
+            </div>
+            
+            <div class="article-section">
+                <div class="article-title">المادة 4: آجال التقديم والصلاحية</div>
+                <div class="article-content">
+                    حدد آخر أجل لتقديم العروض وإيداع الملفات عبر المنصة الرقمية يوم: <strong style="text-decoration: underline;">{{ tender.deadline|date:"Y/m/d" }}</strong>.<br>
+                    مدة صلاحية العروض محددة بـ 90 يوماً ابتداءً من تاريخ فتح الأظرفة.
+                </div>
+            </div>
+            
+            <div class="cahier-stamp">
+                <p>حرر بـ: الجزائر، في: {{ tender.created_at|date:"Y/m/d" }}</p>
+                <p><strong>الإمضاء والختم الإلكتروني للمصلحة</strong></p>
+            </div>
+        </div>
+        
+        <!-- Addendum: Q&A -->
+        <div style="width: 100%; max-width: 900px; margin-top: 2rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+                <h3 style="color: var(--text-primary); margin: 0;"><i class="fas fa-book-open"></i> ملحق الاستفسارات والتوضيحات</h3>
+                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            </div>
+            
+            {% for q in questions %}
+            <div style="background: rgba(20, 25, 40, 0.6); border-radius: 1rem; padding: 1.5rem; border: 1px solid var(--glass-border); margin-bottom: 1rem;">
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="background: rgba(59, 130, 246, 0.2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-primary);">
+                        <i class="fas fa-question"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: var(--text-primary);">استفسار ({{ q.supplier.full_name }})</h4>
+                        <small style="color: var(--text-secondary);">{{ q.created_at|timesince }}</small>
+                    </div>
+                </div>
+                <p style="color: var(--text-primary); margin-bottom: 1rem; padding-right: 3.5rem;">{{ q.question_text }}</p>
+                
+                {% if q.answer_text %}
+                <div style="margin-right: 3.5rem; background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 0.5rem; border-right: 3px solid var(--success);">
+                    <h5 style="margin: 0 0 0.5rem 0; color: var(--success);">توضيح المصلحة المتعاقدة:</h5>
+                    <p style="margin: 0; color: var(--text-primary); font-size: 0.95rem;">{{ q.answer_text }}</p>
+                </div>
+                {% elif user.role == 'authority' %}
+                <form method="POST" style="margin-right: 3.5rem; margin-top: 1rem;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="answer_question">
+                    <input type="hidden" name="question_id" value="{{ q.id }}">
+                    <textarea name="answer_text" required placeholder="أدخل التوضيح هنا..." style="width: 100%; padding: 1rem; border-radius: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white; margin-bottom: 0.5rem;"></textarea>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;"><i class="fas fa-reply"></i> إرسال التوضيح</button>
+                </form>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div style="text-align: center; color: var(--text-secondary); padding: 2rem; background: rgba(20, 25, 40, 0.4); border-radius: 1rem; border: 1px dashed rgba(255,255,255,0.1);">
+                <p>لم يتم تسجيل أي استفسارات أو توضيحات إضافية حول هذا الدفتر.</p>
+            </div>
+            {% endfor %}
+
+            {% if user.role == 'supplier' %}
+            <form method="POST" style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(59, 130, 246, 0.2); margin-top: 2rem;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="ask_question">
+                <h4 style="margin-top: 0; color: var(--text-primary); margin-bottom: 1rem;"><i class="fas fa-pen"></i> تقديم طلب توضيح رسمي</h4>
+                <textarea name="question_text" required placeholder="اكتب استفسارك هنا، سيتم الرد عليه وإرفاقه كملحق..." style="width: 100%; padding: 1rem; border-radius: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: white; min-height: 100px; margin-bottom: 1rem;"></textarea>
+                <button type="submit" class="btn btn-primary" style="background: var(--accent-primary); border-color: var(--accent-primary);"><i class="fas fa-paper-plane"></i> إرسال الاستفسار</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

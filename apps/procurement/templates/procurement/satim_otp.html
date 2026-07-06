@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Secure | SATIM</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --satim-blue: #004d99;
+            --satim-light-blue: #0066cc;
+            --satim-orange: #ff6600;
+            --bg-color: #f4f7f6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .gateway-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            text-align: center;
+        }
+        .gateway-header {
+            padding: 2rem 1rem 1rem 1rem;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+        .gateway-header h2 {
+            color: var(--satim-blue);
+            margin: 0 0 10px 0;
+        }
+        .gateway-body {
+            padding: 2rem;
+        }
+        .info-box {
+            background: #e9ecef;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            color: #495057;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+            box-sizing: border-box;
+            text-align: center;
+            transition: border-color 0.3s;
+            font-family: monospace;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--satim-orange);
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+        }
+        .btn-submit {
+            background: var(--satim-blue);
+            color: white;
+            border: none;
+            padding: 1rem;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-submit:hover {
+            background: var(--satim-light-blue);
+        }
+        .footer {
+            padding: 1rem;
+            font-size: 0.8rem;
+            color: #6c757d;
+            background: #f8f9fa;
+        }
+        
+        .timer {
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+
+        /* Spinner */
+        .spinner-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--satim-blue);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="spinner-overlay" id="spinner">
+        <div class="spinner"></div>
+        <h3 style="color: var(--satim-blue);">جاري التحقق وإتمام الدفع...</h3>
+    </div>
+
+    <div class="gateway-container">
+        <div class="gateway-header">
+            <i class="fas fa-mobile-alt fa-3x" style="color: var(--satim-blue); margin-bottom: 15px;"></i>
+            <h2>المصادقة الثنائية 3D-Secure</h2>
+        </div>
+        
+        <div class="gateway-body">
+            <div class="info-box">
+                لقد قمنا بإرسال رمز تحقق (OTP) في رسالة نصية قصيرة SMS إلى رقم الهاتف المرتبط ببطاقتك (******066). 
+                <br><br>
+                <strong>التاجر:</strong> منصة صفقات ذكية<br>
+                <strong>المبلغ:</strong> {{ tender.document_fee }} دج
+            </div>
+
+            <form id="otpForm" method="POST" action="{% url 'procurement:satim_otp' tender.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="text" name="otp" required placeholder="123456" maxlength="6" id="otpInput" autocomplete="off">
+                </div>
+                
+                <p style="color: #6c757d; font-size: 0.9rem; margin-bottom: 1.5rem;">
+                    أدخل أي رقم مكون من 6 أرقام (لغرض المحاكاة)
+                </p>
+
+                <button type="submit" class="btn-submit">تأكيد الدفع <i class="fas fa-check-circle"></i></button>
+            </form>
+            
+            <div class="timer" id="timerDisplay">الوقت المتبقي: 03:00</div>
+        </div>
+        
+        <div class="footer">
+            مدعوم من طرف شركة الأتمتة النقدية (SATIM)
+        </div>
+    </div>
+
+    <script>
+        // Restrict input to numbers
+        document.getElementById('otpInput').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        // Countdown Timer
+        let timeLeft = 180;
+        const timerEl = document.getElementById('timerDisplay');
+        const interval = setInterval(() => {
+            timeLeft--;
+            let m = Math.floor(timeLeft / 60);
+            let s = timeLeft % 60;
+            timerEl.textContent = `الوقت المتبقي: 0${m}:${s < 10 ? '0'+s : s}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                timerEl.textContent = "انتهت صلاحية الرمز. يرجى المحاولة مرة أخرى.";
+                document.querySelector('.btn-submit').disabled = true;
+                document.querySelector('.btn-submit').style.background = '#ccc';
+            }
+        }, 1000);
+
+        // Submit Spinner
+        document.getElementById('otpForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('spinner').style.display = 'flex';
+            
+            // Simulate processing delay
+            setTimeout(() => {
+                this.submit();
+            }, 2500);
+        });
+    </script>
+</body>
+</html>

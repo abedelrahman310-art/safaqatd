@@ -1,0 +1,71 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}الإعدادات | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% if user.role == 'authority' %}
+        {% include 'includes/sidebar_authority.html' %}
+    {% else %}
+        {% include 'includes/sidebar_supplier.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="margin: 0; color: var(--text-primary);"><i class="fas fa-cog" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> إعدادات الحساب</h2>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div style="padding: 1rem; margin-bottom: 1.5rem; border-radius: 0.5rem; background: {% if message.tags == 'success' %}rgba(16, 185, 129, 0.2){% else %}rgba(239, 68, 68, 0.2){% endif %}; color: {% if message.tags == 'success' %}var(--success){% else %}var(--danger){% endif %}; border: 1px solid {% if message.tags == 'success' %}var(--success){% else %}var(--danger){% endif %};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="auth-card" style="padding: 2.5rem; max-width: 100%;">
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;"><i class="fas fa-lock" style="margin-left: 0.5rem; color: var(--accent-primary);"></i> تغيير كلمة المرور</h3>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <small style="color: rgba(255,255,255,0.4); display: block; margin-top: 0.5rem; font-size: 0.8rem;">{{ field.help_text|safe }}</small>
+                {% endif %}
+                {% if field.errors %}
+                <ul style="color: var(--danger); font-size: 0.85rem; margin-top: 0.5rem; padding-right: 1rem;">
+                    {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; border-radius: 0.5rem; padding: 1rem;"><i class="fas fa-save"></i> حفظ الإعدادات</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .form-group input {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--glass-border);
+        background: rgba(0,0,0,0.3);
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 0.3s;
+        font-family: 'Tajawal', sans-serif;
+    }
+    .form-group input:focus {
+        border-color: var(--accent-primary);
+    }
+</style>
+{% endblock %}

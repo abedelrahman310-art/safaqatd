@@ -1,0 +1,154 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}إضافة صفقة جديدة | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>إضافة صفقة جديدة</h2>
+            <p style="color: var(--text-secondary);">يرجى ملء تفاصيل الصفقة ليتم نشرها في المنصة</p>
+        </div>
+        <a href="{% url 'procurement:authority_tender_list' %}" class="btn btn-secondary">إلغاء والعودة</a>
+    </div>
+
+    <div class="auth-card" style="max-width: 800px; margin: 0 auto; text-align: right;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>عنوان الصفقة</label>
+                {{ form.title }}
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label>الميزانية التقديرية (دج)</label>
+                    {{ form.budget }}
+                </div>
+                <div class="form-group">
+                    <label>آخر أجل للتقديم</label>
+                    {{ form.deadline }}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label>الولاية</label>
+                    {{ form.wilaya }}
+                </div>
+                <div class="form-group">
+                    <label>القطاع</label>
+                    {{ form.sector }}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label>حالة النشر</label>
+                    {{ form.status }}
+                </div>
+                <div class="form-group">
+                    <label>رسوم سحب دفتر الشروط (دج)</label>
+                    {{ form.document_fee }}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>دفتر الشروط (PDF/DOC)</label>
+                {{ form.document }}
+            </div>
+
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label style="margin: 0;">تفاصيل الصفقة</label>
+                    <button type="button" onclick="draftTenderAI()" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; border: none; border-radius: 20px; padding: 0.3rem 1rem; font-size: 0.85rem; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3); display: flex; align-items: center; gap: 0.5rem; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <i class="fas fa-magic"></i> صياغة ذكية
+                    </button>
+                </div>
+                {{ form.description }}
+                <small id="ai-drafting-status" style="display: none; color: #ec4899; margin-top: 0.5rem;"><i class="fas fa-spinner fa-spin"></i> جاري التوليد بواسطة الذكاء الاصطناعي...</small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">حفظ الصفقة <i class="fas fa-save"></i></button>
+        </form>
+    </div>
+</section>
+
+<script>
+function draftTenderAI() {
+    const titleInput = document.querySelector('input[name="title"]');
+    const sectorInput = document.querySelector('input[name="sector"]');
+    const descTextarea = document.querySelector('textarea[name="description"]');
+    const statusText = document.getElementById('ai-drafting-status');
+    
+    if (!titleInput || !titleInput.value) {
+        alert("يرجى إدخال 'عنوان الصفقة' أولاً ليتمكن الذكاء الاصطناعي من صياغة التفاصيل.");
+        titleInput.focus();
+        return;
+    }
+    
+    statusText.style.display = 'block';
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    fetch('/ai/draft/tender/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            title: titleInput.value,
+            sector: sectorInput ? sectorInput.value : ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        statusText.style.display = 'none';
+        if (data.error) {
+            alert("خطأ: " + data.error);
+            return;
+        }
+        
+        if (descTextarea.value.trim() !== '') {
+            if(confirm("يوجد نص مسبقاً في حقل التفاصيل. هل تريد أن يقوم الذكاء الاصطناعي بإضافة النص المولد أسفله أم استبداله؟\n\n- اضغط 'موافق' للاستبدال\n- اضغط 'إلغاء' للإضافة بالأسفل")) {
+                descTextarea.value = data.draft;
+            } else {
+                descTextarea.value += "\n\n" + data.draft;
+            }
+        } else {
+            descTextarea.value = data.draft;
+        }
+        
+        // Add a glow effect to the textarea to highlight the new content
+        descTextarea.style.boxShadow = "0 0 15px rgba(236, 72, 153, 0.5)";
+        setTimeout(() => {
+            descTextarea.style.boxShadow = "none";
+        }, 2000);
+    })
+    .catch(error => {
+        statusText.style.display = 'none';
+        console.error('Error:', error);
+        alert("حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.");
+    });
+}
+</script>
+{% endblock %}

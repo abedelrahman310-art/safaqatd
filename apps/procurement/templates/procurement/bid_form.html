@@ -1,0 +1,302 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}دفتر الشروط الرقمي | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_supplier.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>دفتر الشروط الرقمي</h2>
+            <p style="color: var(--text-secondary);">ملء الاستمارة الرقمية للصفقة: {{ tender.title }}</p>
+        </div>
+        <a href="{% url 'procurement:tender_list' %}" class="btn btn-secondary">إلغاء والعودة</a>
+    </div>
+
+    <div class="auth-card" style="max-width: 900px; margin: 0 auto; text-align: right;">
+        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+            <h4 style="margin-bottom: 0.5rem; color: var(--accent-primary);">ملخص متطلبات الصفقة:</h4>
+            <ul style="list-style-type: none; font-size: 0.95rem; color: var(--text-secondary);">
+                <li><strong>الميزانية المقدرة:</strong> {{ tender.budget }} دج</li>
+                <li><strong>آخر أجل للتقديم:</strong> {{ tender.deadline|date:"Y/m/d" }}</li>
+            </ul>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div id="ai-generator-container" style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem; text-align: center; position: relative; overflow: hidden;">
+                <div class="ai-glow-bg"></div>
+                <h4 style="color: #c4b5fd; margin-bottom: 0.5rem;"><i class="fas fa-robot"></i> المساعد الذكي للمناقصات</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">دع الذكاء الاصطناعي يقرأ دفتر الشروط ويقترح لك العرض التقني والمالي الأنسب للفوز بهذه الصفقة بناءً على الميزانية والسوق.</p>
+                <button type="button" id="btn-generate-ai" class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); border: none; font-size: 1.1rem; padding: 0.8rem 2rem; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);">
+                    <i class="fas fa-magic"></i> توليد العرض بالذكاء الاصطناعي
+                </button>
+                <div id="ai-loading" style="display: none; margin-top: 1rem;">
+                    <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem; color: #c4b5fd !important;"></div>
+                    <span style="color: #c4b5fd; margin-right: 0.5rem; font-weight: bold;" id="ai-loading-text">يتم قراءة وتحليل متطلبات الصفقة...</span>
+                </div>
+            </div>
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; color: var(--text-primary);">
+                <i class="fas fa-cogs text-accent"></i> الملف التقني
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>رفع ملف العرض التقني (PDF)</label>
+                    <input type="file" name="technical_document" accept=".pdf" class="form-control" style="background: rgba(0,0,0,0.2);">
+                </div>
+                <div class="form-group">
+                    <label>تعداد الطاقم التقني</label>
+                    {{ form.technical_team_size }}
+                </div>
+                <div class="form-group">
+                    <label>عدد المشاريع المماثلة المنجزة</label>
+                    {{ form.similar_projects_count }}
+                </div>
+                <div class="form-group">
+                    <label>مدة الإنجاز المقترحة (بالأيام)</label>
+                    {{ form.delivery_time_days }}
+                </div>
+                <div class="form-group">
+                    <label>مدة الضمان المقترحة (بالأشهر)</label>
+                    {{ form.warranty_months }}
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>ملاحظات العرض التقني / خطة العمل</label>
+                    {{ form.technical_notes }}
+                </div>
+            </div>
+
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; color: var(--text-primary);">
+                <i class="fas fa-money-bill-wave text-accent"></i> الملف المالي (جدول التفصيل الكمي والتقديري)
+            </h3>
+            
+            <div class="form-group" style="grid-column: 1 / -1; margin-bottom: 1.5rem;">
+                <label>رفع ملف العرض المالي الموثق (PDF)</label>
+                <input type="file" name="financial_document" accept=".pdf" class="form-control" style="background: rgba(0,0,0,0.2);">
+            </div>
+            
+            <div style="overflow-x: auto; margin-bottom: 1.5rem;">
+                <table style="width: 100%; border-collapse: collapse; text-align: right; background: rgba(255, 255, 255, 0.02); border-radius: 0.5rem; overflow: hidden;">
+                    <thead style="background: rgba(59, 130, 246, 0.1);">
+                        <tr>
+                            <th style="padding: 1rem; border-bottom: 1px solid var(--glass-border);">الرقم</th>
+                            <th style="padding: 1rem; border-bottom: 1px solid var(--glass-border);">التعيين / البيان</th>
+                            <th style="padding: 1rem; border-bottom: 1px solid var(--glass-border);">الوحدة</th>
+                            <th style="padding: 1rem; border-bottom: 1px solid var(--glass-border);">الكمية</th>
+                            <th style="padding: 1rem; border-bottom: 1px solid var(--glass-border);">سعر الوحدة (دج)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);">01</td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);"><input type="text" class="form-control" placeholder="أدخل اسم السلعة/الخدمة..."></td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);"><input type="text" class="form-control" placeholder="وحدة" style="width: 80px;"></td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);"><input type="number" class="form-control" placeholder="1" style="width: 80px;"></td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);"><input type="number" class="form-control" placeholder="0.00"></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);">02</td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);"><input type="text" class="form-control" placeholder="أدخل اسم السلعة/الخدمة..."></td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);"><input type="text" class="form-control" placeholder="وحدة" style="width: 80px;"></td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);"><input type="number" class="form-control" placeholder="1" style="width: 80px;"></td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--glass-border);"><input type="number" class="form-control" placeholder="0.00"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-secondary" style="margin-top: 1rem; padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    <i class="fas fa-plus"></i> إضافة سطر جديد
+                </button>
+            </div>
+
+            <div class="form-group" style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 0.5rem; border: 1px dashed var(--accent-primary);">
+                <label style="font-size: 1.1rem; color: var(--accent-primary); font-weight: bold;">العرض المالي الإجمالي (بكل الرسوم TTC)</label>
+                {{ form.financial_offer }}
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">هذا هو المبلغ الإجمالي الذي سيتم على أساسه تقييم العرض مالياً.</small>
+            </div>
+            
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; color: var(--text-primary);">
+                <i class="fas fa-university text-accent"></i> كفالة التعهد البنكية (Bid Bond)
+            </h3>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label>اسم البنك المصدر للكفالة</label>
+                {{ form.bank_name }}
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label>ملف الكفالة البنكية (PDF الممسوح ضوئياً)</label>
+                <input type="file" name="bank_guarantee_file" accept=".pdf" class="form-control" style="background: rgba(0,0,0,0.2);">
+            </div>
+            
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; color: var(--text-primary);">
+                <i class="fas fa-file-signature text-accent"></i> التصريح بالنزاهة
+            </h3>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label>رفع التصريح بالنزاهة المُمضى (PDF)</label>
+                <input type="file" name="integrity_declaration" accept=".pdf" class="form-control" style="background: rgba(0,0,0,0.2);">
+            </div>
+
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1.5rem; border-radius: 0.5rem; margin-top: 2rem; display: flex; align-items: center;">
+                {{ form.agreement }}
+                <label for="{{ form.agreement.id_for_label }}" style="margin-right: 10px; margin-bottom: 0; color: var(--text-primary); cursor: pointer;">
+                    أصرح بشرفي على صحة المعلومات المقدمة وأوافق على كافة بنود دفتر الشروط الخاص بهذه الصفقة.
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem; justify-content: center; font-size: 1.1rem; padding: 1rem;">
+                إرسال العرض النهائي <i class="fas fa-paper-plane" style="margin-right: 0.5rem;"></i>
+            </button>
+        </form>
+    </div>
+</section>
+
+<style>
+    .text-accent { color: var(--accent-primary); }
+    
+    .ai-glow-bg {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 60%);
+        animation: ai-pulse 4s infinite linear;
+        pointer-events: none;
+    }
+    
+    @keyframes ai-pulse {
+        0% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.5; }
+    }
+    
+    .highlight-field {
+        animation: highlight 2s ease-out;
+    }
+    
+    @keyframes highlight {
+        0% { background-color: rgba(139, 92, 246, 0.4); border-color: #8b5cf6; }
+        100% { background-color: rgba(0,0,0,0.2); border-color: var(--glass-border); }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const generateBtn = document.getElementById('btn-generate-ai');
+        const loadingDiv = document.getElementById('ai-loading');
+        const loadingText = document.getElementById('ai-loading-text');
+        const aiContainer = document.getElementById('ai-generator-container');
+        
+        if (generateBtn) {
+            generateBtn.addEventListener('click', function() {
+                // Disable button and show loading
+                generateBtn.style.display = 'none';
+                loadingDiv.style.display = 'block';
+                
+                // Animation text sequence
+                const loadingMessages = [
+                    "يتم قراءة وتحليل متطلبات الصفقة...",
+                    "حساب التكلفة التقديرية وهوامش الربح...",
+                    "صياغة العرض التقني وتحديد الكفاءات...",
+                    "وضع اللمسات الأخيرة..."
+                ];
+                
+                let msgIndex = 0;
+                const msgInterval = setInterval(() => {
+                    msgIndex = (msgIndex + 1) % loadingMessages.length;
+                    loadingText.innerText = loadingMessages[msgIndex];
+                }, 800);
+                
+                // Make AJAX call to AI backend
+                fetch('{% url "ai:generate_smart_bid" tender.id %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    clearInterval(msgInterval);
+                    
+                    if (data.success) {
+                        loadingText.innerHTML = '<i class="fas fa-check-circle"></i> تم توليد العرض بنجاح!';
+                        loadingText.style.color = '#10b981';
+                        document.querySelector('.spinner-border').style.display = 'none';
+                        
+                        // Function to smoothly type text in textarea
+                        function typeText(element, text, speed) {
+                            element.value = '';
+                            element.classList.add('highlight-field');
+                            let i = 0;
+                            function typeWriter() {
+                                if (i < text.length) {
+                                    element.value += text.charAt(i);
+                                    i++;
+                                    setTimeout(typeWriter, speed);
+                                }
+                            }
+                            typeWriter();
+                        }
+                        
+                        // Populate fields with highlight effect
+                        setTimeout(() => {
+                            const financialInput = document.querySelector('input[name="financial_offer"]');
+                            if(financialInput) {
+                                financialInput.value = data.financial_offer;
+                                financialInput.classList.add('highlight-field');
+                            }
+                            
+                            const teamInput = document.querySelector('input[name="technical_team_size"]');
+                            if(teamInput) {
+                                teamInput.value = data.technical_team_size;
+                                teamInput.classList.add('highlight-field');
+                            }
+                            
+                            const projInput = document.querySelector('input[name="similar_projects_count"]');
+                            if(projInput) {
+                                projInput.value = data.similar_projects_count;
+                                projInput.classList.add('highlight-field');
+                            }
+                            
+                            const timeInput = document.querySelector('input[name="delivery_time_days"]');
+                            if(timeInput) {
+                                timeInput.value = data.delivery_time_days;
+                                timeInput.classList.add('highlight-field');
+                            }
+                            
+                            const warrantyInput = document.querySelector('input[name="warranty_months"]');
+                            if(warrantyInput) {
+                                warrantyInput.value = data.warranty_months;
+                                warrantyInput.classList.add('highlight-field');
+                            }
+                            
+                            const notesInput = document.querySelector('textarea[name="technical_notes"]');
+                            if(notesInput) {
+                                typeText(notesInput, data.technical_notes, 10); // Fast typing effect
+                            }
+                            
+                        }, 500);
+                        
+                    } else {
+                        loadingText.innerHTML = '<i class="fas fa-times-circle"></i> ' + (data.error || 'حدث خطأ أثناء التوليد');
+                        loadingText.style.color = '#ef4444';
+                        generateBtn.style.display = 'inline-block';
+                        document.querySelector('.spinner-border').style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    clearInterval(msgInterval);
+                    loadingText.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في الاتصال بالخادم';
+                    loadingText.style.color = '#ef4444';
+                    generateBtn.style.display = 'inline-block';
+                    document.querySelector('.spinner-border').style.display = 'none';
+                    console.error('Error:', error);
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

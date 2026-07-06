@@ -1,0 +1,52 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}تقييم العروض | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<div style="padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="margin: 0; color: var(--text-primary);"><i class="fas fa-balance-scale" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> الصفقات قيد التقييم</h2>
+    </div>
+
+    <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 1.5rem; margin-bottom: 2rem;">
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">
+            <i class="fas fa-info-circle"></i> هذه القائمة تعرض الصفقات التي انتهت آجال التقديم الخاصة بها وهي جاهزة لفرز وتقييم العروض المقدمة من المتعاملين.
+        </p>
+    </div>
+
+    {% if tenders %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+        {% for tender in tenders %}
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1.5rem; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">{{ tender.title }}</h3>
+                <span style="background: rgba(245, 158, 11, 0.2); color: var(--warning); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
+                    مرحلة التقييم
+                </span>
+            </div>
+            
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;"><i class="far fa-calendar-times"></i> انتهت الآجال في: {{ tender.deadline|date:"Y/m/d" }}</p>
+            
+            <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+                <h4 style="margin: 0; font-size: 2rem; color: var(--accent-primary);">{{ tender.bids.count }}</h4>
+                <span style="color: var(--text-secondary); font-size: 0.85rem;">إجمالي العروض المستلمة</span>
+            </div>
+            
+            <a href="{% url 'procurement:tender_detail' tender.id %}" class="btn btn-primary" style="width: 100%; justify-content: center; text-decoration: none; margin-bottom: 0.5rem;"><i class="fas fa-gavel"></i> ابدأ الفرز والتقييم</a>
+            <a href="{% url 'procurement:manage_committee' tender.id %}" class="btn btn-secondary" style="width: 100%; justify-content: center; text-decoration: none;"><i class="fas fa-users"></i> إدارة لجنة التقييم</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem; background: var(--glass-bg); border: 1px dashed var(--glass-border); border-radius: 15px;">
+        <i class="fas fa-check-circle fa-3x" style="color: var(--success); margin-bottom: 1rem; opacity: 0.5;"></i>
+        <h3 style="margin: 0; color: var(--text-primary);">لا توجد صفقات معلقة للتقييم</h3>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">جميع الصفقات تم تقييمها أو أن آجال الصفقات الحالية لم تنته بعد.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
