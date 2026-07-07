@@ -1,0 +1,23 @@
+{
+  "name": "صفقات ذكية",
+  "short_name": "صفقات ذكية",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f141e",
+  "theme_color": "#8b5cf6",
+  "description": "منصة صفقات ذكية للمشتريات",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -9,7 +9,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-development-key-default')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'safakat.local,127.0.0.1,localhost,.onrender.com').split(',') + ['.lhr.life']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'safakat.local,127.0.0.1,localhost,.onrender.com,*').split(',') + ['.lhr.life', '*']
 
 # Heroku and Render CSRF and Security
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []

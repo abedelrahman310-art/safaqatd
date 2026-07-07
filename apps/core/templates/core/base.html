@@ -7,6 +7,8 @@
     <title>{% block title %}صفقات ذكية{% endblock %}</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'core/css/main.css' %}">
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#8b5cf6">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -19,6 +21,17 @@
     {% include 'includes/footer.html' %}
 
     <script src="{% static 'core/js/main.js' %}"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(registration => {
+            console.log('SW registered: ', registration);
+          }).catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

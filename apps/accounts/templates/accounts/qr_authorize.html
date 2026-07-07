@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+
+{% block title %}تأكيد الدخول{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-dark text-white text-center py-4 rounded-top-4">
+                    <h3 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>تأكيد الدخول عبر الهاتف</h3>
+                </div>
+                
+                <div class="card-body p-4 text-center">
+                    {% if status == 'already_approved' %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle fa-3x mb-3"></i>
+                            <h5>تمت الموافقة مسبقاً</h5>
+                            <p class="mb-0">تم السماح بتسجيل الدخول لهذا الكود من قبل.</p>
+                        </div>
+                    {% elif status == 'invalid' %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle fa-3x mb-3"></i>
+                            <h5>رمز غير صالح</h5>
+                            <p class="mb-0">هذا الرمز منتهي الصلاحية أو غير صحيح.</p>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-4 fs-5">
+                            هل أنت متأكد أنك تريد السماح بتسجيل الدخول إلى حسابك <strong>{{ request.user.email }}</strong> من جهاز الكمبيوتر الذي يظهر فيه هذا الكود؟
+                        </p>
+                        
+                        <div class="d-grid gap-3">
+                            <button id="approve-btn" class="btn btn-success btn-lg py-3 rounded-pill fw-bold">
+                                <i class="fas fa-check-circle me-2"></i>نعم، السماح بالدخول
+                            </button>
+                            
+                            <a href="{% url 'core:index' %}" class="btn btn-outline-danger btn-lg py-3 rounded-pill fw-bold">
+                                <i class="fas fa-times-circle me-2"></i>إلغاء
+                            </a>
+                        </div>
+                        
+                        <div id="result-message" class="mt-4" style="display: none;"></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if status == 'pending' %}
+<script>
+    document.getElementById('approve-btn').addEventListener('click', function() {
+        const btn = this;
+        const resultMsg = document.getElementById('result-message');
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التأكيد...';
+        
+        fetch("{% url 'accounts:qr_login_process' token %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            resultMsg.style.display = 'block';
+            if (data.success) {
+                resultMsg.className = 'alert alert-success';
+                resultMsg.innerHTML = '<strong>نجاح!</strong> تم تسجيل دخول جهاز الكمبيوتر بنجاح. يمكنك إغلاق هذه الصفحة.';
+                btn.style.display = 'none';
+            } else {
+                resultMsg.className = 'alert alert-danger';
+                resultMsg.innerHTML = '<strong>خطأ!</strong> ' + (data.error || 'حدث خطأ غير متوقع.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>المحاولة مرة أخرى';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultMsg.style.display = 'block';
+            resultMsg.className = 'alert alert-danger';
+            resultMsg.innerHTML = '<strong>خطأ في الاتصال!</strong> يرجى المحاولة مرة أخرى.';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>المحاولة مرة أخرى';
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

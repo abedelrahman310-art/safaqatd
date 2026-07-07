@@ -59,6 +59,10 @@
                 </div>
             </div>
             <button type="submit" class="premium-btn" style="margin-top: 2rem;">تسجيل الدخول <i class="fas fa-sign-in-alt"></i></button>
+            <div style="text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.7);">أو</div>
+            <a href="{% url 'accounts:qr_login_page' %}" class="premium-btn" style="margin-top: 1rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); display: block; text-align: center; text-decoration: none;">
+                <i class="fas fa-qrcode"></i> الدخول السريع بمسح الكود
+            </a>
         </form>
         
         <div style="text-align: center; margin-top: 2rem;">

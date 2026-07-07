@@ -8,7 +8,9 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 import uuid
-
+import qrcode
+import base64
+from io import BytesIO
 def tender_list(request):
     tenders = Tender.objects.filter(status='published')
     
@@ -346,7 +348,22 @@ def download_tender_pdf(request, tender_id):
             return redirect('procurement:tender_detail', tender_id=tender.id)
 
     template_path = 'procurement/tender_pdf_template.html'
-    context = {'tender': tender}
+    
+    # Generate QR Code
+    verify_url = request.build_absolute_uri(f'/procurement/verify/tender/{tender.id}/')
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(verify_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    qr_image = base64.b64encode(buffer.getvalue()).decode()
+    
+    context = {
+        'tender': tender,
+        'qr_image': qr_image,
+        'verify_url': verify_url
+    }
     
     # Render template
     template = get_template(template_path)
@@ -360,6 +377,11 @@ def download_tender_pdf(request, tender_id):
     if pisa_status.err:
         return HttpResponse('We had some errors <pre>' + html + '</pre>')
     return response
+
+def verify_document(request, tender_id):
+    """Public view to verify the authenticity of a tender document."""
+    tender = get_object_or_404(Tender, id=tender_id)
+    return render(request, 'procurement/verify_document.html', {'tender': tender})
 
 @login_required
 def submit_appeal(request, bid_id):

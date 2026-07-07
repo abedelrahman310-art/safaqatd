@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+import uuid
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -34,3 +35,12 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email or self.username
+
+class QRLoginSession(models.Model):
+    token = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"QR Session: {self.token} - Approved: {self.is_approved}"

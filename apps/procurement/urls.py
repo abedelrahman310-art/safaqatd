@@ -30,4 +30,7 @@ urlpatterns = [
     
     # Virtual Opening
     path('tenders/<int:tender_id>/virtual-opening/', views.virtual_opening_room, name='virtual_opening_room'),
+    
+    # Document Verification (QR Code)
+    path('verify/tender/<int:tender_id>/', views.verify_document, name='verify_document'),
 ]
