@@ -5,8 +5,17 @@ class User(AbstractUser):
     ROLE_CHOICES = (
         ('authority', 'مصلحة متعاقدة'),
         ('supplier', 'متعامل اقتصادي'),
+        ('central_admin', 'إدارة مركزية'),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+
+    class Meta:
+        permissions = [
+            ("view_central_dashboard", "Can view central administration dashboard"),
+            ("manage_all_users", "Can manage all users and suppliers"),
+            ("audit_all_tenders", "Can audit all tenders system-wide"),
+            ("view_system_reports", "Can view system-wide reports"),
+        ]
     full_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="الاسم الكامل")
     wilaya = models.CharField(max_length=100, blank=True, null=True, verbose_name="الولاية")
     

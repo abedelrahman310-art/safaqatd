@@ -3,7 +3,7 @@
 {% block title %}إدارة المستخدمين | صفقات ذكية{% endblock %}
 
 {% block sidebar %}
-    {% include 'includes/sidebar_regulator.html' %}
+    {% include 'includes/sidebar_central_admin.html' %}
 {% endblock %}
 
 {% block content %}
@@ -58,6 +58,7 @@
                         {% endif %}
                     </td>
                     <td style="padding: 1rem; text-align: left;">
+                        {% if perms.accounts.manage_all_users %}
                         <form action="{% url 'dashboard:toggle_user_status' target_user.id %}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من تغيير حالة هذا المستخدم؟');">
                             {% csrf_token %}
                             {% if target_user.is_active %}
@@ -70,6 +71,9 @@
                                 </button>
                             {% endif %}
                         </form>
+                        {% else %}
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;"><i class="fas fa-ban"></i> غير مصرح</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

@@ -1,0 +1,21 @@
+<div class="sidebar-menu">
+    <a href="{% url 'dashboard:regulator' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator' %}active{% endif %}">
+        <i class="fas fa-tachometer-alt"></i> اللوحة المركزية
+    </a>
+    {% if perms.accounts.audit_all_tenders %}
+    <a href="{% url 'dashboard:regulator_audit' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_audit' %}active{% endif %}">
+        <i class="fas fa-search-dollar"></i> الرقابة الشاملة
+    </a>
+    {% endif %}
+    {% if perms.accounts.manage_all_users %}
+    <a href="{% url 'dashboard:regulator_users' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_users' %}active{% endif %}">
+        <i class="fas fa-users-cog"></i> إدارة المستخدمين
+    </a>
+    {% endif %}
+    <a href="{% url 'accounts:settings' %}" class="sidebar-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+        <i class="fas fa-cog"></i> الإعدادات
+    </a>
+    <a href="{% url 'accounts:logout' %}" class="sidebar-item logout" style="margin-top: auto; color: var(--danger);">
+        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+    </a>
+</div>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جاري المعالجة - {{ tender.title }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .loader {
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid #ec4899;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    <!-- Auto refresh every 5 seconds to check if generation is done -->
+    <meta http-equiv="refresh" content="5">
+</head>
+<body>
+    <div>
+        <div class="loader"></div>
+        <h2>يتم الآن صياغة دفتر الشروط باستخدام الذكاء الاصطناعي...</h2>
+        <p style="color: #94a3b8;">يرجى الانتظار، هذه العملية قد تستغرق بضع ثوانٍ. سيتم تحديث الصفحة تلقائياً.</p>
+    </div>
+</body>
+</html>

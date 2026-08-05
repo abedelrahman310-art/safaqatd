@@ -77,3 +77,55 @@ def evaluate_tender_bids_task(tender_id):
         return {"status": "error", "message": "Tender not found"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@shared_task
+def generate_cahier_task(tender_id):
+    try:
+        tender = Tender.objects.get(id=tender_id)
+        
+        import google.genai as genai
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        
+        prompt = f"""
+        أنت خبير قانوني وتقني في إعداد دفاتر الشروط (Cahier des charges) للصفقات العمومية الجزائرية.
+        قم بإنشاء دفتر شروط مفصل للمشروع التالي:
+        - العنوان: {tender.title}
+        - الوصف: {tender.description}
+        - الميزانية التقديرية: {tender.budget} دج
+        - قطاع النشاط: {tender.sector}
+        - الولاية: {tender.wilaya}
+        - نوع الصفقة: {tender.get_tender_type_display()}
+        
+        قم بإرجاع النتيجة حصراً بصيغة JSON مهيكلة تحتوي على الحقول التالية:
+        {{
+            "title": "عنوان دفتر الشروط",
+            "legal_framework": "الإطار القانوني والتنظيمي (نص طويل)",
+            "technical_requirements": "المتطلبات التقنية والمواصفات (نص طويل)",
+            "evaluation_criteria": "شروط التقييم والتأهيل (نص طويل)"
+        }}
+        """
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        
+        try:
+            result_json = json.loads(response.text.strip('```json\n').strip('```').strip())
+        except json.JSONDecodeError:
+            result_json = {
+                "title": f"دفتر الشروط: {tender.title}",
+                "legal_framework": "حدث خطأ في قراءة رد الذكاء الاصطناعي.",
+                "technical_requirements": "يرجى إعادة المحاولة.",
+                "evaluation_criteria": response.text
+            }
+            
+        tender.ai_cahier_result = result_json
+        tender.save()
+        
+        return {"status": "success", "tender_id": tender_id}
+        
+    except Tender.DoesNotExist:
+        return {"status": "error", "message": "Tender not found"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

@@ -64,21 +64,26 @@ def draft_tender_view(request):
         if not title:
             return JsonResponse({'error': 'Title is required for drafting'}, status=400)
             
-        # Simulate AI API call delay
-        time.sleep(2)
+        import google.genai as genai
+        from django.conf import settings
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
         
-        # Mock AI Draft Generation
-        draft = f"استناداً لأحكام المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية وتفويضات المرفق العام (والمعدل لاحقاً بقانون الصفقات الجديد 23-12)، تعلن المصلحة المتعاقدة عن إطلاق طلب عروض مفتوح لمشروع: {title}.\n\n"
+        prompt = f"""
+        استناداً لأحكام المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية وتفويضات المرفق العام (والمعدل لاحقاً بقانون الصفقات الجديد 23-12)، 
+        أكتب مسودة قصيرة (فقرة أو اثنتين) لإعلان عن طلب عروض مفتوح للمشروع التالي:
+        - العنوان: {title}
+        - قطاع النشاط: {sector if sector else "غير محدد"}
         
-        if sector:
-            draft += f"**قطاع النشاط:** {sector}\n\n"
-            
-        draft += "يتضمن هذا المشروع توفير الخدمات/السلع اللازمة وفقاً للمعايير التقنية المحددة في دفتر الشروط المرفق. يُشترط في المتقدمين أن يمتلكوا الخبرة والكفاءة اللازمة لتنفيذ المشروع في الآجال المحددة.\n\n"
-        draft += "**المتطلبات الأساسية:**\n"
-        draft += "- تقديم العرض المالي والتقني في أظرفة منفصلة ومغلقة.\n"
-        draft += "- إرفاق نسخة من السجل التجاري والبطاقة الجبائية.\n"
-        draft += "- شهادة حسن التنفيذ لمشاريع سابقة مشابهة (إن وجدت).\n\n"
-        draft += "تلتزم المصلحة المتعاقدة بضمان شفافية ونزاهة عملية التقييم، وسيتم منح الصفقة للعرض الذي يقدم أفضل توازن بين التكلفة والجودة بناءً على سلم التقييم."
+        يجب أن يكون النص رسمياً، باللغة العربية، وجاهزاً للنسخ في إعلان الصفقة. 
+        تجنب المقدمات الطويلة واذكر المتطلبات الأساسية فقط مثل الأظرفة المنفصلة والسجل التجاري.
+        """
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        
+        draft = response.text.strip()
         
         return JsonResponse({
             'success': True,
@@ -97,18 +102,24 @@ def generate_cahier_view(request, tender_id):
     except Tender.DoesNotExist:
         return render(request, 'core/error.html', {'message': 'الصفقة غير موجودة'})
         
-    # In a real app, this would call the AI API to generate a massive document.
-    # Here we mock the AI generation with a structured template.
-    
-    # Simulate AI processing delay
-    time.sleep(2)
-    
-    context = {
-        'tender': tender,
-        'generation_date': time.strftime("%Y/%m/%d"),
-    }
-    
-    return render(request, 'ai/cahier_des_charges.html', context)
+    if tender.ai_cahier_result:
+        context = {
+            'tender': tender,
+            'cahier_data': tender.ai_cahier_result,
+            'generation_date': tender.updated_at.strftime("%Y/%m/%d"),
+        }
+        return render(request, 'ai/cahier_des_charges.html', context)
+    else:
+        # Trigger Celery Task if not already generating
+        from .tasks import generate_cahier_task
+        # We can just fire it, Celery will queue it. For MVP, we fire it once when requested.
+        generate_cahier_task.delay(tender.id)
+        
+        context = {
+            'tender': tender,
+            'message': 'جاري استخراج دفتر الشروط بالذكاء الاصطناعي... يرجى الانتظار.'
+        }
+        return render(request, 'ai/cahier_loading.html', context)
 
 @login_required
 def chatbot_view(request):

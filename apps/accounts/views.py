@@ -31,6 +31,8 @@ def login_view(request):
             login(request, user)
             if user.role == 'authority':
                 return redirect('dashboard:authority')
+            elif user.has_perm('accounts.view_central_dashboard'):
+                return redirect('dashboard:regulator')
             else:
                 return redirect('dashboard:supplier')
         else:
