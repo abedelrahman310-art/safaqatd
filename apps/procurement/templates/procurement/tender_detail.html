@@ -126,7 +126,7 @@
 {% endblock %}
 
 {% block sidebar %}
-    {% if user.role == 'supplier' %}
+    {% if request.user.role == 'supplier' %}
         {% include 'includes/sidebar_supplier.html' %}
     {% else %}
         {% include 'includes/sidebar_authority.html' %}
@@ -141,19 +141,23 @@
         <div style="display: flex; align-items: center; gap: 1rem;">
             <button onclick="window.print()" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.5rem 1rem;"><i class="fas fa-print"></i> طباعة الوثيقة</button>
             <a href="{% url 'procurement:download_tender_pdf' tender.id %}" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.5rem 1rem; color: #ef4444; border-color: #ef4444;"><i class="fas fa-file-pdf"></i> تحميل PDF</a>
+            {% if request.user.role == 'authority' %}
+            <a href="{% url 'procurement:virtual_opening_room' tender.id %}" class="btn btn-primary" style="border-radius: 2rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, #1e3a8a, #3b82f6); border: none;"><i class="fas fa-door-open"></i> قاعة الافتتاح الافتراضية</a>
+            {% endif %}
         </div>
         
         <div style="display: flex; gap: 1rem; align-items: center;">
-            {% if user.role == 'supplier' %}
+            {% if request.user.role == 'supplier' %}
                 {% if tender.document_fee <= 0 or has_paid %}
                     {% if tender.document %}
                         <a href="{{ tender.document.url }}" target="_blank" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.5rem 1rem; color: var(--accent-primary); border-color: var(--accent-primary);"><i class="fas fa-download"></i> المرفقات</a>
                     {% endif %}
-                    <a href="{% url 'procurement:bid_create' tender.id %}" class="btn btn-primary" style="border-radius: 2rem; padding: 0.5rem 1.5rem;"><i class="fas fa-paper-plane"></i> تقديم العرض الآن</a>
+                    <a href="{% url 'procurement:bid_create' tender.id %}" class="btn btn-primary" style="border-radius: 2rem; padding: 0.5rem 1.5rem;"><i class="fas fa-paper-plane"></i> تقديم العرض</a>
+                    <a href="{% url 'procurement:supplier_live_opening' tender.id %}" class="btn btn-primary" style="border-radius: 2rem; padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #ef4444, #b91c1c); border: none;"><i class="fas fa-satellite-dish"></i> متابعة البث الحي</a>
                 {% else %}
                     <a href="{% url 'procurement:payment_checkout' tender.id %}" class="btn btn-primary" style="border-radius: 2rem; padding: 0.5rem 1.5rem; color: #fff; border-color: #d4af37; background: #d4af37;"><i class="fas fa-file-invoice-dollar"></i> سحب الدفتر ({{ tender.document_fee }} دج)</a>
                 {% endif %}
-            {% else %}
+            {% elif request.user.role == 'authority' %}
                 <a href="{% url 'ai:generate_cahier' tender.id %}" target="_blank" class="btn btn-primary" style="border-radius: 2rem; padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none;"><i class="fas fa-magic"></i> توليد المرفق (AI)</a>
             {% endif %}
         </div>
@@ -165,7 +169,7 @@
             <div class="cahier-header">
                 <div class="republic-text">الجمهورية الجزائرية الديمقراطية الشعبية</div>
                 <h3>المصلحة المتعاقدة: {{ tender.authority.full_name|default:"الهيئة الوطنية" }}</h3>
-                <h1 style="margin-top: 1.5rem;">دفتر الشروط الخاص بطلب العروض</h1>
+                <h1 style="margin-top: 1.5rem;">إعلان عن {{ tender.get_tender_type_display }}</h1>
                 <h3>رقم المرجع: TN-{{ tender.id|stringformat:"04d" }} / {{ tender.created_at|date:"Y" }}</h3>
             </div>
             
@@ -175,8 +179,8 @@
                     يتمثل موضوع دفتر الشروط الحالي في تحديد القواعد والإجراءات الخاصة بـ: <strong>{{ tender.title }}</strong>.<br>
                     تم طرح هذا الإعلان لغرض تلبية احتياجات المصلحة المتعاقدة بقطاع ({{ tender.get_sector_display|default:tender.sector }}) على مستوى ولاية ({{ tender.get_wilaya_display|default:tender.wilaya }}).
                 </div>
+            </div>
 
-            
             <div class="article-section">
                 <div class="article-title">المادة 2: التفاصيل التقنية والوصف</div>
                 <div class="article-content">
@@ -209,13 +213,23 @@
         </div>
         
         <!-- Addendum: Q&A -->
-        <div style="width: 100%; max-width: 900px; margin-top: 2rem;">
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
-                <h3 style="color: var(--text-primary); margin: 0;"><i class="fas fa-book-open"></i> ملحق الاستفسارات والتوضيحات</h3>
-                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
-            </div>
+        <div style="max-width: 900px; margin: 3rem auto;">
+            <h3 style="color: var(--text-primary); border-bottom: 2px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 2rem;">
+                <i class="fas fa-comments" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> الاستفسارات والتوضيحات
+            </h3>
             
+            {% if request.user.role == 'supplier' %}
+            <div style="background: var(--glass-bg); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 2rem;">
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="ask_question">
+                    <h4 style="margin-top: 0; color: var(--text-primary); margin-bottom: 1rem;"><i class="fas fa-pen"></i> تقديم طلب توضيح رسمي</h4>
+                    <textarea name="question_text" required placeholder="اكتب استفسارك هنا، سيتم الرد عليه وإرفاقه كملحق..." style="width: 100%; padding: 1rem; border-radius: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: white; min-height: 100px; margin-bottom: 1rem;"></textarea>
+                    <button type="submit" class="btn btn-primary" style="background: var(--accent-primary); border-color: var(--accent-primary);"><i class="fas fa-paper-plane"></i> إرسال الاستفسار</button>
+                </form>
+            </div>
+            {% endif %}
+
             {% for q in questions %}
             <div style="background: rgba(20, 25, 40, 0.6); border-radius: 1rem; padding: 1.5rem; border: 1px solid var(--glass-border); margin-bottom: 1rem;">
                 <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">

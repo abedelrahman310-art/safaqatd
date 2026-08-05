@@ -19,6 +19,15 @@ def login_view(request):
             user = None
             
         if user is not None:
+            if getattr(user, 'is_blacklisted', False):
+                from django.utils import timezone
+                if not user.blacklist_until or user.blacklist_until > timezone.now():
+                    error_msg = f"عذراً، تم حظر حسابك. السبب: {user.blacklist_reason or 'مخالفة الشروط'}"
+                    if user.blacklist_until:
+                        error_msg += f" (يستمر الحظر حتى {user.blacklist_until.strftime('%Y/%m/%d')})"
+                    messages.error(request, error_msg)
+                    return render(request, 'accounts/login.html')
+                    
             login(request, user)
             if user.role == 'authority':
                 return redirect('dashboard:authority')
@@ -113,14 +122,34 @@ def profile_view(request):
         messages.success(request, "تم تحديث الملف الشخصي بنجاح!")
     return render(request, 'accounts/profile.html')
 
+@login_required
+def manage_blacklist(request):
+    if request.user.role != 'authority':
+        return redirect('dashboard:supplier')
+        
+    if request.method == 'POST':
+        supplier_id = request.POST.get('supplier_id')
+        action = request.POST.get('action')
+        
+        try:
+            supplier = User.objects.get(id=supplier_id, role='supplier')
+            if action == 'blacklist':
+                supplier.is_blacklisted = True
+                messages.success(request, f"تم إضافة {supplier.full_name} إلى القائمة السوداء بنجاح.")
+            elif action == 'whitelist':
+                supplier.is_blacklisted = False
+                messages.success(request, f"تم إزالة {supplier.full_name} من القائمة السوداء بنجاح.")
+            supplier.save()
+        except User.DoesNotExist:
+            messages.error(request, "لم يتم العثور على المتعامل.")
+            
+        return redirect('accounts:manage_blacklist')
+        
+    suppliers = User.objects.filter(role='supplier').order_by('full_name')
+    return render(request, 'accounts/manage_blacklist.html', {'suppliers': suppliers})
+
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
-from .models import QRLoginSession
-import qrcode
-import base64
-from io import BytesIO
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 @login_required
 def settings_view(request):
@@ -136,81 +165,3 @@ def settings_view(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'accounts/settings.html', {'form': form})
-
-# ==========================================
-# QR CODE LOGIN SYSTEM
-# ==========================================
-
-def qr_login_page(request):
-    """Generates a QR code on the desktop screen."""
-    # Create a new QR session token
-    qr_session = QRLoginSession.objects.create()
-    
-    # Generate QR Code pointing to the authorize URL
-    auth_url = request.build_absolute_uri(f'/accounts/qr-login/authorize/{qr_session.token}/')
-    
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(auth_url)
-    qr.make(fit=True)
-    
-    img = qr.make_image(fill_color="black", back_color="white")
-    buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    qr_image = base64.b64encode(buffer.getvalue()).decode()
-    
-    context = {
-        'qr_image': qr_image,
-        'token': qr_session.token,
-    }
-    return render(request, 'accounts/qr_login.html', context)
-
-def qr_login_status(request, token):
-    """AJAX endpoint polled by the desktop to check if the phone approved the login."""
-    try:
-        qr_session = QRLoginSession.objects.get(token=token)
-        if qr_session.is_approved and qr_session.user:
-            # The phone approved it! Log the desktop user in.
-            login(request, qr_session.user, backend='django.contrib.auth.backends.ModelBackend')
-            
-            from django.urls import reverse
-            if qr_session.user.role == 'authority':
-                redirect_url = reverse('dashboard:authority')
-            else:
-                redirect_url = reverse('dashboard:supplier')
-                
-            return JsonResponse({'status': 'approved', 'redirect_url': redirect_url})
-        return JsonResponse({'status': 'pending'})
-    except QRLoginSession.DoesNotExist:
-        return JsonResponse({'status': 'expired'})
-
-@login_required
-def qr_login_authorize(request, token):
-    """The page that opens on the phone when the QR is scanned."""
-    try:
-        qr_session = QRLoginSession.objects.get(token=token)
-        if qr_session.is_approved:
-            return render(request, 'accounts/qr_authorize.html', {'status': 'already_approved'})
-            
-        context = {
-            'token': token,
-            'status': 'pending'
-        }
-        return render(request, 'accounts/qr_authorize.html', context)
-    except QRLoginSession.DoesNotExist:
-        return render(request, 'accounts/qr_authorize.html', {'status': 'invalid'})
-
-@login_required
-@csrf_exempt
-def qr_login_process(request, token):
-    """The backend action triggered when the user clicks 'Approve' on their phone."""
-    if request.method == 'POST':
-        try:
-            qr_session = QRLoginSession.objects.get(token=token)
-            if not qr_session.is_approved:
-                qr_session.user = request.user
-                qr_session.is_approved = True
-                qr_session.save()
-            return JsonResponse({'success': True})
-        except QRLoginSession.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Invalid token'})
-    return JsonResponse({'success': False})

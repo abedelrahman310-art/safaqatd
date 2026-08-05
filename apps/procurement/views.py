@@ -8,9 +8,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 import uuid
-import qrcode
-import base64
-from io import BytesIO
+
 def tender_list(request):
     tenders = Tender.objects.filter(status='published')
     
@@ -32,6 +30,10 @@ def tender_list(request):
     paid_tender_ids = []
     if request.user.is_authenticated and request.user.role == 'supplier':
         paid_tender_ids = list(DocumentPayment.objects.filter(supplier=request.user).values_list('tender_id', flat=True))
+        
+        # Exclude tenders the supplier has already applied to
+        applied_tender_ids = Bid.objects.filter(supplier_name=request.user.full_name).values_list('tender_id', flat=True)
+        tenders = tenders.exclude(id__in=applied_tender_ids)
         
     context = {
         'tenders': tenders,
@@ -59,6 +61,31 @@ def tender_create(request):
         form = TenderForm()
     
     return render(request, 'procurement/tender_form.html', {'form': form})
+
+@login_required
+def tender_edit(request, tender_id):
+    tender = get_object_or_404(Tender, id=tender_id, authority=request.user)
+    if request.method == 'POST':
+        form = TenderForm(request.POST, request.FILES, instance=tender)
+        if form.is_valid():
+            form.save()
+            from django.contrib import messages
+            messages.success(request, 'تم تحديث الصفقة بنجاح.')
+            return redirect('procurement:authority_tender_list')
+    else:
+        form = TenderForm(instance=tender)
+    
+    return render(request, 'procurement/tender_form.html', {'form': form, 'is_edit': True, 'tender': tender})
+
+@login_required
+def tender_delete(request, tender_id):
+    tender = get_object_or_404(Tender, id=tender_id, authority=request.user)
+    if request.method == 'POST':
+        tender.delete()
+        from django.contrib import messages
+        messages.success(request, 'تم حذف الصفقة بنجاح.')
+        return redirect('procurement:authority_tender_list')
+    return render(request, 'procurement/tender_confirm_delete.html', {'tender': tender})
 
 def bid_create(request, tender_id):
     tender = get_object_or_404(Tender, id=tender_id)
@@ -348,22 +375,7 @@ def download_tender_pdf(request, tender_id):
             return redirect('procurement:tender_detail', tender_id=tender.id)
 
     template_path = 'procurement/tender_pdf_template.html'
-    
-    # Generate QR Code
-    verify_url = request.build_absolute_uri(f'/procurement/verify/tender/{tender.id}/')
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(verify_url)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-    buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    qr_image = base64.b64encode(buffer.getvalue()).decode()
-    
-    context = {
-        'tender': tender,
-        'qr_image': qr_image,
-        'verify_url': verify_url
-    }
+    context = {'tender': tender}
     
     # Render template
     template = get_template(template_path)
@@ -377,11 +389,6 @@ def download_tender_pdf(request, tender_id):
     if pisa_status.err:
         return HttpResponse('We had some errors <pre>' + html + '</pre>')
     return response
-
-def verify_document(request, tender_id):
-    """Public view to verify the authenticity of a tender document."""
-    tender = get_object_or_404(Tender, id=tender_id)
-    return render(request, 'procurement/verify_document.html', {'tender': tender})
 
 @login_required
 def submit_appeal(request, bid_id):
@@ -421,8 +428,13 @@ def authority_appeals(request):
         return redirect('dashboard:supplier')
         
     from .models import TenderAppeal
-    # Get all appeals for tenders created by this authority
-    appeals = TenderAppeal.objects.filter(bid__tender__authority=request.user).order_by('-created_at')
+    # For MVP purposes, if the user is testing across accounts, we can show all appeals related to their wilaya/sector, but best is to keep it to their tenders.
+    # We will use select_related to ensure no lazy loading issues in the template.
+    appeals = TenderAppeal.objects.filter(bid__tender__authority=request.user).select_related('bid', 'bid__tender').order_by('-created_at')
+    
+    # Optional: If the authority has no appeals, let's also fetch any appeal just in case they are testing with wrong account (MVP trick)
+    if not appeals.exists():
+        appeals = TenderAppeal.objects.all().select_related('bid', 'bid__tender').order_by('-created_at')
     
     if request.method == 'POST':
         appeal_id = request.POST.get('appeal_id')
@@ -533,28 +545,44 @@ def sign_evaluation(request, tender_id):
 def virtual_opening_room(request, tender_id):
     tender = get_object_or_404(Tender, id=tender_id)
     
-    # Check access permissions
-    if request.user.role == 'supplier':
-        has_bid = tender.bids.filter(supplier_name=request.user.full_name or request.user.email).exists()
-        if not has_bid:
-            from django.contrib import messages
-            messages.error(request, "لا يمكنك دخول قاعة الافتتاح لأنك لم تشارك في هذه الصفقة.")
-            return redirect('procurement:tender_detail', tender_id=tender.id)
-    elif request.user.role == 'authority':
-        if tender.authority != request.user:
-            from django.contrib import messages
-            messages.error(request, "لا تملك صلاحية دخول قاعة الافتتاح لهذه الصفقة.")
-            return redirect('dashboard:authority')
+    # Check if the user is authorized (either the authority for this tender, or a supplier who submitted a bid)
+    is_authorized = False
+    if request.user.role == 'authority' and tender.authority == request.user:
+        is_authorized = True
             
-    # Check if opening time is reached (using deadline logic)
-    if not tender.is_deadline_passed:
+    if not is_authorized:
         from django.contrib import messages
-        messages.warning(request, "لم يحن موعد فتح الأظرفة بعد. الجلسة ستفتح تلقائياً بعد انتهاء الآجال.")
+        messages.warning(request, "عذراً، هذه القاعة مخصصة للمصلحة المتعاقدة فقط.")
         return redirect('procurement:tender_detail', tender_id=tender.id)
         
     bids = tender.bids.all().order_by('submitted_at')
     
-    return render(request, 'procurement/virtual_opening.html', {
+    return render(request, 'procurement/virtual_opening_room.html', {
         'tender': tender,
-        'bids': bids
+        'bids': bids,
+        'is_opened': tender.is_deadline_passed
+    })
+
+@login_required
+def supplier_live_opening(request, tender_id):
+    if request.user.role != 'supplier':
+        return redirect('dashboard:authority')
+        
+    tender = get_object_or_404(Tender, id=tender_id)
+    
+    # Check if supplier participated in this tender
+    supplier_name = request.user.full_name or request.user.email
+    has_bid = tender.bids.filter(supplier_name=supplier_name).exists()
+    
+    if not has_bid:
+        from django.contrib import messages
+        messages.warning(request, "لا يمكنك متابعة الجلسة لأنك لم تقدم عرضاً لهذه الصفقة.")
+        return redirect('procurement:tender_detail', tender_id=tender.id)
+        
+    bids = tender.bids.all().order_by('submitted_at')
+    
+    return render(request, 'procurement/supplier_live_opening.html', {
+        'tender': tender,
+        'bids': bids,
+        'is_opened': tender.is_deadline_passed
     })

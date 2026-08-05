@@ -37,7 +37,8 @@
             </div>
             
             <a href="{% url 'procurement:tender_detail' tender.id %}" class="btn btn-primary" style="width: 100%; justify-content: center; text-decoration: none; margin-bottom: 0.5rem;"><i class="fas fa-gavel"></i> ابدأ الفرز والتقييم</a>
-            <a href="{% url 'procurement:manage_committee' tender.id %}" class="btn btn-secondary" style="width: 100%; justify-content: center; text-decoration: none;"><i class="fas fa-users"></i> إدارة لجنة التقييم</a>
+            <a href="{% url 'procurement:manage_committee' tender.id %}" class="btn btn-secondary" style="width: 100%; justify-content: center; text-decoration: none; margin-bottom: 0.5rem;"><i class="fas fa-users"></i> إدارة لجنة التقييم</a>
+            <a href="{% url 'procurement:virtual_opening_room' tender.id %}" class="btn btn-primary" style="width: 100%; justify-content: center; text-decoration: none; background: linear-gradient(135deg, #1e3a8a, #3b82f6); border: none;"><i class="fas fa-door-open"></i> قاعة الافتتاح</a>
         </div>
         {% endfor %}
     </div>

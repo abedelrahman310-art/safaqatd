@@ -7,6 +7,8 @@ urlpatterns = [
     path('tenders/', views.tender_list, name='tender_list'),
     path('authority/tenders/', views.authority_tender_list, name='authority_tender_list'),
     path('authority/tenders/create/', views.tender_create, name='tender_create'),
+    path('authority/tenders/<int:tender_id>/edit/', views.tender_edit, name='tender_edit'),
+    path('authority/tenders/<int:tender_id>/delete/', views.tender_delete, name='tender_delete'),
     path('authority/tenders/<int:tender_id>/bids/', views.authority_tender_bids, name='authority_tender_bids'),
     path('authority/bids/<int:bid_id>/update/<str:status>/', views.bid_update_status, name='bid_update_status'),
     path('authority/bids/<int:bid_id>/rate/', views.rate_supplier, name='rate_supplier'),
@@ -28,9 +30,7 @@ urlpatterns = [
     path('tenders/<int:tender_id>/committee/', views.manage_committee, name='manage_committee'),
     path('tenders/<int:tender_id>/committee/sign/', views.sign_evaluation, name='sign_evaluation'),
     
-    # Virtual Opening
-    path('tenders/<int:tender_id>/virtual-opening/', views.virtual_opening_room, name='virtual_opening_room'),
-    
-    # Document Verification (QR Code)
-    path('verify/tender/<int:tender_id>/', views.verify_document, name='verify_document'),
+    # Virtual Opening Room
+    path('tenders/<int:tender_id>/opening-room/', views.virtual_opening_room, name='virtual_opening_room'),
+    path('tenders/<int:tender_id>/live-opening/', views.supplier_live_opening, name='supplier_live_opening'),
 ]

@@ -1,0 +1,180 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}البث الحي لجلسة الافتتاح | صفقات ذكية{% endblock %}
+
+{% block content %}
+<style>
+    .room-header {
+        text-align: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(30, 58, 138, 0.8), rgba(15, 23, 42, 0.9));
+        border-radius: 15px;
+        border: 1px solid var(--glass-border);
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    
+    .countdown-timer {
+        font-size: 3rem;
+        font-weight: bold;
+        color: var(--accent-primary);
+        font-family: monospace;
+        letter-spacing: 5px;
+        text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        margin: 1rem 0;
+    }
+    
+    .bid-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .bid-locked {
+        background: rgba(0,0,0,0.6);
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+        z-index: 10;
+        transition: opacity 1.5s ease-out;
+    }
+    
+    .price-reveal {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--success);
+        text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .live-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
+    }
+
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        background-color: var(--danger);
+        border-radius: 50%;
+        margin-left: 0.5rem;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+</style>
+
+<section class="dashboard-page" style="max-width: 1000px; margin: 0 auto; padding: 2rem;">
+    <div class="room-header">
+        <div class="live-badge">
+            <div class="live-dot"></div>
+            متابعة حية
+        </div>
+        <h1 style="color: white; margin-bottom: 0.5rem;"><i class="fas fa-satellite-dish" style="color: var(--accent-secondary);"></i> البث الحي لفتح الأظرفة</h1>
+        <h3 style="color: var(--text-secondary); font-weight: normal;">{{ tender.title }} ({{ tender.reference_number }})</h3>
+        
+        {% if is_opened %}
+        <div class="countdown-timer" style="color: var(--success);">
+            الجلسة مفتوحة علناً
+        </div>
+        <p style="color: var(--text-secondary);">قامت المصلحة المتعاقدة ببدء إجراءات فتح الأظرفة وعرض نتائج التشفير.</p>
+        {% else %}
+        <div class="countdown-timer" id="countdown">
+            --:--:--:--
+        </div>
+        <p style="color: var(--warning);"><i class="fas fa-lock"></i> العروض مشفرة. يرجى الانتظار لحين بدء عملية الفتح من طرف الإدارة.</p>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 1rem;">تاريخ الفتح المقرر: {{ tender.deadline|date:"Y/m/d" }}</div>
+        {% endif %}
+    </div>
+
+    <div>
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">نتائج فتح الأظرفة المباشرة</h3>
+        
+        {% for bid in bids %}
+        <div class="bid-card">
+            {% if not is_opened %}
+            <div class="bid-locked">
+                <i class="fas fa-lock fa-3x" style="color: var(--text-secondary); margin-bottom: 1rem;"></i>
+                <h4 style="color: white; margin: 0;">العرض مشفر</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">في انتظار قرار فتح الأظرفة</p>
+            </div>
+            {% endif %}
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h4 style="color: var(--accent-primary); margin-bottom: 0.5rem; font-size: 1.3rem;">{{ bid.supplier_name }}</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="far fa-clock"></i> توقيت التقديم: {{ bid.submitted_at|date:"Y/m/d H:i:s" }}</p>
+                    {% if bid.is_blockchain_verified %}
+                    <p style="color: #10b981; font-size: 0.8rem; margin: 0;"><i class="fas fa-link"></i> بصمة التشفير: {{ bid.blockchain_tx_hash }}</p>
+                    {% endif %}
+                </div>
+                <div style="text-align: left;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.2rem;">العرض المالي (بعد فك التشفير)</div>
+                    <div class="price-reveal">{{ bid.financial_offer }} دج</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">مدة الإنجاز: {{ bid.delivery_time_days }} يوم</div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align: center; padding: 3rem; background: rgba(0,0,0,0.2); border-radius: 12px; color: var(--text-secondary);">
+            <i class="fas fa-box-open fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+            <h4>لم يتم استلام أي عروض لهذه الصفقة.</h4>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{% url 'procurement:tender_detail' tender.id %}" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> عودة لصفحة الصفقة</a>
+    </div>
+</section>
+
+<script>
+    // Auto refresh the page every 15 seconds to simulate a live feed if not opened yet
+    {% if not is_opened %}
+    setTimeout(function() {
+        location.reload();
+    }, 15000);
+    
+    // Simple countdown logic to midnight of deadline (simulate)
+    const deadlineStr = "{{ tender.deadline|date:'Y-m-d' }}";
+    const countDownDate = new Date(deadlineStr + "T00:00:00").getTime();
+
+    const x = setInterval(function() {
+        const now = new Date().getTime();
+        const distance = countDownDate - now;
+
+        if (distance < 0) {
+            clearInterval(x);
+            const el = document.getElementById("countdown");
+            if (el) el.innerHTML = "انتهت الآجال";
+        } else {
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            const el = document.getElementById("countdown");
+            if (el) el.innerHTML = `${days}يوم ${hours}:${minutes}:${seconds}`;
+        }
+    }, 1000);
+    {% endif %}
+</script>
+{% endblock %}

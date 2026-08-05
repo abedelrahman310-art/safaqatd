@@ -53,8 +53,8 @@
                         </td>
                         <td style="padding: 1rem;">
                             <a href="{% url 'ai:generate_cahier' tender.id %}" target="_blank" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; padding: 0.3rem 0.8rem; font-size: 0.85rem; border-radius: 2rem; border: none; margin-left: 0.5rem;" title="توليد دفتر الشروط بالذكاء الاصطناعي"><i class="fas fa-magic"></i> دفتر AI</a>
-                            <a href="#" style="color: var(--accent-primary); margin-left: 0.5rem;" title="تعديل"><i class="fas fa-edit"></i></a>
-                            <a href="#" style="color: var(--danger);" title="حذف"><i class="fas fa-trash-alt"></i></a>
+                            <a href="{% url 'procurement:tender_edit' tender.id %}" style="color: var(--accent-primary); margin-left: 0.5rem;" title="تعديل"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'procurement:tender_delete' tender.id %}" style="color: var(--danger);" title="حذف"><i class="fas fa-trash-alt"></i></a>
                         </td>
                     </tr>
                     {% empty %}

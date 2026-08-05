@@ -9,3 +9,8 @@ django-cors-headers
 xhtml2pdf
 reportlab
 qrcode[pil]
+celery
+redis
+cryptography
+google-genai
+PyMuPDF

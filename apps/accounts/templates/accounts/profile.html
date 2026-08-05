@@ -3,7 +3,11 @@
 {% block title %}الملف الشخصي | صفقات ذكية{% endblock %}
 
 {% block sidebar %}
-    {% include 'includes/sidebar_supplier.html' %}
+    {% if request.user.role == 'authority' %}
+        {% include 'includes/sidebar_authority.html' %}
+    {% else %}
+        {% include 'includes/sidebar_supplier.html' %}
+    {% endif %}
 {% endblock %}
 
 {% block content %}

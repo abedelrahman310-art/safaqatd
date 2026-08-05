@@ -59,7 +59,7 @@
             <div style="display: inline-block; position: relative;" onclick="document.getElementById('profileDropdown').style.display = document.getElementById('profileDropdown').style.display === 'none' ? 'block' : 'none'">
                 <img src="https://ui-avatars.com/api/?name=U&background=3b82f6&color=fff" alt="User" style="width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid var(--glass-border); vertical-align: middle;">
                 <div class="dropdown-menu" id="profileDropdown" style="display: none; position: absolute; left: 0; top: 100%; margin-top: 0.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0.5rem; padding: 0.5rem 0; min-width: 150px; text-align: right; z-index: 1000; backdrop-filter: blur(10px);">
-                    {% if user.role != 'authority' %}
+                    {% if request.user.role != 'authority' %}
                     <a href="{% url 'accounts:profile' %}" style="display: block; padding: 0.5rem 1rem; color: var(--text-primary); text-decoration: none;"><i class="fas fa-user" style="margin-left: 0.5rem; color: var(--accent-primary);"></i> الملف الشخصي</a>
                     {% endif %}
                     <a href="#" style="display: block; padding: 0.5rem 1rem; color: var(--text-primary); text-decoration: none;"><i class="fas fa-cog" style="margin-left: 0.5rem;"></i> الإعدادات</a>

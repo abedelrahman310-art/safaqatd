@@ -12,6 +12,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name='profile'),
     path('settings/', views.settings_view, name='settings'),
+    path('blacklist/', views.manage_blacklist, name='manage_blacklist'),
     
     # Password Reset URLs
     path('password_reset/', auth_views.PasswordResetView.as_view(
@@ -29,9 +30,4 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(
         template_name='accounts/password_reset_complete.html'
     ), name='password_reset_complete'),
-    # QR Code Login
-    path('qr-login/', views.qr_login_page, name='qr_login_page'),
-    path('qr-login/status/<uuid:token>/', views.qr_login_status, name='qr_login_status'),
-    path('qr-login/authorize/<uuid:token>/', views.qr_login_authorize, name='qr_login_authorize'),
-    path('qr-login/process/<uuid:token>/', views.qr_login_process, name='qr_login_process'),
 ]

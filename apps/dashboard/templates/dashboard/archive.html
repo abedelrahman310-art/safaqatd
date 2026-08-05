@@ -4,7 +4,7 @@
 
 {% block sidebar %}
     <!-- Include the correct sidebar based on user role -->
-    {% if user.role == 'authority' %}
+    {% if request.user.role == 'authority' %}
         {% include 'includes/sidebar_authority.html' %}
     {% else %}
         {% include 'includes/sidebar_supplier.html' %}

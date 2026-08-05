@@ -1,0 +1,214 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}قاعة الافتتاح الافتراضية | صفقات ذكية{% endblock %}
+
+{% block content %}
+<style>
+    .room-header {
+        text-align: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(30, 58, 138, 0.8), rgba(15, 23, 42, 0.9));
+        border-radius: 15px;
+        border: 1px solid var(--glass-border);
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    
+    .countdown-timer {
+        font-size: 3rem;
+        font-weight: bold;
+        color: var(--accent-primary);
+        font-family: monospace;
+        letter-spacing: 5px;
+        text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        margin: 1rem 0;
+    }
+    
+    .bid-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .bid-locked {
+        background: rgba(0,0,0,0.6);
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+        z-index: 10;
+        transition: opacity 1.5s ease-out;
+    }
+    
+    .unlock-animation {
+        animation: unlockFade 2s forwards;
+    }
+    
+    @keyframes unlockFade {
+        0% { opacity: 1; }
+        50% { opacity: 1; backdrop-filter: blur(10px); background: rgba(16, 185, 129, 0.4); }
+        100% { opacity: 0; visibility: hidden; }
+    }
+    
+    .price-reveal {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--success);
+        text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+</style>
+
+<section class="dashboard-page" style="max-width: 1000px; margin: 0 auto; padding: 2rem;">
+    <div class="room-header">
+        <h1 style="color: white; margin-bottom: 0.5rem;"><i class="fas fa-door-open" style="color: var(--accent-secondary);"></i> قاعة الافتتاح الافتراضية للأسعار</h1>
+        <h3 style="color: var(--text-secondary); font-weight: normal;">{{ tender.title }} ({{ tender.reference_number }})</h3>
+        
+        {% if is_opened %}
+        <div class="countdown-timer" style="color: var(--success);">
+            الآجال منتهية - مسموح بالفتح
+        </div>
+        <p style="color: var(--text-secondary);">يمكن الكشف عن العروض التقنية والمالية المشفرة الآن.</p>
+        <button id="unlockAllBtn" class="btn btn-primary" style="background: var(--success); border-color: var(--success); font-size: 1.2rem; padding: 1rem 2rem; margin-top: 1rem; border-radius: 30px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);">
+            <i class="fas fa-unlock-alt"></i> بدء عملية فك التشفير والفتح
+        </button>
+        {% else %}
+        <div class="countdown-timer" id="countdown">
+            --:--:--:--
+        </div>
+        <p style="color: var(--warning);"><i class="fas fa-lock"></i> العروض مشفرة بتقنية البلوكتشين ولا يمكن الإطلاع عليها قبل انتهاء الآجال.</p>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 1rem;">تاريخ الفتح المقرر: {{ tender.deadline|date:"Y/m/d" }}</div>
+        {% endif %}
+    </div>
+
+    <div>
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">العروض المستلمة ({{ bids.count }})</h3>
+        
+        {% for bid in bids %}
+        <div class="bid-card">
+            {% if not is_opened %}
+            <div class="bid-locked">
+                <i class="fas fa-lock fa-3x" style="color: var(--text-secondary); margin-bottom: 1rem;"></i>
+                <h4 style="color: white; margin: 0;">العرض مشفر</h4>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">الشركة: مخفية حالياً</p>
+            </div>
+            {% else %}
+            <div class="bid-locked unlockable-overlay" id="overlay-{{ bid.id }}">
+                <i class="fas fa-lock fa-3x lock-icon" style="color: var(--warning); margin-bottom: 1rem;"></i>
+                <h4 style="color: white; margin: 0;">جاهز لفك التشفير</h4>
+                <div class="spinner" style="display: none; margin-top: 1rem;"><i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--accent-primary);"></i></div>
+            </div>
+            {% endif %}
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h4 style="color: var(--accent-primary); margin-bottom: 0.5rem; font-size: 1.3rem;">{{ bid.supplier_name }}</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="far fa-clock"></i> توقيت التقديم: {{ bid.submitted_at|date:"Y/m/d H:i:s" }}</p>
+                    {% if bid.is_blockchain_verified %}
+                    <p style="color: #10b981; font-size: 0.8rem; margin: 0;"><i class="fas fa-link"></i> بصمة التشفير: {{ bid.blockchain_tx_hash }}</p>
+                    {% endif %}
+                </div>
+                <div style="text-align: left;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.2rem;">العرض المالي (بعد فك التشفير)</div>
+                    <div class="price-reveal">{{ bid.financial_offer }} دج</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">مدة الإنجاز: {{ bid.delivery_time_days }} يوم</div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align: center; padding: 3rem; background: rgba(0,0,0,0.2); border-radius: 12px; color: var(--text-secondary);">
+            <i class="fas fa-box-open fa-3x" style="margin-bottom: 1rem; opacity: 0.5;"></i>
+            <h4>لا توجد عروض مستلمة في الصندوق حتى الآن.</h4>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{% url 'procurement:tender_detail' tender.id %}" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> عودة لصفحة الصفقة</a>
+    </div>
+</section>
+
+<script>
+    {% if not is_opened %}
+    // Simple countdown logic to midnight of deadline (simulate)
+    const deadlineStr = "{{ tender.deadline|date:'Y-m-d' }}";
+    const countDownDate = new Date(deadlineStr + "T00:00:00").getTime();
+
+    const x = setInterval(function() {
+        const now = new Date().getTime();
+        const distance = countDownDate - now;
+
+        if (distance < 0) {
+            clearInterval(x);
+            document.getElementById("countdown").innerHTML = "الآجال منتهية";
+            location.reload(); // Reload to show opened state
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById("countdown").innerHTML = 
+            (days < 10 ? "0"+days : days) + ":" + 
+            (hours < 10 ? "0"+hours : hours) + ":" + 
+            (minutes < 10 ? "0"+minutes : minutes) + ":" + 
+            (seconds < 10 ? "0"+seconds : seconds);
+    }, 1000);
+    {% else %}
+    // Animation Logic
+    const unlockBtn = document.getElementById('unlockAllBtn');
+    if (unlockBtn) {
+        unlockBtn.addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق من التشفير...';
+            
+            const overlays = document.querySelectorAll('.unlockable-overlay');
+            let delay = 0;
+            
+            overlays.forEach((overlay, index) => {
+                setTimeout(() => {
+                    const icon = overlay.querySelector('.lock-icon');
+                    const spinner = overlay.querySelector('.spinner');
+                    const text = overlay.querySelector('h4');
+                    
+                    if(icon) icon.style.display = 'none';
+                    if(spinner) spinner.style.display = 'block';
+                    if(text) text.innerText = 'جاري التحقق من البصمة الرقمية...';
+                    
+                    setTimeout(() => {
+                        if(spinner) spinner.style.display = 'none';
+                        if(icon) {
+                            icon.className = 'fas fa-unlock fa-3x lock-icon';
+                            icon.style.display = 'block';
+                            icon.style.color = 'var(--success)';
+                        }
+                        if(text) text.innerText = 'تم فك التشفير بنجاح!';
+                        
+                        setTimeout(() => {
+                            overlay.classList.add('unlock-animation');
+                        }, 800);
+                    }, 1500); // simulate decryption time
+                    
+                }, delay);
+                
+                delay += 2500; // time between each bid opening
+            });
+            
+            setTimeout(() => {
+                unlockBtn.innerHTML = '<i class="fas fa-check"></i> تمت عملية الفتح بنجاح';
+                unlockBtn.classList.remove('btn-primary');
+                unlockBtn.style.background = 'var(--glass-border)';
+            }, delay + 1000);
+        });
+    }
+    {% endif %}
+</script>
+{% endblock %}

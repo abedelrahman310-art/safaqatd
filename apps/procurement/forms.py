@@ -4,7 +4,7 @@ from .models import Tender, Bid, TenderAppeal
 class TenderForm(forms.ModelForm):
     class Meta:
         model = Tender
-        fields = ['title', 'description', 'budget', 'wilaya', 'sector', 'deadline', 'document', 'document_fee', 'status']
+        fields = ['title', 'description', 'budget', 'tender_type', 'wilaya', 'sector', 'deadline', 'document', 'document_fee', 'status']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'أدخل عنوان الصفقة...'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'تفاصيل وشروط الصفقة...'}),
@@ -29,6 +29,7 @@ class TenderForm(forms.ModelForm):
             'deadline': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'document_fee': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'مثال: 5000.00 (0 تعني مجاني)'}),
+            'tender_type': forms.Select(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
         }
 

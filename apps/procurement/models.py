@@ -9,6 +9,15 @@ class Tender(models.Model):
         ('closed', 'مغلقة'),
         ('evaluating', 'قيد التقييم'),
     )
+    
+    TENDER_TYPES = (
+        ('open', 'طلب العروض المفتوح'),
+        ('minimum_capacity', 'طلب العروض مع اشتراط قدرات دنيا'),
+        ('restricted', 'طلب العروض المحدود'),
+        ('contest', 'المسابقة'),
+        ('negotiation', 'التفاوض'),
+        ('mutual', 'بالتراضي'),
+    )
 
     title = models.CharField(max_length=200, verbose_name="عنوان الصفقة")
     authority = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tenders', verbose_name="المصلحة المتعاقدة", null=True, blank=True)
@@ -19,6 +28,7 @@ class Tender(models.Model):
     deadline = models.DateField(verbose_name="آخر أجل للتقديم")
     document = models.FileField(upload_to='tenders/documents/', null=True, blank=True, verbose_name="دفتر الشروط")
     document_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="رسوم سحب دفتر الشروط (دج)")
+    tender_type = models.CharField(max_length=50, choices=TENDER_TYPES, default='open', verbose_name="نوع الصفقة")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', verbose_name="الحالة")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -74,6 +84,57 @@ class Bid(models.Model):
     bank_name = models.CharField(max_length=150, blank=True, null=True, verbose_name="البنك الضامن")
     bank_guarantee_file = models.FileField(upload_to='bids/guarantees/', blank=True, null=True, verbose_name="كفالة التعهد البنكية (PDF)")
     is_guarantee_verified = models.BooleanField(default=False, verbose_name="تم التحقق من الكفالة")
+
+    # Real AI Result
+    ai_evaluation_result = models.JSONField(blank=True, null=True, verbose_name="نتيجة تقييم الذكاء الاصطناعي")
+
+    history = HistoricalRecords()
+
+    def save(self, *args, **kwargs):
+        from apps.core.utils import encrypt_file_content, generate_file_hash
+        from django.core.files.base import ContentFile
+        import os
+
+        # Flag to prevent infinite recursion if we need to save again
+        if getattr(self, '_saving_encrypted', False):
+            super().save(*args, **kwargs)
+            return
+
+        is_new = self.pk is None
+        
+        # We process files only when they are uploaded/modified
+        files_to_encrypt = []
+        if self.financial_document and not getattr(self.financial_document, '_encrypted', False):
+            files_to_encrypt.append('financial_document')
+        if self.technical_document and not getattr(self.technical_document, '_encrypted', False):
+            files_to_encrypt.append('technical_document')
+
+        # Generate hash based on financial doc if present
+        if 'financial_document' in files_to_encrypt:
+            file_content = self.financial_document.read()
+            self.bid_hash = generate_file_hash(file_content)
+            # Remove fake blockchain logic, keep just hash for integrity
+            self.blockchain_tx_hash = "SHA-256 Hash recorded"
+            self.is_blockchain_verified = False # It's just a hash now, not blockchain
+            self.financial_document.seek(0)
+
+        super().save(*args, **kwargs)
+
+        # Now encrypt and overwrite
+        if files_to_encrypt:
+            self._saving_encrypted = True
+            for field_name in files_to_encrypt:
+                file_field = getattr(self, field_name)
+                file_content = file_field.read()
+                encrypted_content = encrypt_file_content(file_content)
+                
+                # Save the encrypted content back
+                file_name = os.path.basename(file_field.name)
+                file_field.save(file_name, ContentFile(encrypted_content), save=False)
+                setattr(file_field, '_encrypted', True)
+            
+            self.save()
+            self._saving_encrypted = False
 
     history = HistoricalRecords()
 

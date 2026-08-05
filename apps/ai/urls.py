@@ -9,4 +9,5 @@ urlpatterns = [
     path('generate-cahier/<int:tender_id>/', views.generate_cahier_view, name='generate_cahier'),
     path('chat/', views.chatbot_view, name='chat'),
     path('generate-smart-bid/<int:tender_id>/', views.generate_smart_bid_view, name='generate_smart_bid'),
+    path('smart-match/', views.smart_tender_match, name='smart_match'),
 ]

@@ -49,12 +49,6 @@
                 </div>
             </div>
             
-            {% if bid.tender.is_deadline_passed %}
-            <a href="{% url 'procurement:virtual_opening_room' bid.tender.id %}" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.5rem; background: var(--accent-primary); border-color: var(--accent-primary);">
-                <i class="fas fa-door-open"></i> دخول قاعة الافتتاح
-            </a>
-            {% endif %}
-            
             <a href="{% url 'procurement:tender_detail' bid.tender.id %}" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: auto;"><i class="fas fa-eye"></i> تفاصيل الصفقة</a>
             
             {% if bid.status == 'rejected' and not bid.appeal %}

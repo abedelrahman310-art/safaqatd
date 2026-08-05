@@ -39,7 +39,12 @@
             <h2>مرحباً بك في لوحة القيادة</h2>
             <p style="color: var(--text-secondary);">تابع حالة عروضك والصفقات المتاحة</p>
         </div>
-        <a href="{% url 'procurement:tender_list' %}" class="btn btn-primary"><i class="fas fa-search"></i> استكشاف الصفقات الجديدة</a>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{% url 'procurement:tender_list' %}" class="btn btn-primary"><i class="fas fa-search"></i> استكشاف الصفقات الجديدة</a>
+            <button type="button" id="btn-smart-assistant" class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); border: none; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); font-weight: bold; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+                <i class="fas fa-robot" style="margin-left: 0.5rem;"></i> المساعد الذكي
+            </button>
+        </div>
     </div>
 
     <!-- Statistics Cards -->
@@ -99,7 +104,7 @@
                 </div>
                 <h4 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 1.1rem; line-height: 1.4;">{{ tender.title|truncatechars:50 }}</h4>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;"><i class="far fa-clock"></i> ينتهي التقديم: {{ tender.deadline|date:"Y/m/d" }}</p>
-                <a href="{% url 'procurement:tender_detail' tender.id %}" class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 0.8rem; font-size: 0.95rem;">التفاصيل والتقديم <i class="fas fa-arrow-left"></i></a>
+                <a href="{% url 'procurement:tender_detail' tender.id %}" class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 0.8rem; font-size: 0.95rem;">المعاينة <i class="fas fa-eye" style="margin-left: 0.5rem;"></i></a>
             </div>
             {% endfor %}
         </div>
@@ -154,4 +159,139 @@
 <style>
     .text-accent { color: var(--accent-primary); }
 </style>
+
+<!-- Smart Assistant Modal -->
+<div id="smart-assistant-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+    <div style="background: var(--bg-secondary); border: 1px solid var(--glass-border); border-radius: 1rem; width: 90%; max-width: 600px; padding: 2rem; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+        <button type="button" id="close-sa-modal" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;"><i class="fas fa-times"></i></button>
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #8b5cf6, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);">
+                <i class="fas fa-robot fa-2x" style="color: white;"></i>
+            </div>
+            <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">المساعد الذكي لبحث الصفقات</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">أخبرني عن اختصاص شركتك، وسأقوم بالبحث والتحليل في جميع الصفقات المفتوحة لأجد الأنسب لك.</p>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <textarea id="sa-keywords" rows="3" class="form-control" placeholder="مثال: بناء وأشغال عمومية، تهيئة عمرانية، ولاية وهران..." style="background: rgba(0,0,0,0.2);"></textarea>
+        </div>
+        
+        <button type="button" id="btn-run-smart-match" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.8rem; border-radius: 0.5rem; background: linear-gradient(135deg, #8b5cf6, #3b82f6); border: none;">
+            <i class="fas fa-magic" style="margin-right: 0.5rem;"></i> ابدأ البحث الذكي
+        </button>
+        
+        <div id="sa-loading" style="display: none; text-align: center; margin-top: 2rem;">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; margin-bottom: 1rem; color: #8b5cf6 !important;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p id="sa-loading-text" style="color: var(--text-primary); font-weight: bold; animation: pulse 1.5s infinite;">يتم تحليل الصفقات المتاحة...</p>
+        </div>
+        
+        <div id="sa-results" style="display: none; margin-top: 2rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+            <!-- Results will be injected here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const saBtn = document.getElementById('btn-smart-assistant');
+    const saModal = document.getElementById('smart-assistant-modal');
+    const closeSaBtn = document.getElementById('close-sa-modal');
+    const runMatchBtn = document.getElementById('btn-run-smart-match');
+    
+    if (saBtn) {
+        saBtn.addEventListener('click', () => {
+            saModal.style.display = 'flex';
+        });
+        
+        closeSaBtn.addEventListener('click', () => {
+            saModal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', (e) => {
+            if (e.target === saModal) saModal.style.display = 'none';
+        });
+        
+        runMatchBtn.addEventListener('click', () => {
+            const keywords = document.getElementById('sa-keywords').value;
+            const resultsDiv = document.getElementById('sa-results');
+            const loadingDiv = document.getElementById('sa-loading');
+            
+            if (!keywords.trim()) {
+                alert('يرجى إدخال كلمات مفتاحية عن تخصصك أولاً');
+                return;
+            }
+            
+            runMatchBtn.style.display = 'none';
+            resultsDiv.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            
+            const messages = [
+                "يتم مسح قاعدة بيانات الصفقات...",
+                "مطابقة المتطلبات مع تخصص شركتك...",
+                "ترتيب النتائج حسب الأهمية...",
+                "تجهيز التوصيات..."
+            ];
+            let msgIdx = 0;
+            const msgInt = setInterval(() => {
+                msgIdx = (msgIdx + 1) % messages.length;
+                document.getElementById('sa-loading-text').innerText = messages[msgIdx];
+            }, 800);
+            
+            fetch('{% url "ai:smart_match" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ keywords: keywords })
+            })
+            .then(res => res.json())
+            .then(data => {
+                clearInterval(msgInt);
+                loadingDiv.style.display = 'none';
+                runMatchBtn.style.display = 'flex';
+                
+                if (data.success) {
+                    resultsDiv.style.display = 'block';
+                    if (data.matches.length > 0) {
+                        let html = `<h4 style="margin-bottom: 1rem; color: var(--success);"><i class="fas fa-check-circle"></i> ${data.message}</h4>`;
+                        data.matches.forEach(match => {
+                            html += `
+                            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; position: relative;">
+                                <div style="position: absolute; top: -10px; left: 1rem; background: var(--accent-primary); color: white; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.8rem; font-weight: bold;">
+                                    مطابقة: ${match.score}%
+                                </div>
+                                <h5 style="color: var(--text-primary); margin-bottom: 0.5rem; margin-top: 0.5rem;">${match.title}</h5>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">
+                                    <i class="fas fa-map-marker-alt" style="margin-left: 0.2rem;"></i> ${match.wilaya} | 
+                                    <i class="fas fa-money-bill-wave" style="margin-left: 0.2rem;"></i> ${match.budget} دج
+                                </p>
+                                <p style="color: var(--warning); font-size: 0.9rem; margin-bottom: 1rem; background: rgba(245, 158, 11, 0.1); padding: 0.5rem; border-radius: 0.3rem; border-right: 3px solid var(--warning);">
+                                    <i class="fas fa-lightbulb"></i> ${match.reason}
+                                </p>
+                                <a href="/procurement/tender/${match.id}/" class="btn btn-sm btn-primary" style="width: 100%; justify-content: center;">عرض تفاصيل الصفقة</a>
+                            </div>
+                            `;
+                        });
+                        resultsDiv.innerHTML = html;
+                    } else {
+                        resultsDiv.innerHTML = `<div style="text-align: center; padding: 2rem;"><i class="fas fa-search-minus fa-3x" style="color: var(--text-secondary); margin-bottom: 1rem;"></i><p>${data.message}</p></div>`;
+                    }
+                } else {
+                    alert(data.error || 'حدث خطأ غير متوقع');
+                }
+            })
+            .catch(err => {
+                clearInterval(msgInt);
+                loadingDiv.style.display = 'none';
+                runMatchBtn.style.display = 'flex';
+                alert('خطأ في الاتصال بالخادم');
+                console.error(err);
+            });
+        });
+    }
+</script>
+
 {% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}إدارة القائمة السوداء | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2 style="color: var(--danger);"><i class="fas fa-ban"></i> إدارة القائمة السوداء</h2>
+            <p style="color: var(--text-secondary);">إدارة المتعاملين الاقتصاديين الممنوعين من المشاركة في الصفقات العمومية.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages" style="margin-bottom: 2rem;">
+        {% for message in messages %}
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); padding: 1rem; border-radius: 8px;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="auth-card" style="max-width: 100%; padding: 0;">
+        <div style="overflow-x: auto; padding: 1.5rem;">
+            <table style="width: 100%; border-collapse: collapse; text-align: right;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--glass-border); color: var(--text-secondary);">
+                        <th style="padding: 1rem;">المتعامل</th>
+                        <th style="padding: 1rem;">البريد الإلكتروني</th>
+                        <th style="padding: 1rem;">السجل التجاري</th>
+                        <th style="padding: 1rem;">الحالة الحالية</th>
+                        <th style="padding: 1rem; text-align: center;">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for supplier in suppliers %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem; font-weight: bold;">{{ supplier.full_name }}</td>
+                        <td style="padding: 1rem; color: var(--text-secondary);">{{ supplier.email }}</td>
+                        <td style="padding: 1rem; color: var(--text-secondary);">{{ supplier.commercial_register|default:"غير محدد" }}</td>
+                        <td style="padding: 1rem;">
+                            {% if supplier.is_blacklisted %}
+                                <span style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.2rem 0.8rem; border-radius: 1rem; font-size: 0.85rem;">مدرج في القائمة السوداء</span>
+                            {% else %}
+                                <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 0.2rem 0.8rem; border-radius: 1rem; font-size: 0.85rem;">مؤهل (غير مدرج)</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <form method="POST" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="supplier_id" value="{{ supplier.id }}">
+                                {% if supplier.is_blacklisted %}
+                                    <input type="hidden" name="action" value="whitelist">
+                                    <button type="submit" class="btn btn-secondary" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: var(--success); padding: 0.5rem 1rem;">
+                                        <i class="fas fa-check-circle"></i> رفع الحظر
+                                    </button>
+                                {% else %}
+                                    <input type="hidden" name="action" value="blacklist">
+                                    <button type="submit" class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger); padding: 0.5rem 1rem;" onclick="return confirm('هل أنت متأكد من إدراج هذا المتعامل في القائمة السوداء؟ سيتم منعه من المشاركة في أي صفقة.');">
+                                        <i class="fas fa-ban"></i> حظر المتعامل
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                            لا يوجد متعاملون مسجلون في المنصة.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

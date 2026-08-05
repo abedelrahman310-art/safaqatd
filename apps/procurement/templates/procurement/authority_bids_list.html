@@ -17,11 +17,9 @@
                 <i class="fas fa-lock"></i> السرية مفعلة: العروض التقنية والمالية مشفرة حتى تاريخ فتح الأظرفة ({{ tender.deadline|date:"Y/m/d" }})
             </div>
             {% endif %}
+        </div>
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             {% if tender.is_deadline_passed %}
-            <a href="{% url 'procurement:virtual_opening_room' tender.id %}" class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: var(--accent-primary); border: none; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
-                <i class="fas fa-door-open"></i> دخول قاعة الافتتاح
-            </a>
             <form method="POST" action="{% url 'procurement:sign_evaluation' tender.id %}" style="display: inline-block;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: var(--warning); border-color: var(--warning); color: #000;">

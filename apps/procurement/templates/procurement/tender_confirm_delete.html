@@ -1,0 +1,36 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}حذف الصفقة | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>حذف الصفقة</h2>
+            <p style="color: var(--text-secondary);">هل أنت متأكد من رغبتك في حذف هذه الصفقة؟</p>
+        </div>
+    </div>
+
+    <div class="auth-card" style="max-width: 600px; margin: 2rem auto; text-align: center;">
+        <i class="fas fa-exclamation-triangle fa-4x" style="color: var(--danger); margin-bottom: 1.5rem;"></i>
+        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">تحذير: هذا الإجراء لا يمكن التراجع عنه</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6;">
+            أنت على وشك حذف الصفقة: <br>
+            <strong style="color: white; font-size: 1.1rem;">"{{ tender.title }}"</strong><br>
+            سيتم حذف جميع العروض والمرفقات والتقييمات المرتبطة بهذه الصفقة بشكل نهائي.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="{% url 'procurement:authority_tender_list' %}" class="btn btn-secondary" style="padding: 0.8rem 2rem;">إلغاء</a>
+                <button type="submit" class="btn btn-primary" style="background: var(--danger); border-color: var(--danger); padding: 0.8rem 2rem;">نعم، احذف الصفقة <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i></button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

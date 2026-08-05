@@ -9,12 +9,12 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-development-key-default')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'safakat.local,127.0.0.1,localhost,.onrender.com,*').split(',') + ['.lhr.life', '*']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'safakat.local,127.0.0.1,localhost').split(',')
 
-# Heroku and Render CSRF and Security
+# Heroku CSRF and Security
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
 if 'herokuapp.com' not in str(CSRF_TRUSTED_ORIGINS):
-    CSRF_TRUSTED_ORIGINS.extend(['https://*.herokuapp.com', 'https://*.onrender.com'])
+    CSRF_TRUSTED_ORIGINS.extend(['https://*.herokuapp.com'])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -69,10 +69,13 @@ ASGI_APPLICATION = 'config.asgi.application'
 
 # Database Configuration
 if 'DATABASE_URL' in os.environ:
-    # Production: Use PostgreSQL on Heroku
+    # Production/Docker: Use PostgreSQL
     import dj_database_url
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.config(
+            conn_max_age=600, 
+            ssl_require=not DEBUG  # Require SSL only in production (when DEBUG is False)
+        )
     }
 else:
     # Development: Use SQLite
@@ -143,3 +146,15 @@ if not DEBUG and 'herokuapp.com' in str(ALLOWED_HOSTS):
     SECURE_CONTENT_SECURITY_POLICY = {
         'default-src': ("'self'",),
     }
+
+# Celery Configuration
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+# Encryption Key for sensitive files
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY', 'default_insecure_key_for_dev_must_change_in_prod')
+
+# AI Settings
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
