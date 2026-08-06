@@ -3,11 +3,11 @@ databases:
     databaseName: safakat
     user: safakat_user
     plan: free
+services:
   - type: redis
     name: safakat-redis
     plan: free
 
-services:
   - type: web
     name: safakat-web
     env: python
