@@ -12,7 +12,7 @@ services:
     name: safakat-web
     env: python
     buildCommand: "./build.sh"
-    startCommand: "gunicorn config.wsgi:application"
+    startCommand: "python manage.py migrate && python setup_groups.py && gunicorn config.wsgi:application"
     plan: free
     envVars:
       - key: DATABASE_URL
