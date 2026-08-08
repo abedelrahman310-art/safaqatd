@@ -1,0 +1,152 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}قسم البرمجة والتخطيط | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_central_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<style>
+    .planning-page { padding: 1.5rem; }
+    .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+    
+    .budget-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+    .b-card { background: rgba(15, 20, 30, 0.7); border: 1px solid var(--glass-border); border-radius: 1rem; padding: 1.5rem; position: relative; overflow: hidden; }
+    .b-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; }
+    .b-card.primary::before { background: var(--primary); }
+    .b-card.success::before { background: var(--success); }
+    .b-card.warning::before { background: #f59e0b; }
+    
+    .b-card h4 { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: normal; }
+    .b-card .value { font-size: 2rem; font-weight: bold; color: white; margin-bottom: 0.5rem; }
+    .b-card .progress-container { width: 100%; background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 1rem; }
+    .b-card .progress-bar { height: 100%; }
+    
+    .section-title { margin-bottom: 1.5rem; font-size: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+    
+    .data-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+    .data-table th, .data-table td { padding: 1rem; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .data-table th { color: var(--text-secondary); font-weight: normal; background: rgba(0,0,0,0.2); }
+    .data-table tr:hover { background: rgba(255,255,255,0.02); }
+    
+    .status-badge { padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem; }
+    .status-badge.launched { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .status-badge.pending { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+</style>
+
+<section class="planning-page">
+    <div class="page-header">
+        <div>
+            <h2>البرمجة والتخطيط ({{ current_year }})</h2>
+            <p style="color: var(--text-secondary);">متابعة الميزانيات السنوية والمشاريع المبرمجة للقطاعات.</p>
+        </div>
+        <div>
+            <button class="btn btn-primary" onclick="alert('في هذه النسخة (MVP)، تتم إضافة الميزانيات عبر لوحة تحكم Django Admin.')"><i class="fas fa-plus"></i> إضافة ميزانية قطاع</button>
+        </div>
+    </div>
+
+    <!-- Budget Overview Cards -->
+    <div class="budget-cards">
+        <div class="b-card primary">
+            <h4>إجمالي الميزانيات المرصودة</h4>
+            <div class="value">{{ total_budget|floatformat:0 }} دج</div>
+            <p style="font-size: 0.85rem; color: #94a3b8;"><i class="fas fa-building"></i> عبر {{ budgets.count }} قطاع/مصلحة</p>
+        </div>
+        
+        <div class="b-card warning">
+            <h4>قيمة المشاريع المبرمجة</h4>
+            <div class="value">{{ planned_value|floatformat:0 }} دج</div>
+            {% widthratio planned_value total_budget 100 as planned_percent %}
+            <p style="font-size: 0.85rem; color: #94a3b8;">{{ planned_percent|default:0 }}% من إجمالي الميزانيات</p>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: {{ planned_percent|default:0 }}%; background: #f59e0b;"></div>
+            </div>
+        </div>
+        
+        <div class="b-card success">
+            <h4>الميزانية المستهلكة (الصفقات المُطلقة)</h4>
+            <div class="value">{{ consumed_value|floatformat:0 }} دج</div>
+            {% widthratio consumed_value total_budget 100 as consumed_percent %}
+            <p style="font-size: 0.85rem; color: #94a3b8;">{{ consumed_percent|default:0 }}% نسبة الاستهلاك</p>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: {{ consumed_percent|default:0 }}%; background: var(--success);"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Sectors Budget -->
+    <div class="section-title">
+        <h3>توزيع الميزانيات حسب القطاع ({{ current_year }})</h3>
+    </div>
+    
+    <div style="background: rgba(15,20,30,0.7); border-radius: 1rem; border: 1px solid var(--glass-border); overflow-x: auto; margin-bottom: 2.5rem;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>القطاع</th>
+                    <th>المصلحة المتعاقدة</th>
+                    <th>الميزانية الإجمالية (دج)</th>
+                    <th>المشاريع المبرمجة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in budgets %}
+                <tr>
+                    <td><strong>{{ b.sector }}</strong></td>
+                    <td>{{ b.authority.username|default:"غير محدد" }}</td>
+                    <td style="color: #38bdf8; font-weight: bold;">{{ b.total_budget|floatformat:2 }}</td>
+                    <td>{{ b.planned_projects.count }} مشروع</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 2rem;">لم يتم رصد ميزانيات لهذه السنة بعد.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Planned Projects List -->
+    <div class="section-title">
+        <h3>أحدث المشاريع المبرمجة</h3>
+    </div>
+    
+    <div style="background: rgba(15,20,30,0.7); border-radius: 1rem; border: 1px solid var(--glass-border); overflow-x: auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>المشروع</th>
+                    <th>القطاع</th>
+                    <th>القيمة التقديرية (دج)</th>
+                    <th>تاريخ الإطلاق المتوقع</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in planned_projects %}
+                <tr>
+                    <td>{{ p.title }}</td>
+                    <td>{{ p.budget.sector }}</td>
+                    <td>{{ p.estimated_value|floatformat:2 }}</td>
+                    <td>{{ p.expected_launch_date|date:"Y-m-d"|default:"غير محدد" }}</td>
+                    <td>
+                        {% if p.is_launched %}
+                            <span class="status-badge launched"><i class="fas fa-check-circle"></i> تم الإطلاق</span>
+                        {% else %}
+                            <span class="status-badge pending"><i class="fas fa-clock"></i> مبرمج</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">لا توجد مشاريع مبرمجة حالياً.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</section>
+{% endblock %}

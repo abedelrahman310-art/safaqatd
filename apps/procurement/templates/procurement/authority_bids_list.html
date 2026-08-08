@@ -12,14 +12,32 @@
         <div>
             <h2>العروض المقدمة: {{ tender.title }}</h2>
             <p style="color: var(--text-secondary);">استعراض وتقييم العروض المقدمة من طرف المتعاملين الاقتصاديين</p>
-            {% if not tender.is_deadline_passed %}
+            {% if bids_hidden %}
             <div style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--warning); border-radius: 8px; display: inline-flex; align-items: center; gap: 0.5rem; color: var(--warning);">
-                <i class="fas fa-lock"></i> السرية مفعلة: العروض التقنية والمالية مشفرة حتى تاريخ فتح الأظرفة ({{ tender.deadline|date:"Y/m/d" }})
+                <i class="fas fa-lock"></i> السرية مفعلة: العروض التقنية والمالية مشفرة حتى تاريخ فتح الأظرفة.
             </div>
             {% endif %}
         </div>
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            {% if tender.is_deadline_passed %}
+            {% if bids_hidden and can_open %}
+            <form method="POST" action="{% url 'procurement:open_tender_bids' tender.id %}" style="display: inline-block;" onsubmit="return confirm('هل أنت متأكد من رغبتك في فتح الأظرفة؟ سيتم تسجيلك كرئيس للجنة الفتح.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: var(--danger); border-color: var(--danger); color: #fff;">
+                    <i class="fas fa-box-open"></i> فتح الأظرفة (لجنة الفتح)
+                </button>
+            </form>
+            {% elif bids_hidden %}
+            <button disabled class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: var(--text-secondary); cursor: not-allowed;" title="يُسمح بفتح الأظرفة فقط بعد انقضاء الآجال">
+                <i class="fas fa-lock"></i> لجنة الفتح (مغلق)
+            </button>
+            {% endif %}
+
+            {% if not bids_hidden %}
+            {% if tender.opening_committee and tender.opening_committee.report_file %}
+            <a href="{{ tender.opening_committee.report_file.url }}" target="_blank" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: rgba(59, 130, 246, 0.2); border: 1px solid var(--primary); color: #fff;">
+                <i class="fas fa-file-pdf"></i> محضر الفتح (PDF)
+            </a>
+            {% endif %}
             <form method="POST" action="{% url 'procurement:sign_evaluation' tender.id %}" style="display: inline-block;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-primary" style="border-radius: 2rem; padding: 0.75rem 1.5rem; background: var(--warning); border-color: var(--warning); color: #000;">
@@ -67,7 +85,7 @@
                             {% endif %}
                         </td>
                         
-                        {% if tender.is_deadline_passed %}
+                        {% if not bids_hidden %}
                             <td style="padding: 1rem; color: var(--accent-primary); font-weight: bold;">{{ bid.financial_offer }} دج</td>
                             <td style="padding: 1rem; color: var(--text-secondary);">{{ bid.delivery_time_days|default:"-" }} يوم</td>
                             <td style="padding: 1rem; color: var(--text-secondary); max-width: 200px;">
@@ -76,9 +94,13 @@
                                 </div>
                                 {% if bid.bank_guarantee_file %}
                                     <div style="margin-top: 0.5rem; font-size: 0.8rem;">
-                                        <a href="{{ bid.bank_guarantee_file.url }}" target="_blank" style="color: var(--warning);"><i class="fas fa-university"></i> كفالة ({{ bid.bank_name|default:"البنك" }})</a>
+                                        <a href="{% url 'procurement:secure_bid_download' bid.id 'guarantee' %}" style="color: var(--warning);"><i class="fas fa-university"></i> كفالة ({{ bid.bank_name|default:"البنك" }})</a>
                                     </div>
                                 {% endif %}
+                                <div style="margin-top: 0.5rem; font-size: 0.8rem;">
+                                    {% if bid.financial_document %}<a href="{% url 'procurement:secure_bid_download' bid.id 'financial' %}" style="color: var(--success); margin-left: 0.5rem;"><i class="fas fa-file-invoice-dollar"></i> مالي</a>{% endif %}
+                                    {% if bid.technical_document %}<a href="{% url 'procurement:secure_bid_download' bid.id 'technical' %}" style="color: var(--primary);"><i class="fas fa-cogs"></i> تقني</a>{% endif %}
+                                </div>
                             </td>
                             <td style="padding: 1rem; text-align: center;" class="ai-score-cell">
                                 <span style="color: var(--text-secondary); font-size: 0.85rem;">في انتظار التحليل...</span>

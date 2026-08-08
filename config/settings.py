@@ -33,8 +33,10 @@ INSTALLED_APPS = [
     'apps.dashboard',
     'apps.procurement',
     'apps.ai',
+    'apps.analytics',
     'simple_history',
     'corsheaders',
+    'axes',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -162,3 +165,18 @@ ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY', 'default_insecure_key_for_dev_must_
 
 # AI Settings
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# File upload limits for MVP (100MB)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
+
+# Axes settings
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1
+AXES_LOCKOUT_TEMPLATE = 'axes/lockout.html'
+

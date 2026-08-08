@@ -33,6 +33,15 @@ class TenderForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-control'}),
         }
 
+    def clean_document(self):
+        upload = self.cleaned_data.get('document')
+        if upload:
+            if not upload.name.lower().endswith('.pdf'):
+                raise forms.ValidationError('عذراً، يُسمح فقط برفع ملفات PDF.')
+            if hasattr(upload, 'content_type') and upload.content_type != 'application/pdf':
+                raise forms.ValidationError('نوع الملف غير صالح.')
+        return upload
+
 class BidForm(forms.ModelForm):
     class Meta:
         model = Bid
@@ -55,6 +64,23 @@ class BidForm(forms.ModelForm):
             'technical_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'أضف أي تفاصيل أو ملاحظات تقنية...'}),
             'agreement': forms.CheckboxInput(attrs={'style': 'transform: scale(1.5); margin-left: 10px;'}),
         }
+
+    def _validate_pdf(self, upload):
+        if upload:
+            if not upload.name.lower().endswith('.pdf'):
+                raise forms.ValidationError('عذراً، يُسمح فقط برفع ملفات PDF.')
+            if hasattr(upload, 'content_type') and upload.content_type != 'application/pdf':
+                raise forms.ValidationError('نوع الملف غير صالح.')
+        return upload
+
+    def clean_financial_document(self):
+        return self._validate_pdf(self.cleaned_data.get('financial_document'))
+
+    def clean_technical_document(self):
+        return self._validate_pdf(self.cleaned_data.get('technical_document'))
+
+    def clean_bank_guarantee_file(self):
+        return self._validate_pdf(self.cleaned_data.get('bank_guarantee_file'))
 
 class TenderAppealForm(forms.ModelForm):
     class Meta:

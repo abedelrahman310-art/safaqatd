@@ -6,6 +6,9 @@ from django.contrib.auth.decorators import login_required
 
 User = get_user_model()
 
+from django_ratelimit.decorators import ratelimit
+
+@ratelimit(key='ip', rate='5/m', block=True)
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('username')

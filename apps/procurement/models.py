@@ -1,6 +1,50 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from simple_history.models import HistoricalRecords
+
+class AnnualBudget(models.Model):
+    year = models.PositiveIntegerField(verbose_name="السنة المالية")
+    sector = models.CharField(max_length=255, verbose_name="القطاع")
+    total_budget = models.DecimalField(
+        max_digits=15, decimal_places=2, 
+        validators=[MinValueValidator(0.01)],
+        verbose_name="الميزانية الإجمالية (دج)"
+    )
+    authority = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='budgets', verbose_name="المصلحة المتعاقدة", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "ميزانية سنوية"
+        verbose_name_plural = "الميزانيات السنوية"
+        unique_together = ('year', 'sector', 'authority')
+
+    def __str__(self):
+        return f"ميزانية {self.sector} - {self.year}"
+
+class PlannedProject(models.Model):
+    title = models.CharField(max_length=255, verbose_name="اسم المشروع المبرمج")
+    budget = models.ForeignKey(AnnualBudget, on_delete=models.CASCADE, related_name='planned_projects', verbose_name="الميزانية المرتبطة")
+    estimated_value = models.DecimalField(
+        max_digits=12, decimal_places=2, 
+        validators=[MinValueValidator(0.01)],
+        verbose_name="القيمة التقديرية (دج)"
+    )
+    expected_launch_date = models.DateField(verbose_name="تاريخ الإطلاق المتوقع", null=True, blank=True)
+    is_launched = models.BooleanField(default=False, verbose_name="تم الإطلاق (تحول إلى صفقة)")
+    tender = models.ForeignKey('Tender', on_delete=models.SET_NULL, null=True, blank=True, related_name='from_planned_project', verbose_name="الصفقة الفعلية المرتبطة")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "مشروع مبرمج"
+        verbose_name_plural = "المشاريع المبرمجة"
+
+    def __str__(self):
+        return self.title
+
+class ActiveManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
 
 class Tender(models.Model):
     STATUS_CHOICES = (
@@ -22,7 +66,11 @@ class Tender(models.Model):
     title = models.CharField(max_length=200, verbose_name="عنوان الصفقة")
     authority = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tenders', verbose_name="المصلحة المتعاقدة", null=True, blank=True)
     description = models.TextField(verbose_name="التفاصيل")
-    budget = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="الميزانية التقديرية (دج)")
+    budget = models.DecimalField(
+        max_digits=12, decimal_places=2, 
+        validators=[MinValueValidator(0.01)],
+        verbose_name="الميزانية التقديرية (دج)"
+    )
     wilaya = models.CharField(max_length=100, blank=True, null=True, verbose_name="الولاية")
     sector = models.CharField(max_length=255, blank=True, null=True, verbose_name="قطاع النشاط")
     deadline = models.DateField(verbose_name="آخر أجل للتقديم")
@@ -30,14 +78,26 @@ class Tender(models.Model):
     document_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="رسوم سحب دفتر الشروط (دج)")
     tender_type = models.CharField(max_length=50, choices=TENDER_TYPES, default='open', verbose_name="نوع الصفقة")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', verbose_name="الحالة")
+    is_bids_opened = models.BooleanField(default=False, verbose_name="تم فتح العروض")
     ai_cahier_result = models.JSONField(null=True, blank=True, verbose_name="نتيجة دفتر الشروط AI")
+    is_deleted = models.BooleanField(default=False, verbose_name="محذوف؟")
+    deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    objects = ActiveManager()
+    all_objects = models.Manager()
+
     history = HistoricalRecords()
 
     def __str__(self):
         return self.title
+
+    def soft_delete(self):
+        from django.utils import timezone
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
 
     @property
     def is_deadline_passed(self):
@@ -48,6 +108,20 @@ class Tender(models.Model):
         verbose_name = "صفقة"
         verbose_name_plural = "الصفقات"
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['wilaya', 'sector']),
+            models.Index(fields=['is_deleted']),
+        ]
+
+from apps.procurement.validators import validate_file_mimetype
+import uuid
+import os
+
+def secure_upload_path(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    return os.path.join('bids', 'secure', filename)
 
 class Bid(models.Model):
     STATUS_CHOICES = (
@@ -57,22 +131,23 @@ class Bid(models.Model):
     )
 
     tender = models.ForeignKey(Tender, on_delete=models.CASCADE, related_name='bids', verbose_name="الصفقة")
+    supplier = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='submitted_bids', verbose_name="المتعامل", null=True, blank=True)
     supplier_name = models.CharField(max_length=200, verbose_name="اسم الشركة / المتعامل")
     nif_number = models.CharField(max_length=50, verbose_name="رقم التعريف الجبائي (NIF)", blank=True, null=True)
     nis_number = models.CharField(max_length=50, verbose_name="رقم التعريف الإحصائي (NIS)", blank=True, null=True)
     
     financial_offer = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="العرض المالي (دج)")
-    financial_document = models.FileField(upload_to='bids/financial/', null=True, blank=True, verbose_name="ملف العرض المالي (PDF)")
+    financial_document = models.FileField(upload_to=secure_upload_path, validators=[validate_file_mimetype], null=True, blank=True, verbose_name="ملف العرض المالي (PDF)")
     delivery_time_days = models.PositiveIntegerField(verbose_name="مدة الإنجاز (بالأيام)", blank=True, null=True)
     warranty_months = models.PositiveIntegerField(verbose_name="مدة الضمان (بالأشهر)", blank=True, null=True)
     
     technical_team_size = models.PositiveIntegerField(verbose_name="تعداد الطاقم التقني", blank=True, null=True)
     similar_projects_count = models.PositiveIntegerField(verbose_name="المشاريع المماثلة المنجزة", blank=True, null=True)
     technical_notes = models.TextField(verbose_name="ملاحظات العرض التقني", blank=True, null=True)
-    technical_document = models.FileField(upload_to='bids/technical/', null=True, blank=True, verbose_name="ملف العرض التقني (PDF)")
+    technical_document = models.FileField(upload_to=secure_upload_path, validators=[validate_file_mimetype], null=True, blank=True, verbose_name="ملف العرض التقني (PDF)")
     
     agreement = models.BooleanField(default=False, verbose_name="موافقة وتصريح شرفي")
-    integrity_declaration = models.FileField(upload_to='bids/integrity/', null=True, blank=True, verbose_name="التصريح بالنزاهة (PDF)")
+    integrity_declaration = models.FileField(upload_to=secure_upload_path, validators=[validate_file_mimetype], null=True, blank=True, verbose_name="التصريح بالنزاهة (PDF)")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="حالة العرض")
     submitted_at = models.DateTimeField(auto_now_add=True)
 
@@ -83,13 +158,26 @@ class Bid(models.Model):
     
     # Bank Guarantee Fields
     bank_name = models.CharField(max_length=150, blank=True, null=True, verbose_name="البنك الضامن")
-    bank_guarantee_file = models.FileField(upload_to='bids/guarantees/', blank=True, null=True, verbose_name="كفالة التعهد البنكية (PDF)")
+    bank_guarantee_file = models.FileField(upload_to=secure_upload_path, validators=[validate_file_mimetype], blank=True, null=True, verbose_name="كفالة التعهد البنكية (PDF)")
     is_guarantee_verified = models.BooleanField(default=False, verbose_name="تم التحقق من الكفالة")
+
+    # Soft Delete Fields
+    is_deleted = models.BooleanField(default=False, verbose_name="محذوف؟")
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     # Real AI Result
     ai_evaluation_result = models.JSONField(blank=True, null=True, verbose_name="نتيجة تقييم الذكاء الاصطناعي")
 
+    objects = ActiveManager()
+    all_objects = models.Manager()
+
     history = HistoricalRecords()
+
+    def soft_delete(self):
+        from django.utils import timezone
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
 
     def save(self, *args, **kwargs):
         from apps.core.utils import encrypt_file_content, generate_file_hash
@@ -231,3 +319,30 @@ class EvaluationSignature(models.Model):
         verbose_name = "توقيع التقييم"
         verbose_name_plural = "تواقيع التقييم"
         unique_together = ('tender', 'committee_member')
+
+class BidOpeningCommittee(models.Model):
+    tender = models.OneToOneField('Tender', on_delete=models.CASCADE, related_name='opening_committee', verbose_name='الصفقة')
+    opened_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, verbose_name='رئيس الجلسة')
+    opened_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ وساعة الفتح')
+    notes = models.TextField(verbose_name='ملاحظات المحضر', blank=True, null=True)
+    report_file = models.FileField(upload_to='bids/reports/', blank=True, null=True, verbose_name='ملف المحضر (PDF)')
+    report_version = models.PositiveIntegerField(default=1, verbose_name="رقم الإصدار")
+    is_finalized = models.BooleanField(default=False, verbose_name="محضر نهائي معتمد")
+    report_hash = models.CharField(max_length=255, blank=True, null=True, verbose_name="بصمة المحضر (SHA-256)")
+    is_valid = models.BooleanField(default=True, verbose_name='محضر صالح')
+
+    class Meta:
+        verbose_name = 'محضر لجنة الفتح'
+        verbose_name_plural = 'محاضر لجان الفتح'
+
+    def __str__(self):
+        return f'محضر فتح - {self.tender.title}'
+
+    def save(self, *args, **kwargs):
+        from django.core.exceptions import ValidationError
+        if self.pk:
+            old_instance = BidOpeningCommittee.objects.get(pk=self.pk)
+            if old_instance.is_finalized:
+                raise ValidationError("لا يمكن تعديل محضر الفتح بعد اعتماده نهائياً.")
+        super().save(*args, **kwargs)
+

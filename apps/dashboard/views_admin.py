@@ -57,5 +57,68 @@ def toggle_user_status(request, user_id):
 @login_required
 @permission_required('accounts.audit_all_tenders', raise_exception=True)
 def regulator_audit_list(request):
-    tenders = Tender.objects.all().order_by('-created_at')
-    return render(request, 'dashboard/regulator_audit.html', {'tenders': tenders})
+    tenders = Tender.objects.select_related('authority').prefetch_related('bids').order_by('-created_at')
+    
+    context = {
+        'tenders': tenders,
+    }
+    return render(request, 'dashboard/regulator_audit.html', context)
+
+@login_required
+@permission_required('accounts.audit_all_tenders', raise_exception=True)
+def regulator_audit_detail(request, tender_id):
+    tender = get_object_or_404(Tender, id=tender_id)
+    history = tender.history.all().order_by('-history_date')
+    bids = tender.bids.all().order_by('-submitted_at')
+    
+    # Calculate simple stats
+    bids_count = bids.count()
+    
+    # Detect red flags (e.g., changes after published, low bids)
+    red_flags = []
+    if bids_count > 0 and bids_count < 3 and tender.status == 'closed':
+        red_flags.append('عدد العروض أقل من 3، يجب مراجعة مبدأ المنافسة.')
+        
+    for h in history:
+        if h.status == 'published' and h.history_type == '~':
+            # Example heuristic: If it was modified while published
+            pass
+            
+    context = {
+        'tender': tender,
+        'history': history,
+        'bids': bids,
+        'red_flags': red_flags,
+    }
+    return render(request, 'dashboard/regulator_audit_detail.html', context)
+
+from apps.procurement.models import Tender, Bid, AnnualBudget, PlannedProject
+from django.db.models import Sum
+from django.utils import timezone
+
+@login_required
+@permission_required('accounts.view_central_dashboard', raise_exception=True)
+def planning_department_view(request):
+    current_year = timezone.now().year
+    
+    # Get all budgets for the current year
+    budgets = AnnualBudget.objects.filter(year=current_year)
+    total_budget = budgets.aggregate(Sum('total_budget'))['total_budget__sum'] or 0
+    
+    # Get all planned projects
+    planned_projects = PlannedProject.objects.filter(budget__year=current_year)
+    planned_value = planned_projects.aggregate(Sum('estimated_value'))['estimated_value__sum'] or 0
+    
+    # Calculate consumed amount (from actual tenders linked to planned projects)
+    consumed_projects = planned_projects.filter(is_launched=True)
+    consumed_value = consumed_projects.aggregate(Sum('tender__budget'))['tender__budget__sum'] or 0
+    
+    context = {
+        'current_year': current_year,
+        'total_budget': total_budget,
+        'planned_value': planned_value,
+        'consumed_value': consumed_value,
+        'budgets': budgets,
+        'planned_projects': planned_projects.order_by('-created_at')[:10], # recent 10
+    }
+    return render(request, 'dashboard/planning_department.html', context)

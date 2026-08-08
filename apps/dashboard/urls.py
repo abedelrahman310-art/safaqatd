@@ -12,5 +12,7 @@ urlpatterns = [
     path('regulator/users/', views_admin.regulator_users_list, name='regulator_users'),
     path('regulator/users/<int:user_id>/toggle/', views_admin.toggle_user_status, name='toggle_user_status'),
     path('regulator/audit/', views_admin.regulator_audit_list, name='regulator_audit'),
+    path('regulator/audit/<int:tender_id>/', views_admin.regulator_audit_detail, name='regulator_audit_detail'),
+    path('regulator/planning/', views_admin.planning_department_view, name='regulator_planning'),
     path('authority/reports/', views.authority_reports, name='authority_reports'),
 ]

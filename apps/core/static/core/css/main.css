@@ -409,12 +409,7 @@ footer {
 
 /* Animated Gradient Background & Geometric Lines */
 .hero-bg-elements {
-    position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-    background-color: var(--bg-primary);
+    display: none;
 }
 
 /* Geometric Grid */
@@ -433,18 +428,14 @@ footer {
     transform-origin: center top;
 }
 
-/* Color Waves/Blobs */
+/* Color Waves/Blobs Removed based on user request */
 .color-blob {
-    position: absolute;
-    filter: blur(120px);
-    border-radius: 50%;
-    opacity: 0.5;
-    animation: float 20s ease-in-out infinite;
+    display: none;
 }
 
-.blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--accent-primary); animation-delay: 0s; }
-.blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: var(--accent-secondary); animation-delay: -5s; }
-.blob-3 { top: 30%; left: 40%; width: 45vw; height: 45vw; background: #ec4899; animation-delay: -10s; opacity: 0.3; }
+.blob-1 { display: none; }
+.blob-2 { display: none; }
+.blob-3 { display: none; }
 
 @keyframes float {
     0%, 100% { transform: translate(0, 0) scale(1); }

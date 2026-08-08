@@ -10,8 +10,13 @@ urlpatterns = [
     path('authority/tenders/<int:tender_id>/edit/', views.tender_edit, name='tender_edit'),
     path('authority/tenders/<int:tender_id>/delete/', views.tender_delete, name='tender_delete'),
     path('authority/tenders/<int:tender_id>/bids/', views.authority_tender_bids, name='authority_tender_bids'),
+    path('authority/tenders/<int:tender_id>/bids/open/', views.open_tender_bids, name='open_tender_bids'),
     path('authority/bids/<int:bid_id>/update/<str:status>/', views.bid_update_status, name='bid_update_status'),
     path('authority/bids/<int:bid_id>/rate/', views.rate_supplier, name='rate_supplier'),
+    
+    # Secure Download
+    path('bids/<int:bid_id>/download/<str:document_type>/', views.secure_bid_download, name='secure_bid_download'),
+    
     path('tenders/<int:tender_id>/bid/', views.bid_create, name='bid_create'),
     path('tenders/<int:tender_id>/', views.tender_detail, name='tender_detail'),
     path('tenders/<int:tender_id>/report/', views.generate_report_view, name='generate_report_view'),

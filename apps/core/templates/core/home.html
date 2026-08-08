@@ -5,38 +5,7 @@
 
 {% block content %}
 <!-- Sky Blue Premium Background -->
-<div class="dazzling-bg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; overflow: hidden;">
-    <!-- Animated Orbs (Blue/White theme) -->
-    <!-- Animations removed -->
-    
-
-
-    <!-- Algerian Geometric Abstract Lines -->
-    <div class="algerian-lines-container" style="position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; opacity: 0.7;">
-        <svg viewBox="0 0 1000 1000" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-            <!-- Green Lines (Algerian Green #006233, but brightened for dark theme #10b981) -->
-            <path d="M -100 200 L 400 600 L 1100 300" fill="none" stroke="#10b981" stroke-width="2.5" class="algerian-line" style="animation-delay: 0s;" />
-            <path d="M 0 1000 Q 500 0 1000 1000" fill="none" stroke="#10b981" stroke-width="1.5" class="algerian-line" style="opacity: 0.5;" />
-            
-            <!-- Red Lines (Algerian Red #D21034, brightened to #ef4444) -->
-            <path d="M -100 800 L 300 500 L 1100 700" fill="none" stroke="#ef4444" stroke-width="2.5" class="algerian-line" style="animation-delay: 1.5s;" />
-            <path d="M 0 0 Q 500 1000 1000 0" fill="none" stroke="#ef4444" stroke-width="1.5" class="algerian-line" style="opacity: 0.5; animation-delay: 2s;" />
-            
-            <!-- White Lines -->
-            <path d="M 200 -100 L 500 500 L 800 1100" fill="none" stroke="#ffffff" stroke-width="2" class="algerian-line" style="animation-delay: 3s;" />
-            
-            <!-- Glowing Nodes at Intersections -->
-            <circle cx="400" cy="600" r="5" fill="#10b981" class="algerian-node" />
-            <circle cx="300" cy="500" r="5" fill="#ef4444" class="algerian-node" style="animation-delay: 1s;" />
-            <circle cx="500" cy="500" r="5" fill="#ffffff" class="algerian-node" style="animation-delay: 2s;" />
-
-            <!-- Connecting Mesh -->
-            <polygon points="400,600 300,500 500,500" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" class="algerian-mesh" />
-        </svg>
-    </div>
-
-    <!-- Subtle Starfield/Particles -->
-    <div style="position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.4;"></div>
+<div class="dazzling-bg" style="display: none;">
 </div>
 
 <section style="min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 5% 4rem 5%; position: relative; z-index: 1; overflow-x: hidden;">

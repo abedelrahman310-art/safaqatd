@@ -44,7 +44,10 @@ def tender_list(request):
     }
     return render(request, 'procurement/tender_list.html', context)
 
+from apps.accounts.decorators import role_required
+
 @login_required
+@role_required(['authority'])
 def authority_tender_list(request):
     tenders = Tender.objects.filter(authority=request.user)
     return render(request, 'procurement/authority_tender_list.html', {'tenders': tenders})
@@ -81,7 +84,7 @@ def tender_edit(request, tender_id):
 def tender_delete(request, tender_id):
     tender = get_object_or_404(Tender, id=tender_id, authority=request.user)
     if request.method == 'POST':
-        tender.delete()
+        tender.soft_delete()
         from django.contrib import messages
         messages.success(request, 'تم حذف الصفقة بنجاح.')
         return redirect('procurement:authority_tender_list')
@@ -143,11 +146,16 @@ def bid_create(request, tender_id):
     
     return render(request, 'procurement/bid_form.html', {'form': form, 'tender': tender})
 
+@login_required
+@role_required(['authority'])
 def authority_tender_bids(request, tender_id):
     tender = get_object_or_404(Tender, id=tender_id)
     bids = list(tender.bids.all())
     
-    if bids:
+    bids_hidden = not tender.is_bids_opened
+    can_open = timezone.now() > tender.submission_deadline if tender.submission_deadline else False
+    
+    if bids and not bids_hidden:
         min_financial = min((b.financial_offer for b in bids if b.financial_offer), default=0)
         min_delivery = min((b.delivery_time_days for b in bids if b.delivery_time_days), default=0)
         max_warranty = max((b.warranty_months for b in bids if b.warranty_months), default=0)
@@ -175,7 +183,54 @@ def authority_tender_bids(request, tender_id):
         if len(bids) > 0 and hasattr(bids[0], 'smart_score') and bids[0].smart_score > 0:
             bids[0].is_best = True
 
-    return render(request, 'procurement/authority_bids_list.html', {'tender': tender, 'bids': bids})
+    return render(request, 'procurement/authority_bids_list.html', {
+        'tender': tender,
+        'bids': bids,
+        'bids_hidden': bids_hidden,
+        'can_open': can_open,
+    })
+
+from django.db import transaction
+
+@login_required
+@transaction.atomic
+def open_tender_bids(request, tender_id):
+    from .models import BidOpeningCommittee
+    tender = get_object_or_404(Tender.objects.select_for_update(), id=tender_id)
+    
+    is_authority = request.user == tender.authority
+    is_committee = tender.committee_members.filter(user=request.user).exists()
+    
+    if not (is_authority or is_committee):
+        messages.error(request, "ليس لديك صلاحية لفتح عروض هذه الصفقة.")
+        return redirect('procurement:authority_tender_bids', tender_id=tender.id)
+    
+    if tender.is_bids_opened:
+        messages.warning(request, "تم فتح الأظرفة مسبقاً.")
+        return redirect('procurement:authority_tender_bids', tender_id=tender.id)
+        
+    if timezone.now().date() <= tender.deadline:
+        messages.error(request, "لا يمكن فتح الأظرفة قبل انقضاء آجال الإيداع قانونياً.")
+        return redirect('procurement:authority_tender_bids', tender_id=tender.id)
+        
+    if request.method == 'POST':
+        # Create Committee record
+        notes = request.POST.get('notes', '')
+        committee = BidOpeningCommittee.objects.create(
+            tender=tender,
+            opened_by=request.user,
+            notes=notes
+        )
+        
+        # Generate PDF Report
+        from apps.procurement.utils import generate_opening_committee_pdf
+        generate_opening_committee_pdf(committee)
+        
+        tender.is_bids_opened = True
+        tender.save()
+        messages.success(request, "تم فك التشفير عن العروض وتوثيق محضر جلسة الفتح بنجاح.")
+        
+    return redirect('procurement:authority_tender_bids', tender_id=tender.id)
 
 def bid_update_status(request, bid_id, status):
     bid = get_object_or_404(Bid, id=bid_id)
@@ -586,3 +641,45 @@ def supplier_live_opening(request, tender_id):
         'bids': bids,
         'is_opened': tender.is_deadline_passed
     })
+from django.http import FileResponse, Http404
+from django.core.exceptions import PermissionDenied
+import os
+
+@login_required
+def secure_bid_download(request, bid_id, document_type):
+    bid = get_object_or_404(Bid, id=bid_id)
+    
+    # Check Permissions
+    is_owner = request.user == bid.supplier
+    is_authority = request.user == bid.tender.authority
+    is_regulator = hasattr(request.user, 'role') and request.user.role == 'regulator'
+    
+    if not is_owner:
+        if not (is_authority or is_regulator):
+            # Explicitly enforcing that Superuser is NOT an exception.
+            raise PermissionDenied('ليس لديك صلاحية للوصول إلى هذه الملفات.')
+            
+        if not bid.tender.is_bids_opened:
+            raise PermissionDenied('لا يمكن الوصول إلى العروض قبل توثيق الفتح من طرف لجنة الفتح.')
+            
+    # Determine requested file
+    file_field = None
+    if document_type == 'financial':
+        file_field = bid.financial_document
+    elif document_type == 'technical':
+        file_field = bid.technical_document
+    elif document_type == 'integrity':
+        file_field = bid.integrity_declaration
+    elif document_type == 'guarantee':
+        file_field = bid.bank_guarantee_file
+    else:
+        raise Http404('نوع المستند غير معروف.')
+        
+    if not file_field or not file_field.name:
+        raise Http404('الملف غير موجود.')
+        
+    # Serve file
+    response = FileResponse(file_field.open('rb'), as_attachment=True, filename=os.path.basename(file_field.name))
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
+
