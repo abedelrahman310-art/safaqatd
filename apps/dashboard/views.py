@@ -8,23 +8,26 @@ import json
 
 @login_required
 def authority_dashboard(request):
-    total_tenders = Tender.objects.count()
-    active_tenders = Tender.objects.filter(status='published').count()
-    total_bids = Bid.objects.count()
+    my_tenders = Tender.objects.filter(authority=request.user)
+    total_tenders = my_tenders.count()
+    active_tenders = my_tenders.filter(status='published').count()
+    
+    my_bids = Bid.objects.filter(tender__authority=request.user)
+    total_bids = my_bids.count()
     
     # Chart Data (Tenders by Status)
     tenders_status = {
-        'draft': Tender.objects.filter(status='draft').count(),
+        'draft': my_tenders.filter(status='draft').count(),
         'published': active_tenders,
-        'closed': Tender.objects.filter(status='closed').count(),
-        'evaluating': Tender.objects.filter(status='evaluating').count(),
+        'closed': my_tenders.filter(status='closed').count(),
+        'evaluating': my_tenders.filter(status='evaluating').count(),
     }
     
     # Chart Data (Bids by Status)
     bids_status = {
-        'pending': Bid.objects.filter(status='pending').count(),
-        'accepted': Bid.objects.filter(status='accepted').count(),
-        'rejected': Bid.objects.filter(status='rejected').count(),
+        'pending': my_bids.filter(status='pending').count(),
+        'accepted': my_bids.filter(status='accepted').count(),
+        'rejected': my_bids.filter(status='rejected').count(),
     }
     
     context = {
@@ -40,7 +43,7 @@ def authority_dashboard(request):
 def supplier_dashboard(request):
     active_tenders = Tender.objects.filter(status='published').count()
     
-    my_bids = Bid.objects.filter(supplier_name=request.user.full_name) if request.user.full_name else Bid.objects.none()
+    my_bids = Bid.objects.filter(supplier=request.user)
     supplier_bids = my_bids.count()
     won_bids = my_bids.filter(status='accepted').count()
     

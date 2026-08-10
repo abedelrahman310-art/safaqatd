@@ -5,27 +5,97 @@ from django.contrib.auth import get_user_model
 from django.contrib import messages
 from apps.procurement.models import Tender, Bid
 
-@login_required
-@permission_required('accounts.view_central_dashboard', raise_exception=True)
-def regulator_dashboard(request):
-    total_tenders = Tender.objects.count()
-    total_bids = Bid.objects.count()
-    total_users = get_user_model().objects.count()
-    active_suppliers = get_user_model().objects.filter(role='supplier').count()
-    
-    tenders_by_wilaya = {}
-    for t in Tender.objects.all():
-        w = t.wilaya
-        tenders_by_wilaya[w] = tenders_by_wilaya.get(w, 0) + 1
+from .services.regulator_stats import get_regulator_summary, get_visible_tenders, apply_regulator_filters
+from .services.regulator_reports import RegulatorReportsService
+from .forms import RegulatorFilterForm
+from .filters import TenderFilter
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import PermissionRequiredMixin
+
+class RegulatorDashboardView(PermissionRequiredMixin, TemplateView):
+    template_name = 'dashboard/regulator_dashboard.html'
+    permission_required = "dashboard.view_regulator_dashboard"
+
+    def get_context_data(self, **kwargs):
+        from django.core.paginator import Paginator
+        context = super().get_context_data(**kwargs)
+        request = self.request
         
-    context = {
-        'total_tenders': total_tenders,
-        'total_bids': total_bids,
-        'total_users': total_users,
-        'active_suppliers': active_suppliers,
-        'tenders_by_wilaya': json.dumps(tenders_by_wilaya),
-    }
-    return render(request, 'dashboard/regulator_dashboard.html', context)
+        filter_form = RegulatorFilterForm(request.GET or None)
+        
+        filters = {}
+        if filter_form.is_valid():
+            filters = filter_form.cleaned_data
+            
+        summary = get_regulator_summary(request.user, filters)
+        context.update(summary)
+        
+        # Paginate tenders
+        paginator = Paginator(summary['tenders'], 20)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        context['page_obj'] = page_obj
+        
+        context['filter'] = type('obj', (object,), {'form': filter_form}) # Mocking the TenderFilter interface for the template `filter.form`
+        
+        request.session['regulator_dashboard_filters'] = request.GET.dict()
+        
+        return context
+
+import csv
+import logging
+from django.http import StreamingHttpResponse
+
+logger = logging.getLogger('dashboard.exports')
+
+class Echo:
+    """An object that implements just the write method of the file-like interface."""
+    def write(self, value):
+        return value
+
+@login_required
+@permission_required('dashboard.view_regulator_dashboard', raise_exception=True)
+def export_regulator_csv(request):
+    logger.info(f"User {request.user} exported CSV. Filters: {request.session.get('regulator_dashboard_filters', {})}")
+    filters = request.session.get('regulator_dashboard_filters', {})
+    qs = get_visible_tenders(request.user)
+    queryset = apply_regulator_filters(qs, filters)
+    
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+
+    def generate():
+        # BOM for UTF-8 Excel compatibility
+        yield pseudo_buffer.write('\ufeff')
+        yield writer.writerow([
+            "رقم الصفقة",
+            "العنوان",
+            "الحالة",
+            "التاريخ",
+        ])
+        for tender in queryset.iterator(chunk_size=500):
+            yield writer.writerow([
+                tender.id,
+                tender.title,
+                tender.get_status_display(),
+                tender.created_at.strftime('%Y-%m-%d %H:%M') if tender.created_at else '',
+            ])
+
+    response = StreamingHttpResponse(
+        generate(),
+        content_type="text/csv; charset=utf-8"
+    )
+    response["Content-Disposition"] = 'attachment; filename="tenders_report.csv"'
+    return response
+
+@login_required
+@permission_required('dashboard.view_regulator_dashboard', raise_exception=True)
+def export_regulator_pdf(request):
+    logger.info(f"User {request.user} exported PDF. Filters: {request.session.get('regulator_dashboard_filters', {})}")
+    filters = request.session.get('regulator_dashboard_filters', {})
+    qs = get_visible_tenders(request.user)
+    filtered_qs = apply_regulator_filters(qs, filters)
+    return RegulatorReportsService.generate_pdf_report(filtered_qs)
 
 @login_required
 @permission_required('accounts.manage_all_users', raise_exception=True)

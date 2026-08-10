@@ -1,6 +1,165 @@
 {% extends 'dashboard_base.html' %}
+{% load static %}
 
-{% block title %}لوحة القيادة العليا (سلطة الضبط) | صفقات ذكية{% endblock %}
+{% block title %}لوحة المراقب والتقارير المتقدمة | صفقات ذكية{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Styling adjustments for Regulator Dashboard */
+    .dashboard-page {
+        padding: 2rem;
+        background-color: var(--bg-main);
+    }
+    
+    .section-title {
+        color: var(--text-primary);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i {
+        color: var(--accent-primary);
+    }
+
+    /* Cards */
+    .kpi-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .kpi-total .kpi-icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .kpi-published .kpi-icon { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .kpi-eval .kpi-icon { background: rgba(234, 179, 8, 0.1); color: #eab308; }
+    .kpi-closed .kpi-icon { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+    .kpi-overdue .kpi-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+    .kpi-value {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .kpi-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* Charts Container */
+    .chart-container {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        height: 350px;
+        position: relative;
+    }
+
+    /* Tables */
+    .table-responsive {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 1rem;
+        backdrop-filter: blur(10px);
+        overflow-x: auto;
+    }
+    
+    .dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: right;
+    }
+    
+    .dashboard-table th {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        font-weight: 600;
+        padding: 1rem;
+        border-bottom: 1px solid var(--glass-border);
+        white-space: nowrap;
+    }
+    
+    .dashboard-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+    
+    .dashboard-table tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 2rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .badge-published { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .badge-evaluating { background: rgba(234, 179, 8, 0.1); color: #eab308; }
+    .badge-closed { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+    .badge-draft { background: rgba(156, 163, 175, 0.1); color: #9ca3af; }
+
+    /* Filters */
+    .filter-section {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        border-radius: 0.5rem;
+        color: var(--text-primary);
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+    }
+    
+    .form-label {
+        display: block;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
 
 {% block sidebar %}
     {% include 'includes/sidebar_central_admin.html' %}
@@ -8,79 +167,346 @@
 
 {% block content %}
 <section class="dashboard-page">
-    <div class="dashboard-header">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
         <div>
-            <h2>مرحباً، سلطة الضبط</h2>
-            <p style="color: var(--text-secondary);">نظرة عامة على أداء المنصة والصفقات العمومية.</p>
+            <h1 style="color: var(--text-primary); font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">الرقابة المركزية</h1>
+            <p style="color: var(--text-secondary); font-size: 1rem;">نظرة تحليلية متقدمة للصفقات العمومية ومتابعة الامتثال.</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{% url 'dashboard:export_regulator_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-outline">
+                <i class="fas fa-file-pdf" style="color: #ef4444;"></i> تصدير PDF
+            </a>
+            <a href="{% url 'dashboard:export_regulator_csv' %}?{{ request.GET.urlencode }}" class="btn btn-primary">
+                <i class="fas fa-file-excel"></i> تصدير CSV
+            </a>
         </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-        <div class="stat-card" style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 1rem;">
-            <h3 style="color: var(--text-secondary); font-size: 1rem;">إجمالي الصفقات</h3>
-            <p style="font-size: 2.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0;">{{ total_tenders }}</p>
+    <!-- Filters -->
+    <div class="filter-section">
+        <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-filter" style="color: var(--text-secondary);"></i> تصفية البيانات
+        </h3>
+        <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
+            {% for field in filter.form %}
+            <div>
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <span style="color: #ef4444; font-size: 0.8rem; margin-top: 0.25rem; display: block;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;"><i class="fas fa-search"></i> تطبيق</button>
+                <a href="{% url 'dashboard:regulator' %}" class="btn btn-outline" style="flex: 1; text-align: center;">إعادة ضبط</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- KPIs -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="kpi-card kpi-total">
+            <div class="kpi-icon"><i class="fas fa-file-contract"></i></div>
+            <div class="kpi-value">{{ total }}</div>
+            <div class="kpi-label">إجمالي الصفقات</div>
         </div>
-        <div class="stat-card" style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 1rem;">
-            <h3 style="color: var(--text-secondary); font-size: 1rem;">إجمالي العروض المقدمة</h3>
-            <p style="font-size: 2.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0;">{{ total_bids }}</p>
+        <div class="kpi-card kpi-published">
+            <div class="kpi-icon"><i class="fas fa-bullhorn"></i></div>
+            <div class="kpi-value">{{ published }}</div>
+            <div class="kpi-label">صفقات منشورة (قيد الاستلام)</div>
         </div>
-        <div class="stat-card" style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 1rem;">
-            <h3 style="color: var(--text-secondary); font-size: 1rem;">إجمالي المستخدمين</h3>
-            <p style="font-size: 2.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0;">{{ total_users }}</p>
+        <div class="kpi-card kpi-eval">
+            <div class="kpi-icon"><i class="fas fa-balance-scale"></i></div>
+            <div class="kpi-value">{{ under_evaluation }}</div>
+            <div class="kpi-label">قيد التقييم (مفتوحة)</div>
         </div>
-        <div class="stat-card" style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 1rem;">
-            <h3 style="color: var(--text-secondary); font-size: 1rem;">المتعاملين الاقتصاديين</h3>
-            <p style="font-size: 2.5rem; font-weight: 800; color: #38bdf8; margin: 0.5rem 0;">{{ active_suppliers }}</p>
+        <div class="kpi-card kpi-closed">
+            <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="kpi-value">{{ closed }}</div>
+            <div class="kpi-label">صفقات منتهية</div>
+        </div>
+        <div class="kpi-card kpi-overdue" style="border: 1px solid rgba(239, 68, 68, 0.3);">
+            <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="kpi-value">{{ overdue }}</div>
+            <div class="kpi-label" style="color: #fca5a5;">صفقات متأخرة أو متعثرة</div>
         </div>
     </div>
 
     <!-- Charts -->
-    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 2rem; border-radius: 1rem; margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1.5rem;">توزيع الصفقات حسب الولاية</h3>
-        <canvas id="wilayaChart" height="100"></canvas>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div>
+            <h3 class="section-title"><i class="fas fa-chart-pie"></i> توزيع الصفقات حسب الحالة</h3>
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+        <div>
+            <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> التوزيع الجغرافي (أعلى 10 ولايات)</h3>
+            <div class="chart-container">
+                <canvas id="wilayaChart"></canvas>
+            </div>
+        </div>
+        <div style="grid-column: 1 / -1;">
+            <h3 class="section-title"><i class="fas fa-chart-line"></i> التطور الزمني لإنشاء الصفقات</h3>
+            <div class="chart-container">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
     </div>
+
+    <!-- Grid for Alarms and Audit Trail -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <!-- Alarms Table -->
+        <div>
+            <h3 class="section-title" style="color: #ef4444;"><i class="fas fa-bell"></i> جدول الإنذارات والمخاطر</h3>
+            <div class="table-responsive">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>رقم الصفقة</th>
+                            <th>تاريخ الانقضاء</th>
+                            <th>مؤشر الخطر</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alarm in alarms %}
+                        <tr>
+                            <td><a href="{{ alarm.get_absolute_url }}" style="color: var(--accent-primary); text-decoration: none;">#{{ alarm.id }}</a></td>
+                            <td style="color: #ef4444;">{{ alarm.deadline|date:"Y/m/d" }}</td>
+                            <td><span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">تجاوز الآجال المحددة</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-secondary);">لا توجد إنذارات حالياً</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Latest Operations (Audit Mock) -->
+        <div>
+            <h3 class="section-title"><i class="fas fa-history"></i> آخر العمليات</h3>
+            <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 1rem; padding: 1.5rem; backdrop-filter: blur(10px); height: 100%;">
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
+                    {% for item in page_obj|slice:":5" %}
+                    <li style="display: flex; gap: 1rem; align-items: flex-start; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-primary); margin-top: 5px;"></div>
+                        <div>
+                            <p style="margin: 0 0 0.25rem 0; color: var(--text-primary); font-size: 0.95rem;">إنشاء أو تعديل صفقة: {{ item.title }}</p>
+                            <span style="color: var(--text-secondary); font-size: 0.8rem;"><i class="far fa-clock"></i> {{ item.created_at|timesince }}</span>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li style="text-align: center; color: var(--text-secondary);">لا توجد حركات مسجلة</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Table -->
+    <h3 class="section-title"><i class="fas fa-table"></i> سجل الصفقات التفصيلي</h3>
+    <div class="table-responsive" style="margin-bottom: 2rem;">
+        <table class="dashboard-table">
+            <thead>
+                <tr>
+                    <th>المعرف</th>
+                    <th>عنوان الصفقة</th>
+                    <th>الجهة المتعاقدة</th>
+                    <th>الولاية</th>
+                    <th>الحالة</th>
+                    <th>تاريخ الإنشاء</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tender in page_obj %}
+                <tr>
+                    <td>#{{ tender.id }}</td>
+                    <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ tender.title }}">{{ tender.title }}</td>
+                    <td>{{ tender.authority.username|default:"-" }}</td>
+                    <td>{{ tender.wilaya|default:"-" }}</td>
+                    <td>
+                        {% if tender.status == 'published' %}
+                        <span class="badge badge-published">منشورة</span>
+                        {% elif tender.status == 'evaluating' %}
+                        <span class="badge badge-evaluating">قيد التقييم</span>
+                        {% elif tender.status == 'closed' %}
+                        <span class="badge badge-closed">مغلقة</span>
+                        {% else %}
+                        <span class="badge badge-draft">مسودة</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ tender.created_at|date:"Y/m/d" }}</td>
+                    <td>
+                        <a href="{{ tender.get_absolute_url }}" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.85rem;"><i class="fas fa-eye"></i> عرض</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>لا توجد بيانات مطابقة للفلاتر المحددة.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-outline" style="padding: 0.5rem 1rem;"><i class="fas fa-chevron-right"></i> السابق</a>
+        {% endif %}
+        
+        <span style="background: var(--glass-bg); padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--glass-border); color: var(--text-primary);">
+            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+        </span>
+        
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-outline" style="padding: 0.5rem 1rem;">التالي <i class="fas fa-chevron-left"></i></a>
+        {% endif %}
+    </div>
+    {% endif %}
+
 </section>
+
+<!-- Injecting JSON Data for Charts -->
+{{ by_status_json|json_script:"statusData" }}
+{{ by_wilaya_json|json_script:"wilayaData" }}
+{{ by_month_json|json_script:"timelineData" }}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const wilayaData = JSON.parse('{{ tenders_by_wilaya|escapejs }}');
-    
-    // Process wilaya codes to names (simplified)
-    const labels = Object.keys(wilayaData).map(k => 'ولاية ' + (k || 'غير محدد'));
-    const data = Object.values(wilayaData);
+    document.addEventListener("DOMContentLoaded", function() {
+        // Shared Chart Configuration for Dark Theme
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Tajawal', sans-serif";
+        const gridOptions = { color: 'rgba(255, 255, 255, 0.05)' };
+        
+        const arabicStatusMap = {
+            'draft': 'مسودة',
+            'published': 'منشورة',
+            'evaluating': 'قيد التقييم',
+            'closed': 'منتهية',
+            'cancelled': 'ملغاة'
+        };
 
-    const ctx = document.getElementById('wilayaChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'عدد الصفقات',
-                data: data,
-                backgroundColor: 'rgba(56, 189, 248, 0.6)',
-                borderColor: 'rgba(56, 189, 248, 1)',
-                borderWidth: 1,
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(255,255,255,0.1)' },
-                    ticks: { color: '#94a3b8' }
+        // 1. Status Doughnut Chart
+        const statusDataRaw = JSON.parse(document.getElementById('statusData').textContent);
+        if(statusDataRaw && statusDataRaw.length > 0) {
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: statusDataRaw.map(d => arabicStatusMap[d.status] || d.status),
+                    datasets: [{
+                        data: statusDataRaw.map(d => d.total),
+                        backgroundColor: ['#9ca3af', '#10b981', '#eab308', '#6b7280', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
                 },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#94a3b8' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', rtl: true }
+                    },
+                    cutout: '70%'
                 }
-            }
+            });
         }
+
+        // 2. Wilaya Bar Chart
+        const wilayaDataRaw = JSON.parse(document.getElementById('wilayaData').textContent);
+        if(wilayaDataRaw && wilayaDataRaw.length > 0) {
+            const ctxWilaya = document.getElementById('wilayaChart').getContext('2d');
+            
+            // Generate a gradient for bars
+            const gradient = ctxWilaya.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+            gradient.addColorStop(1, 'rgba(139, 92, 246, 0.8)');
+
+            new Chart(ctxWilaya, {
+                type: 'bar',
+                data: {
+                    labels: wilayaDataRaw.map(d => d.wilaya || 'غير محدد'),
+                    datasets: [{
+                        label: 'عدد الصفقات',
+                        data: wilayaDataRaw.map(d => d.total),
+                        backgroundColor: gradient,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: gridOptions },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // 3. Timeline Line Chart
+        const timelineDataRaw = JSON.parse(document.getElementById('timelineData').textContent);
+        if(timelineDataRaw && timelineDataRaw.length > 0) {
+            const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
+            
+            const gradientLine = ctxTimeline.createLinearGradient(0, 0, 0, 400);
+            gradientLine.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
+            gradientLine.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+            new Chart(ctxTimeline, {
+                type: 'line',
+                data: {
+                    labels: timelineDataRaw.map(d => d.month),
+                    datasets: [{
+                        label: 'إجمالي الصفقات',
+                        data: timelineDataRaw.map(d => d.total),
+                        borderColor: '#10b981',
+                        backgroundColor: gradientLine,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#10b981',
+                        pointRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: gridOptions },
+                        x: { grid: gridOptions }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
+                }
+            });
+        }
+        
+        // Add form styling for default Django inputs
+        document.querySelectorAll('.filter-section input, .filter-section select').forEach(el => {
+            el.classList.add('form-control');
+        });
     });
 </script>
 {% endblock %}
