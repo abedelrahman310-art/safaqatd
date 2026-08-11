@@ -7,7 +7,7 @@ databases:
 services:
   - type: web
     name: safakat-web
-    runtime: python
+    env: python
     buildCommand: "./build.sh"
     startCommand: "./start.sh"
     plan: free
