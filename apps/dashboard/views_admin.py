@@ -14,7 +14,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 class RegulatorDashboardView(PermissionRequiredMixin, TemplateView):
     template_name = 'dashboard/regulator_dashboard.html'
-    permission_required = "dashboard.view_regulator_dashboard"
+    permission_required = "accounts.view_central_dashboard"
 
     def get_context_data(self, **kwargs):
         from django.core.paginator import Paginator
@@ -54,7 +54,7 @@ class Echo:
         return value
 
 @login_required
-@permission_required('dashboard.view_regulator_dashboard', raise_exception=True)
+@permission_required('accounts.view_central_dashboard', raise_exception=True)
 def export_regulator_csv(request):
     logger.info(f"User {request.user} exported CSV. Filters: {request.session.get('regulator_dashboard_filters', {})}")
     filters = request.session.get('regulator_dashboard_filters', {})
@@ -89,7 +89,7 @@ def export_regulator_csv(request):
     return response
 
 @login_required
-@permission_required('dashboard.view_regulator_dashboard', raise_exception=True)
+@permission_required('accounts.view_central_dashboard', raise_exception=True)
 def export_regulator_pdf(request):
     logger.info(f"User {request.user} exported PDF. Filters: {request.session.get('regulator_dashboard_filters', {})}")
     filters = request.session.get('regulator_dashboard_filters', {})
