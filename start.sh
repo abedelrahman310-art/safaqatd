@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -o errexit
 
+export PYTHONPATH="/opt/render/project/src:$PYTHONPATH"
+
 echo "Setting up permission groups..."
 python manage.py setup_groups
 

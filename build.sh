@@ -11,6 +11,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 echo "→ جمع الملفات الثابتة..."
+export PYTHONPATH="/opt/render/project/src:$PYTHONPATH"
 python manage.py collectstatic --no-input
 
 echo "→ تنفيذ ترحيلات قاعدة البيانات..."
