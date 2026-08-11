@@ -57,7 +57,7 @@ def evaluate_tender_bids_task(tender_id):
                 except json.JSONDecodeError:
                     result_json = {
                         "score": 50,
-                        "strengths": ["فشل في قراءة مخرجات الذكاء الاصطناعي بشكل منظم."],
+                        "strengths": ["فشل في قراءة مخرجات التقييم الآلي بشكل منظم."],
                         "weaknesses": ["الرجاء إعادة التقييم."],
                         "summary": "خطأ في المعالجة."
                     }
@@ -115,7 +115,7 @@ def generate_cahier_task(tender_id):
         except json.JSONDecodeError:
             result_json = {
                 "title": f"دفتر الشروط: {tender.title}",
-                "legal_framework": "حدث خطأ في قراءة رد الذكاء الاصطناعي.",
+                "legal_framework": "حدث خطأ في قراءة الرد الآلي.",
                 "technical_requirements": "يرجى إعادة المحاولة.",
                 "evaluation_criteria": response.text
             }

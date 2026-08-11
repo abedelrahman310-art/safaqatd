@@ -72,7 +72,7 @@ def register_supplier_view(request):
         user.sector = request.POST.get('sector')
         user.save()
         
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return redirect('dashboard:supplier')
 
     return render(request, 'accounts/register_supplier.html')
@@ -105,7 +105,7 @@ def register_authority_view(request):
         user.sector = request.POST.get('sector')
         user.save()
         
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return redirect('dashboard:authority')
 
     return render(request, 'accounts/register_authority.html')

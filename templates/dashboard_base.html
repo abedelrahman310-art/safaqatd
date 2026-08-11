@@ -22,16 +22,16 @@
         </div>
         <div class="nav-user" style="position: relative; display: flex; align-items: center; gap: 1rem;">
             <!-- Live Clock -->
-            <div id="live-clock" style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; margin-left: 1rem; padding: 0.3rem 0.8rem; background: rgba(0,0,0,0.2); border-radius: 1rem; border: 1px solid var(--glass-border);"></div>
+            <div id="live-clock" style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; margin-inline-end: 1rem; padding: 0.3rem 0.8rem; background: rgba(0,0,0,0.2); border-radius: 1rem; border: 1px solid var(--glass-border);"></div>
             <!-- Notifications Bell -->
             <div style="position: relative; cursor: pointer;" onclick="document.getElementById('notifDropdown').style.display = document.getElementById('notifDropdown').style.display === 'none' ? 'block' : 'none'">
                 <i class="fas fa-bell" style="font-size: 1.2rem; color: var(--text-primary); transition: color 0.3s;" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-primary)'"></i>
                 {% if unread_notifications_count > 0 %}
-                <span style="position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; font-size: 0.7rem; padding: 2px 5px; border-radius: 50%; font-weight: bold;">{{ unread_notifications_count }}</span>
+                <span style="position: absolute; top: -5px; inset-inline-end: -8px; background: var(--danger); color: white; font-size: 0.7rem; padding: 2px 5px; border-radius: 50%; font-weight: bold;">{{ unread_notifications_count }}</span>
                 {% endif %}
                 
                 <!-- Notifications Dropdown -->
-                <div class="dropdown-menu" id="notifDropdown" style="display: none; position: absolute; left: -50px; top: 100%; margin-top: 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0.5rem; width: 300px; text-align: right; z-index: 1000; backdrop-filter: blur(10px); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                <div class="dropdown-menu" id="notifDropdown" style="display: none; position: absolute; inset-inline-start: -50px; top: 100%; margin-top: 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0.5rem; width: 300px; text-align: right; z-index: 1000; backdrop-filter: blur(10px); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
                     <div style="padding: 0.8rem 1rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
                         <h4 style="margin: 0; font-size: 0.95rem; color: var(--accent-primary);">الإشعارات</h4>
                         {% if unread_notifications_count > 0 %}
@@ -58,13 +58,13 @@
             <a href="{% url 'core:index' %}" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem;"><i class="fas fa-home"></i> الرئيسية</a>
             <div style="display: inline-block; position: relative;" onclick="document.getElementById('profileDropdown').style.display = document.getElementById('profileDropdown').style.display === 'none' ? 'block' : 'none'">
                 <img src="https://ui-avatars.com/api/?name=U&background=3b82f6&color=fff" alt="User" style="width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid var(--glass-border); vertical-align: middle;">
-                <div class="dropdown-menu" id="profileDropdown" style="display: none; position: absolute; left: 0; top: 100%; margin-top: 0.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0.5rem; padding: 0.5rem 0; min-width: 150px; text-align: right; z-index: 1000; backdrop-filter: blur(10px);">
+                <div class="dropdown-menu" id="profileDropdown" style="display: none; position: absolute; inset-inline-start: 0; top: 100%; margin-top: 0.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 0.5rem; padding: 0.5rem 0; min-width: 150px; text-align: right; z-index: 1000; backdrop-filter: blur(10px);">
                     {% if request.user.role != 'authority' %}
-                    <a href="{% url 'accounts:profile' %}" style="display: block; padding: 0.5rem 1rem; color: var(--text-primary); text-decoration: none;"><i class="fas fa-user" style="margin-left: 0.5rem; color: var(--accent-primary);"></i> الملف الشخصي</a>
+                    <a href="{% url 'accounts:profile' %}" style="display: block; padding: 0.5rem 1rem; color: var(--text-primary); text-decoration: none;"><i class="fas fa-user" style="margin-inline-end: 0.5rem; color: var(--accent-primary);"></i> الملف الشخصي</a>
                     {% endif %}
-                    <a href="#" style="display: block; padding: 0.5rem 1rem; color: var(--text-primary); text-decoration: none;"><i class="fas fa-cog" style="margin-left: 0.5rem;"></i> الإعدادات</a>
+                    <a href="#" style="display: block; padding: 0.5rem 1rem; color: var(--text-primary); text-decoration: none;"><i class="fas fa-cog" style="margin-inline-end: 0.5rem;"></i> الإعدادات</a>
                     <div style="height: 1px; background: var(--glass-border); margin: 0.5rem 0;"></div>
-                    <a href="{% url 'accounts:logout' %}" style="display: block; padding: 0.5rem 1rem; color: var(--danger); text-decoration: none;"><i class="fas fa-sign-out-alt" style="margin-left: 0.5rem;"></i> تسجيل الخروج</a>
+                    <a href="{% url 'accounts:logout' %}" style="display: block; padding: 0.5rem 1rem; color: var(--danger); text-decoration: none;"><i class="fas fa-sign-out-alt" style="margin-inline-end: 0.5rem;"></i> تسجيل الخروج</a>
                 </div>
             </div>
         </div>
@@ -83,7 +83,7 @@
     </div>
 
     <!-- Chatbot Widget -->
-    <div id="chatbot-widget" style="position: fixed; bottom: 2rem; left: 2rem; z-index: 1000; font-family: 'Tajawal', sans-serif;">
+    <div id="chatbot-widget" style="position: fixed; bottom: 2rem; inset-inline-start: 2rem; z-index: 1000; font-family: 'Tajawal', sans-serif;">
         <!-- Chatbot Window -->
         <div id="chatbot-window" style="display: none; width: 350px; height: 500px; background: rgba(15, 20, 30, 0.95); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); flex-direction: column; overflow: hidden; margin-bottom: 1rem; transition: all 0.3s ease;">
             
@@ -147,6 +147,12 @@
             });
           });
         }
+    </script>
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+    <script>
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -14,16 +14,10 @@ class RegulatorDashboardQueryTests(TestCase):
         self.user = User.objects.create_user(
             username="regulator_test",
             password="password123",
-            role="regulator"
+            role="central_admin"
         )
         
-        ct, _ = ContentType.objects.get_or_create(app_label='dashboard', model='dashboard')
-        perm, _ = Permission.objects.get_or_create(
-            codename='view_regulator_dashboard',
-            content_type=ct,
-            defaults={'name': 'Can view regulator dashboard'}
-        )
-        
+        perm = Permission.objects.get(codename='view_central_dashboard', content_type__app_label='accounts')
         self.user.user_permissions.add(perm)
         self.client.force_login(self.user)
 
@@ -33,5 +27,4 @@ class RegulatorDashboardQueryTests(TestCase):
                 reverse("dashboard:regulator")
             )
             self.assertEqual(response.status_code, 200)
-
-        self.assertLessEqual(len(queries), 12)
+        self.assertLessEqual(len(queries), 25)

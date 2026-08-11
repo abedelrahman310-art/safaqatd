@@ -39,7 +39,7 @@
     </div>
 
     <!-- Role Cards Container -->
-    <div style="display: flex; justify-content: center; gap: 5rem; flex-wrap: wrap; max-width: 800px; width: 100%; margin: 0 auto;">
+    <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; max-width: 1000px; width: 100%; margin: 0 auto;">
         
         <!-- Authority Card (Green Theme) -->
         <a href="{% url 'accounts:register_authority' %}" class="role-card" style="text-decoration: none; flex: 1; min-width: 220px; max-width: 280px; text-align: center;">
@@ -61,7 +61,21 @@
             </div>
         </a>
 
+        <!-- Admin Card (Blue Theme) -->
+        <a href="{% url 'dashboard:regulator' %}" class="role-card" style="text-decoration: none; flex: 1; min-width: 220px; max-width: 280px; text-align: center;">
+            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0.05)); backdrop-filter: blur(25px); border: 1px solid rgba(59, 130, 246, 0.3); border-top: 1px solid rgba(59, 130, 246, 0.6); padding: 2rem 1.5rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2); transition: transform 0.3s ease, box-shadow 0.3s ease; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;" class="role-card-inner">
+                <div style="width: 65px; height: 65px; margin-bottom: 1.5rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);">
+                    <i class="fas fa-gavel fa-2x" style="color: #fff;"></i>
+                </div>
+                <h2 style="font-size: 1.25rem; margin: 0; color: #fff; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">إدارة المنصة</h2>
+            </div>
+        </a>
+
+
+
     </div>
+
+
 
     <!-- News Ticker -->
     <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 15, 26, 0.85); border-top: 1px solid rgba(255,255,255,0.15); padding: 0.3rem 0; overflow: hidden; z-index: 100; display: flex; align-items: center; backdrop-filter: blur(10px);">

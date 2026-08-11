@@ -1,0 +1,70 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}بحث عن الصفقات | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-menu">
+    <a href="{% url 'suppliers:dashboard' %}" class="sidebar-item">
+        <i class="fas fa-home"></i> نظرة عامة
+    </a>
+    <a href="{% url 'suppliers:tenders_list' %}" class="sidebar-item active">
+        <i class="fas fa-search"></i> البحث عن الصفقات
+    </a>
+    <a href="#" class="sidebar-item">
+        <i class="fas fa-file-contract"></i> عروضي المقدمة
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h2>استكشاف الصفقات المتاحة</h2>
+    <p>ابحث عن أحدث عروض المناقصات والصفقات المطروحة في النظام.</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="filters-grid" style="display: flex; gap: 1rem; align-items: flex-end;"
+              hx-get="{% url 'suppliers:tenders_list' %}" 
+              hx-target="#tenders-results" 
+              hx-trigger="keyup from:#search-q delay:500ms, change from:#sector-filter">
+            
+            <div style="flex: 1;">
+                <label for="search-q" style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">بحث بالكلمات المفتاحية</label>
+                <input type="text" id="search-q" name="q" placeholder="اسم الصفقة..." 
+                       class="form-control" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary);">
+            </div>
+            
+            <div style="flex: 1;">
+                <label for="sector-filter" style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">القطاع</label>
+                <select id="sector-filter" name="sector" class="form-control" 
+                        style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary);">
+                    <option value="">جميع القطاعات</option>
+                    <option value="تكنولوجيا">تكنولوجيا</option>
+                    <option value="بناء">بناء</option>
+                    <option value="صحة">صحة</option>
+                    <option value="تعليم">تعليم</option>
+                </select>
+            </div>
+            
+            <div>
+                <!-- We don't need a submit button thanks to HTMX, but it's good for fallback -->
+                <button type="submit" class="btn btn-primary" style="padding: 0.8rem 1.5rem; border-radius: 8px;">
+                    <i class="fas fa-filter"></i> فلترة
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card" style="position: relative;">
+    <!-- HTMX Loading Indicator -->
+    <div class="htmx-indicator" style="position: absolute; top: 50%; inset-inline-start: 50%; transform: translate(-50%, -50%); z-index: 10;">
+        <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--accent-primary);"></i>
+    </div>
+    
+    <div class="card-body" id="tenders-results">
+        {% include 'suppliers/partials/_tenders_table.html' %}
+    </div>
+</div>
+{% endblock %}

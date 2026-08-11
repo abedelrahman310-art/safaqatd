@@ -1,0 +1,101 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}لوحة المورد | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-menu">
+    <a href="{% url 'suppliers:dashboard' %}" class="sidebar-item active">
+        <i class="fas fa-home"></i> نظرة عامة
+    </a>
+    <a href="{% url 'suppliers:tenders_list' %}" class="sidebar-item">
+        <i class="fas fa-search"></i> البحث عن الصفقات
+    </a>
+    <a href="#" class="sidebar-item">
+        <i class="fas fa-file-contract"></i> عروضي المقدمة
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h2>مرحباً بك، {{ user.display_name }}!</h2>
+    <p>بوابة الموردين الخاصة بك (متعامل اقتصادي)</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">
+            <i class="fas fa-search-dollar"></i>
+        </div>
+        <div class="stat-info">
+            <h3>الصفقات المتاحة</h3>
+            <p class="stat-value">{{ available_tenders_count }}</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">
+            <i class="fas fa-file-signature"></i>
+        </div>
+        <div class="stat-info">
+            <h3>عروض قيد الدراسة</h3>
+            <p class="stat-value">{{ my_bids_count }}</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-info">
+            <h3>العروض الفائزة</h3>
+            <p class="stat-value">{{ accepted_bids_count }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header" style="display:flex; justify-content: space-between; align-items:center;">
+        <h3 class="card-title">أحدث الصفقات المفتوحة</h3>
+        <a href="{% url 'suppliers:tenders_list' %}" class="btn btn-outline">عرض الكل</a>
+    </div>
+    <div class="card-body">
+        {% if recent_tenders %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>العنوان</th>
+                    <th>القطاع</th>
+                    <th>آخر أجل</th>
+                    <th>الوثائق</th>
+                    <th>إجراء</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tender in recent_tenders %}
+                <tr>
+                    <td>{{ tender.title }}</td>
+                    <td>{{ tender.sector|default:"-" }}</td>
+                    <td class="{% if tender.is_deadline_passed %}text-danger{% else %}text-success{% endif %}">
+                        {{ tender.deadline|date:"Y/m/d" }}
+                    </td>
+                    <td>
+                        {% if tender.document %}
+                        <a href="{{ tender.document.url }}" class="btn btn-sm btn-outline"><i class="fas fa-download"></i></a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'suppliers:tender_detail' tender.id %}" class="btn btn-sm btn-primary">التفاصيل</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-center text-muted">لا توجد صفقات متاحة حالياً.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

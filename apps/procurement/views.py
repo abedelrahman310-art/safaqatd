@@ -32,7 +32,7 @@ def tender_list(request):
         paid_tender_ids = list(DocumentPayment.objects.filter(supplier=request.user).values_list('tender_id', flat=True))
         
         # Exclude tenders the supplier has already applied to
-        applied_tender_ids = Bid.objects.filter(supplier_name=request.user.full_name).values_list('tender_id', flat=True)
+        applied_tender_ids = Bid.objects.filter(supplier=request.user).values_list('tender_id', flat=True)
         tenders = tenders.exclude(id__in=applied_tender_ids)
         
     context = {
@@ -106,6 +106,7 @@ def bid_create(request, tender_id):
         if form.is_valid():
             bid = form.save(commit=False)
             bid.tender = tender
+            bid.supplier = request.user
             bid.supplier_name = request.user.full_name or request.user.email
             bid.nif_number = getattr(request.user, 'national_id', '')
             bid.nis_number = getattr(request.user, 'commercial_register', '')
@@ -238,9 +239,7 @@ def bid_update_status(request, bid_id, status):
         bid.status = status
         bid.save()
         
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        supplier_user = User.objects.filter(full_name=bid.supplier_name).first()
+        supplier_user = bid.supplier
         
         if supplier_user:
             msg = "تم قبول عرضك!" if status == 'accepted' else "تم تحديث حالة عرضك إلى: " + status
@@ -395,7 +394,7 @@ def my_bids(request):
     if request.user.role != 'supplier':
         return redirect('dashboard:authority')
         
-    bids = Bid.objects.filter(supplier_name=request.user.full_name or request.user.email).order_by('-submitted_at')
+    bids = Bid.objects.filter(supplier=request.user).order_by('-submitted_at')
     return render(request, 'procurement/my_bids.html', {'bids': bids})
 
 @login_required
@@ -625,9 +624,7 @@ def supplier_live_opening(request, tender_id):
         
     tender = get_object_or_404(Tender, id=tender_id)
     
-    # Check if supplier participated in this tender
-    supplier_name = request.user.full_name or request.user.email
-    has_bid = tender.bids.filter(supplier_name=supplier_name).exists()
+    has_bid = tender.bids.filter(supplier=request.user).exists()
     
     if not has_bid:
         from django.contrib import messages

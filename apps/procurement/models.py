@@ -45,6 +45,22 @@ class PlannedProject(models.Model):
 class ActiveManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
+        
+    def visible_to(self, user):
+        """
+        Filters tenders visible to the given user. 
+        For central_admin, it returns all. 
+        For authority, it returns their own tenders.
+        """
+        qs = self.get_queryset()
+        if user.is_authenticated:
+            if user.has_perm('accounts.audit_all_tenders'):
+                return qs
+            elif getattr(user, 'role', None) == 'authority':
+                return qs.filter(authority=user)
+            elif getattr(user, 'role', None) == 'supplier':
+                return qs.filter(status__in=['published', 'evaluating', 'closed'])
+        return qs.none()
 
 class Tender(models.Model):
     STATUS_CHOICES = (
@@ -166,7 +182,7 @@ class Bid(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     # Real AI Result
-    ai_evaluation_result = models.JSONField(blank=True, null=True, verbose_name="نتيجة تقييم الذكاء الاصطناعي")
+    ai_evaluation_result = models.JSONField(blank=True, null=True, verbose_name="التقييم الآلي المبدئي")
 
     objects = ActiveManager()
     all_objects = models.Manager()

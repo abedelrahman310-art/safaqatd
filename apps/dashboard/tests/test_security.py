@@ -14,17 +14,12 @@ User = get_user_model()
 class RegulatorSecurityTests(TestCase):
     def setUp(self):
         # Create users
-        self.regulator = User.objects.create_user(username="regulator", password="123", role="regulator")
+        self.regulator = User.objects.create_user(username="regulator", password="123", role="central_admin")
         self.supplier = User.objects.create_user(username="supplier", password="123", role="supplier")
         self.authority = User.objects.create_user(username="authority", password="123", role="authority")
         
         # Grant permission to regulator
-        ct, _ = ContentType.objects.get_or_create(app_label='dashboard', model='dashboard')
-        perm, _ = Permission.objects.get_or_create(
-            codename='view_regulator_dashboard',
-            content_type=ct,
-            defaults={'name': 'Can view regulator dashboard'}
-        )
+        perm = Permission.objects.get(codename='view_central_dashboard', content_type__app_label='accounts')
         self.regulator.user_permissions.add(perm)
 
         # Create some tenders

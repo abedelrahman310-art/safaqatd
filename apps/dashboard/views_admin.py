@@ -192,3 +192,15 @@ def planning_department_view(request):
         'planned_projects': planned_projects.order_by('-created_at')[:10], # recent 10
     }
     return render(request, 'dashboard/planning_department.html', context)
+
+@login_required
+@permission_required('accounts.manage_all_users', raise_exception=True)
+def platform_roles_view(request):
+    User = get_user_model()
+    # Fetch all users except superusers
+    users = User.objects.exclude(is_superuser=True).prefetch_related('user_permissions').order_by('role', '-date_joined')
+    
+    context = {
+        'users': users,
+    }
+    return render(request, 'dashboard/platform_roles.html', context)

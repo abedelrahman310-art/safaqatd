@@ -95,7 +95,7 @@ def ask_your_data(request):
             
             # Here we would normally call Google Gemini with contextual data.
             # For the MVP, we return a mock intelligent response.
-            response_text = f"بناءً على البيانات المتاحة، لاختبار الذكاء الاصطناعي لسؤالك: '{question}'... يبدو أن متوسط مدة المعالجة مستقر، مع وجود تأخير طفيف في قطاع الأشغال العمومية. أنصح بمراجعة الصفقات المتأخرة في هذا القطاع."
+            response_text = f"بناءً على البيانات المتاحة وتحليل النظام الآلي لسؤالك: '{question}'... يبدو أن متوسط مدة المعالجة مستقر، مع وجود تأخير طفيف في قطاع الأشغال العمومية. أنصح بمراجعة الصفقات المتأخرة في هذا القطاع."
             
             return JsonResponse({'answer': response_text, 'source': 'Gemini 2.5 Flash', 'confidence': 'عالية'})
         except Exception as e:

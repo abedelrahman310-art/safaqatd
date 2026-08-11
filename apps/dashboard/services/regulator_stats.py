@@ -46,7 +46,7 @@ def get_regulator_statistics(queryset):
             item['month'] = item['month'].strftime('%Y-%m')
             
     # Tenders for detailed table
-    recent_tenders = queryset.order_by('-created_at')
+    recent_tenders = queryset.select_related('authority').order_by('-created_at')
     
     # Audit trail (mocked with simple recent tenders log for now since no AuditLog model exists)
     audit_trail = [] # Could fetch from LogEntry if needed
@@ -61,7 +61,7 @@ def get_regulator_statistics(queryset):
         "by_status_json": json.dumps(by_status),
         "by_wilaya_json": json.dumps(by_wilaya),
         "by_month_json": json.dumps(by_month),
-        "alarms": overdue_qs[:10],
+        "alarms": overdue_qs.select_related('authority')[:10],
         "tenders": recent_tenders,
         "audit_trail": audit_trail,
     }

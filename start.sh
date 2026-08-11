@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 set -o errexit
 
-echo "Running migrations..."
-python manage.py migrate
+echo "Setting up permission groups..."
+python manage.py setup_groups
 
-echo "Setting up groups..."
-python setup_groups.py
-
-echo "Starting server..."
-gunicorn config.wsgi:application
+echo "Starting Gunicorn server..."
+gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers ${WEB_CONCURRENCY:-3} --timeout 120 --log-file -

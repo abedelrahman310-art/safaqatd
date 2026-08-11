@@ -45,7 +45,7 @@ def evaluate_bids_view(request, tender_id):
         'success': True,
         'tender_title': tender.title,
         'status': 'processing',
-        'message': 'جاري تقييم العروض باستخدام الذكاء الاصطناعي في الخلفية. يرجى الانتظار...'
+        'message': 'جاري تقييم العروض عبر الأتمتة الإجرائية المتقدمة في الخلفية. يرجى الانتظار...'
     })
 
 import json
@@ -117,7 +117,7 @@ def generate_cahier_view(request, tender_id):
         
         context = {
             'tender': tender,
-            'message': 'جاري استخراج دفتر الشروط بالذكاء الاصطناعي... يرجى الانتظار.'
+            'message': 'جاري استخراج دفتر الشروط آلياً... يرجى الانتظار.'
         }
         return render(request, 'ai/cahier_loading.html', context)
 

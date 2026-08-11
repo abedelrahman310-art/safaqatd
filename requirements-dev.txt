@@ -1,0 +1,16 @@
+# Development dependencies — NOT deployed to production
+-r requirements.txt
+
+# Testing
+pytest==9.1.1
+pytest-django==4.14.0
+locust==2.46.3
+
+# Code Quality
+black==26.5.1
+ruff==0.16.2
+vulture==2.16
+pre_commit==4.6.2
+
+# Debugging
+django-debug-toolbar==5.0.1

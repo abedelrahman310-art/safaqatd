@@ -75,7 +75,7 @@
                     </button>
                 </div>
                 {{ form.description }}
-                <small id="ai-drafting-status" style="display: none; color: #ec4899; margin-top: 0.5rem;"><i class="fas fa-spinner fa-spin"></i> جاري التوليد بواسطة الذكاء الاصطناعي...</small>
+                <small id="ai-drafting-status" style="display: none; color: #ec4899; margin-top: 0.5rem;"><i class="fas fa-spinner fa-spin"></i> جاري التوليد الآلي...</small>
             </div>
             
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">حفظ الصفقة <i class="fas fa-save"></i></button>
@@ -91,7 +91,7 @@ function draftTenderAI() {
     const statusText = document.getElementById('ai-drafting-status');
     
     if (!titleInput || !titleInput.value) {
-        alert("يرجى إدخال 'عنوان الصفقة' أولاً ليتمكن الذكاء الاصطناعي من صياغة التفاصيل.");
+        alert("يرجى إدخال 'عنوان الصفقة' أولاً ليتمكن النظام من صياغة التفاصيل.");
         titleInput.focus();
         return;
     }
@@ -134,7 +134,7 @@ function draftTenderAI() {
         }
         
         if (descTextarea.value.trim() !== '') {
-            if(confirm("يوجد نص مسبقاً في حقل التفاصيل. هل تريد أن يقوم الذكاء الاصطناعي بإضافة النص المولد أسفله أم استبداله؟\n\n- اضغط 'موافق' للاستبدال\n- اضغط 'إلغاء' للإضافة بالأسفل")) {
+            if(confirm("يوجد نص مسبقاً في حقل التفاصيل. هل تريد أن يقوم النظام بإضافة النص المولد أسفله أم استبداله؟\n\n- اضغط 'موافق' للاستبدال\n- اضغط 'إلغاء' للإضافة بالأسفل")) {
                 descTextarea.value = data.draft;
             } else {
                 descTextarea.value += "\n\n" + data.draft;
@@ -152,7 +152,7 @@ function draftTenderAI() {
     .catch(error => {
         statusText.style.display = 'none';
         console.error('Error:', error);
-        alert("حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.");
+        alert("حدث خطأ أثناء الاتصال بخدمة التوليد الآلي.");
     });
 }
 </script>

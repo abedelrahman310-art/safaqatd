@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
-# exit on error
+# Render Build Script for صفقات ذكية
 set -o errexit
 
-echo "Installing dependencies..."
+echo "========================================="
+echo "  بناء منصة صفقات ذكية"
+echo "========================================="
+
+echo "→ تثبيت المكتبات..."
+pip install --upgrade pip
 pip install -r requirements.txt
 
-echo "Collecting static files..."
+echo "→ جمع الملفات الثابتة..."
 python manage.py collectstatic --no-input
 
-echo "Running database migrations..."
-python manage.py migrate
+echo "→ تنفيذ ترحيلات قاعدة البيانات..."
+python manage.py migrate --no-input
 
-echo "Build process completed successfully!"
+echo "========================================="
+echo "  ✓ تم البناء بنجاح"
+echo "========================================="

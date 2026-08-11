@@ -1,0 +1,54 @@
+{% if tenders %}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>عنوان الصفقة</th>
+                <th>المصلحة المتعاقدة</th>
+                <th>القطاع</th>
+                <th>الولاية</th>
+                <th>تاريخ الإغلاق</th>
+                <th>الإجراء</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tender in tenders %}
+            <tr>
+                <td style="font-weight: 600;">{{ tender.title }}</td>
+                <td>{{ tender.authority.display_name|default:"-" }}</td>
+                <td><span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">{{ tender.sector|default:"عام" }}</span></td>
+                <td>{{ tender.wilaya|default:"-" }}</td>
+                <td class="{% if tender.is_deadline_passed %}text-danger{% else %}text-success{% endif %}">
+                    {{ tender.deadline|date:"Y/m/d" }}
+                </td>
+                <td>
+                    <a href="{% url 'suppliers:tender_detail' tender.id %}" class="btn btn-sm btn-primary">عرض التفاصيل</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="pagination mt-4" style="display: flex; justify-content: center; gap: 0.5rem;">
+    {% if page_obj.has_previous %}
+        <button hx-get="?page={{ page_obj.previous_page_number }}" hx-target="#tenders-results" class="btn btn-outline btn-sm">السابق</button>
+    {% endif %}
+    
+    <span class="btn btn-outline btn-sm" style="background: var(--glass-bg); color: var(--text-primary); cursor: default;">
+        صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    {% if page_obj.has_next %}
+        <button hx-get="?page={{ page_obj.next_page_number }}" hx-target="#tenders-results" class="btn btn-outline btn-sm">التالي</button>
+    {% endif %}
+</div>
+{% endif %}
+{% else %}
+<div class="empty-state text-center" style="padding: 3rem 1rem;">
+    <i class="fas fa-box-open fa-3x" style="color: rgba(255,255,255,0.2); margin-bottom: 1rem;"></i>
+    <p style="color: var(--text-secondary); font-size: 1.1rem;">لم يتم العثور على أية صفقات تطابق معايير البحث.</p>
+</div>
+{% endif %}

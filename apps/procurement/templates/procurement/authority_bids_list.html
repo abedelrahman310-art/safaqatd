@@ -161,7 +161,7 @@
 <!-- AI Loading Overlay -->
 <div id="ai-loading" style="display: none; position: fixed; inset: 0; background: rgba(15, 20, 30, 0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
     <div style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid rgba(236, 72, 153, 0.2); border-top-color: #ec4899; animation: spin 1s linear infinite; margin-bottom: 2rem;"></div>
-    <h3 style="color: white; margin-bottom: 0.5rem;">يتم تحليل العروض بواسطة الذكاء الاصطناعي...</h3>
+    <h3 style="color: white; margin-bottom: 0.5rem;">يتم تحليل العروض آلياً...</h3>
     <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">نحن نقوم بمقارنة الجوانب المالية والتقنية بناءً على خوارزمياتنا المتقدمة.</p>
 </div>
 
@@ -174,7 +174,7 @@
             <i class="fas fa-robot fa-2x" style="color: white;"></i>
         </div>
         
-        <h2 style="color: white; margin-bottom: 1.5rem;">توصية الذكاء الاصطناعي</h2>
+        <h2 style="color: white; margin-bottom: 1.5rem;">التقييم الآلي المبدئي</h2>
         
         <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
             <p id="ai-recommendation-text" style="color: #e2e8f0; font-size: 1.1rem; line-height: 1.8; margin: 0; text-align: right;"></p>
@@ -245,7 +245,7 @@
             .catch(error => {
                 document.getElementById('ai-loading').style.display = 'none';
                 console.error('Error:', error);
-                alert('حدث خطأ أثناء الاتصال بخدمة الذكاء الاصطناعي.');
+                alert('حدث خطأ أثناء الاتصال بخدمة التقييم الآلي.');
             });
     }
 </script>

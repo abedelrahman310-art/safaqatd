@@ -1,0 +1,78 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}صلاحيات المنصة | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_central_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h2>مصفوفة الأدوار والصلاحيات</h2>
+            <p style="color: var(--text-secondary);">عرض تفصيلي لأدوار المستخدمين والصلاحيات الممنوحة لهم في النظام.</p>
+        </div>
+    </div>
+
+    <div class="dashboard-stats-grid" style="grid-template-columns: 1fr;">
+        <div class="stat-card" style="overflow-x: auto;">
+            <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: right;">
+                <thead>
+                    <tr style="background: rgba(0, 0, 0, 0.2);">
+                        <th style="padding: 1rem; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">المستخدم</th>
+                        <th style="padding: 1rem; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الدور الأساسي (Role)</th>
+                        <th style="padding: 1rem; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">الصلاحيات الدقيقة (Permissions)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 1rem;">
+                            <strong>{{ u.display_name }}</strong><br>
+                            <small style="color: var(--text-secondary);">{{ u.email }}</small>
+                        </td>
+                        <td style="padding: 1rem;">
+                            {% if u.role == 'central_admin' %}
+                                <span style="background: rgba(139, 92, 246, 0.2); color: #c4b5fd; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(139, 92, 246, 0.3);">
+                                    <i class="fas fa-shield-alt"></i> الإدارة المركزية
+                                </span>
+                            {% elif u.role == 'authority' %}
+                                <span style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(59, 130, 246, 0.3);">
+                                    <i class="fas fa-university"></i> المصلحة المتعاقدة
+                                </span>
+                            {% elif u.role == 'supplier' %}
+                                <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                    <i class="fas fa-briefcase"></i> متعامل اقتصادي
+                                </span>
+                            {% else %}
+                                <span>{{ u.get_role_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem;">
+                            {% if u.user_permissions.all %}
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                    {% for perm in u.user_permissions.all %}
+                                        <span style="background: rgba(255, 255, 255, 0.1); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; border: 1px solid rgba(255, 255, 255, 0.2);" title="{{ perm.name }}">
+                                            {{ perm.codename }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span style="color: var(--text-secondary); font-size: 0.9rem;">لا توجد صلاحيات مخصصة (يعتمد على الدور الافتراضي)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                            لا يوجد مستخدمين لعرضهم.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

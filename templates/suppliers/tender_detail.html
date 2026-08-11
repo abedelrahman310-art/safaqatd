@@ -1,0 +1,111 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}{{ tender.title }} | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-menu">
+    <a href="{% url 'suppliers:dashboard' %}" class="sidebar-item">
+        <i class="fas fa-home"></i> نظرة عامة
+    </a>
+    <a href="{% url 'suppliers:tenders_list' %}" class="sidebar-item active">
+        <i class="fas fa-search"></i> البحث عن الصفقات
+    </a>
+    <a href="#" class="sidebar-item">
+        <i class="fas fa-file-contract"></i> عروضي المقدمة
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+        <h2>{{ tender.title }}</h2>
+        <p>المصلحة المتعاقدة: {{ tender.authority.display_name }} | الحالة: <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">{{ tender.get_status_display }}</span></p>
+    </div>
+    <a href="{% url 'suppliers:tenders_list' %}" class="btn btn-outline"><i class="fas fa-arrow-right"></i> عودة للقائمة</a>
+</div>
+
+<div class="grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+    <!-- Tender Details -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">التفاصيل والشروط</h3>
+        </div>
+        <div class="card-body">
+            <div style="background: var(--glass-bg); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 1.5rem;">
+                <p style="white-space: pre-line; color: var(--text-primary); line-height: 1.8;">{{ tender.description }}</p>
+            </div>
+            
+            <h4 style="margin-bottom: 1rem; color: var(--accent-primary);">المعلومات التقنية</h4>
+            <table class="table" style="background: transparent;">
+                <tbody>
+                    <tr>
+                        <th style="width: 30%; border-bottom: 1px solid var(--glass-border);">نوع الصفقة</th>
+                        <td style="border-bottom: 1px solid var(--glass-border);">{{ tender.get_tender_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <th style="border-bottom: 1px solid var(--glass-border);">القطاع</th>
+                        <td style="border-bottom: 1px solid var(--glass-border);">{{ tender.sector|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th style="border-bottom: 1px solid var(--glass-border);">الولاية</th>
+                        <td style="border-bottom: 1px solid var(--glass-border);">{{ tender.wilaya|default:"-" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Action Sidebar -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">معلومات هامة</h3>
+            </div>
+            <div class="card-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <p style="color: var(--text-secondary); margin-bottom: 0.2rem; font-size: 0.9rem;">آخر أجل للتقديم</p>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: {% if tender.is_deadline_passed %}var(--danger){% else %}var(--success){% endif %};">
+                        <i class="fas fa-calendar-alt" style="margin-inline-end: 0.5rem;"></i> {{ tender.deadline|date:"Y/m/d" }}
+                    </div>
+                    {% if tender.is_deadline_passed %}
+                    <small class="text-danger">لقد انتهت مهلة التقديم</small>
+                    {% endif %}
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <p style="color: var(--text-secondary); margin-bottom: 0.2rem; font-size: 0.9rem;">رسوم سحب دفتر الشروط</p>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--text-primary);">
+                        {{ tender.document_fee }} دج
+                    </div>
+                </div>
+                
+                <hr style="border-color: var(--glass-border); margin: 1.5rem 0;">
+                
+                {% if has_bid %}
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1rem; border-radius: 8px; text-align: center; color: #10b981;">
+                    <i class="fas fa-check-circle fa-2x" style="margin-bottom: 0.5rem;"></i>
+                    <h4 style="margin: 0; font-size: 1rem;">لقد قمت بتقديم العرض</h4>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem;">عرضك قيد الدراسة حالياً من قبل لجنة التقييم.</p>
+                </div>
+                {% elif tender.is_deadline_passed %}
+                <button class="btn btn-secondary" style="width: 100%; opacity: 0.5; cursor: not-allowed;" disabled>
+                    <i class="fas fa-lock"></i> تقديم مغلق
+                </button>
+                {% else %}
+                <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                    {% if tender.document %}
+                    <a href="{{ tender.document.url }}" class="btn btn-outline" style="width: 100%; justify-content: center;">
+                        <i class="fas fa-file-download"></i> تحميل دفتر الشروط
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none;" onclick="alert('سيتم تفعيل تقديم العروض الإلكترونية في المرحلة القادمة.');">
+                        <i class="fas fa-paper-plane"></i> تقديم عرض (قريباً)
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
