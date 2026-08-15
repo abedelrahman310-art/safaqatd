@@ -10,16 +10,17 @@ env = environ.Env(
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-development-key-default')
-DEBUG = env('DEBUG', default=True)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'testserver', '*'])
-
+DEBUG = env('DEBUG', default=False)
+ALLOWED_HOSTS = ['*']
 
 # Heroku and Render CSRF and Security
-CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
-if 'herokuapp.com' not in str(CSRF_TRUSTED_ORIGINS):
-    CSRF_TRUSTED_ORIGINS.extend(['https://*.herokuapp.com'])
-if 'onrender.com' not in str(CSRF_TRUSTED_ORIGINS):
-    CSRF_TRUSTED_ORIGINS.extend(['https://*.onrender.com'])
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+    'https://*.fly.dev',
+    'https://*.herokuapp.com',
+    'http://127.0.0.1',
+    'http://localhost'
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -142,12 +143,12 @@ if env.bool('USE_S3', default=False):
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
     # No MEDIA_URL because S3 generates pre-signed URLs or serves directly if public
 else:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
