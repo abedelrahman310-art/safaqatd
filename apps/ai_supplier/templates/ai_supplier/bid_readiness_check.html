@@ -1,0 +1,105 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}الفاحص المسبق لسلامة ملف العرض | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/supplier_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2.5rem; background-color: #fafbfc; font-family: 'Cairo', sans-serif; min-height: 100vh;">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.5rem; border-bottom: 1px solid #e5e9f0; padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.3rem 0.85rem; background: #d1fae5; color: #065f46; border-radius: 8px; font-size: 0.85rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-shield-check"></i> الفحص المسبق وتفادي الإقصاء الشكلي (Bid Pre-Check AI)
+            </div>
+            <h1 style="color: #090d16; font-size: 2.3rem; font-weight: 900; margin: 0; letter-spacing: -0.5px;">الفاحص المسبق لملف العرض</h1>
+            <p style="color: #475569; font-size: 1.05rem; margin-top: 0.4rem;">فحص وتدقيق اكتمال الوثائق الإدارية والتقنية والمالية قبل إيداع العرض لتجنب الإقصاء الإجرائي.</p>
+        </div>
+    </div>
+
+    <!-- Select Tender -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);">
+        <h3 style="color: #090d16; margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 900;">
+            <i class="fas fa-file-signature text-emerald-600"></i> اختر الصفقة لفحص جاهزية ملف شركتكم
+        </h3>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            {% for t in tenders %}
+            <a href="{% url 'ai_supplier:readiness_check_detail' t.id %}" style="padding: 0.6rem 1.1rem; border-radius: 8px; font-weight: 800; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; {% if selected_tender.id == t.id %}background: #059669; color: white;{% else %}background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1;{% endif %}">
+                <i class="fas fa-file-contract"></i> {{ t.title|truncatechars:35 }} (#{{ t.id }})
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if selected_tender and readiness_report %}
+    <!-- Readiness Card -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 2rem; box-shadow: 0 6px 25px rgba(15, 23, 42, 0.04); margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span style="font-size: 0.85rem; color: #64748b; font-weight: 800;">تقرير جاهزية العرض للصفقة #{{ selected_tender.id }}</span>
+                <h2 style="color: #090d16; margin: 0.2rem 0 0 0; font-size: 1.5rem; font-weight: 900;">{{ selected_tender.title }}</h2>
+                <small style="color: #64748b;">المصلحة المتعاقدة: {{ selected_tender.authority.institution_name|default:selected_tender.authority.username }}</small>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2.2rem; font-weight: 900; color: {% if readiness_report.readiness_percentage >= 80 %}#059669{% else %}#dc2626{% endif %};">
+                        {{ readiness_report.readiness_percentage }}%
+                    </div>
+                    <small style="font-weight: 800; color: #64748b;">نسبة الاكتمال</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Verdict Banner -->
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-right: 5px solid #059669; border-radius: 12px; padding: 1.25rem; margin-bottom: 2rem;">
+            <strong style="color: #166534; font-size: 1.05rem; display: block; margin-bottom: 0.3rem;">
+                <i class="fas fa-circle-check"></i> القرار الإرشادي للذكاء الاصطناعي:
+            </strong>
+            <p style="margin: 0; color: #15803d; font-size: 0.95rem; font-weight: 700;">
+                {{ readiness_report.compliance_verdict }}
+            </p>
+        </div>
+
+        <!-- Valid Documents List -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="color: #090d16; font-size: 1.1rem; font-weight: 900; margin-bottom: 1rem;">
+                <i class="fas fa-check-double text-emerald-600"></i> الوثائق المستوفاة والصحيحة قانونياً
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                {% for doc in readiness_report.valid_documents %}
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; color: #1e293b; font-size: 0.9rem;">{{ doc.name }}</span>
+                    <span style="color: #059669; font-weight: 800; font-size: 0.8rem; background: #d1fae5; padding: 0.2rem 0.6rem; border-radius: 6px;">{{ doc.status }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Missing or At-Risk Documents -->
+        {% if readiness_report.missing_documents %}
+        <div>
+            <h4 style="color: #991b1b; font-size: 1.1rem; font-weight: 900; margin-bottom: 1rem;">
+                <i class="fas fa-triangle-exclamation"></i> وثائق ناقصة أو تتطلب انتباهاً عاجلاً
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {% for doc in readiness_report.missing_documents %}
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <strong style="color: #991b1b; font-size: 0.95rem; display: block;">{{ doc.name }}</strong>
+                        <span style="color: #b91c1c; font-size: 0.85rem;">{{ doc.issue }}</span>
+                    </div>
+                    <a href="{% url 'accounts:profile' %}" style="padding: 0.4rem 0.85rem; background: #ffffff; color: #991b1b; border: 1px solid #fca5a5; border-radius: 6px; font-weight: 800; font-size: 0.8rem; text-decoration: none;">
+                        <i class="fas fa-arrow-up-from-bracket"></i> رفع / تحديث الوثيقة
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

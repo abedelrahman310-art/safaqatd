@@ -1,0 +1,111 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}حاسبة الميزانية والأسعار المرجعية العادلة | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #064e3b; font-family: 'Cairo', sans-serif; min-height: 100vh;">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-coins"></i> محرك تحليل أسعار السوق والصفقات المماثلة (Cost Benchmarking)
+            </div>
+            <h1 style="color: #38bdf8; font-size: 2.2rem; font-weight: 900; margin: 0;">حاسبة الميزانية والأسعار المرجعية العادلة</h1>
+            <p style="color: #a7f3d0; font-size: 1rem; margin-top: 0.3rem;">تقدير النطاق السعري التقديري العادل للمشاريع العمومية لتفادي عدم الجدوى أو تضخيم الأسعار.</p>
+        </div>
+    </div>
+
+    <!-- Estimator Input Form -->
+    <div style="background: #022c22; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);">
+        <h3 style="color: #38bdf8; margin: 0 0 1.25rem 0; font-size: 1.25rem; font-weight: 900;">
+            <i class="fas fa-calculator"></i> بيانات المشروع لتقدير السعر المرجعي
+        </h3>
+
+        <form method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+            {% csrf_token %}
+            <div>
+                <label style="display: block; color: #38bdf8; font-weight: 800; margin-bottom: 0.4rem; font-size: 0.95rem;">موضوع المشروع أو الخدمة</label>
+                <input type="text" name="title" required placeholder="مثال: اقتناء وتركيب خوادم وتجهيزات شبكية للمقر الإداري" style="width: 100%; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #065f46; background: #064e3b; color: #38bdf8; font-size: 1rem; font-family: 'Cairo', sans-serif; font-weight: 700;">
+            </div>
+
+            <div>
+                <label style="display: block; color: #38bdf8; font-weight: 800; margin-bottom: 0.4rem; font-size: 0.95rem;">القطاع المرجعي</label>
+                <select name="sector" style="width: 100%; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #065f46; background: #064e3b; color: #38bdf8; font-size: 1rem; font-family: 'Cairo', sans-serif; font-weight: 700;">
+                    <option value="أشغال">أشغال وبناء وتجهيز البنى التحتية</option>
+                    <option value="لوازم">لوازم وتجهيزات ومعدات</option>
+                    <option value="دراسات">دراسات تقنية وهندسية واستشارات</option>
+                    <option value="خدمات">خدمات وصيانة ونظافة وحراسة</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; color: #38bdf8; font-weight: 800; margin-bottom: 0.4rem; font-size: 0.95rem;">الحجم التقديري الأولي (دج) - اختياري</label>
+                <input type="number" name="approx_size" placeholder="اتركه فارغاً للاعتماد على متوسطات السوق" style="width: 100%; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #065f46; background: #064e3b; color: #38bdf8; font-size: 1rem; font-family: 'Cairo', sans-serif; font-weight: 700;">
+            </div>
+
+            <div style="display: flex; align-items: flex-end;">
+                <button type="submit" style="width: 100%; padding: 0.85rem 1.5rem; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 1rem; cursor: pointer; font-family: 'Cairo', sans-serif; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+                    <i class="fas fa-chart-line"></i> حساب النطاق السعري المرجعي
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Estimate Result Card -->
+    {% if estimate_result %}
+    <div style="background: #022c22; border: 1px solid #38bdf8; border-radius: 14px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span style="font-size: 0.85rem; color: #a7f3d0; font-weight: 700;">نتيجة التقدير المالي المرجعي:</span>
+                <h2 style="color: #38bdf8; margin: 0.2rem 0 0 0; font-size: 1.5rem; font-weight: 900;">{{ estimate_result.project_title }}</h2>
+                <small style="color: #a7f3d0;">القطاع: {{ estimate_result.sector }}</small>
+            </div>
+            <span style="display: inline-block; padding: 0.35rem 0.85rem; border-radius: 6px; background: #064e3b; color: #38bdf8; border: 1px solid #38bdf8; font-weight: 800; font-size: 0.85rem;">
+                مستوى الثقة: {{ estimate_result.confidence_level }}
+            </span>
+        </div>
+
+        <!-- 3 Price Boxes -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div style="background: #064e3b; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 1.25rem; text-align: center;">
+                <small style="color: #a7f3d0; font-weight: 700;">الحد الأدنى العادل (Min)</small>
+                <div style="font-size: 1.6rem; font-weight: 900; color: #f0fdf4; margin-top: 0.3rem;">
+                    {{ estimate_result.estimated_min_price|floatformat:0 }} دج
+                </div>
+            </div>
+
+            <div style="background: #064e3b; border: 2px solid #38bdf8; border-radius: 10px; padding: 1.25rem; text-align: center;">
+                <small style="color: #38bdf8; font-weight: 900;">السعر المرجعي المتوقع (Target)</small>
+                <div style="font-size: 2rem; font-weight: 900; color: #38bdf8; margin-top: 0.3rem;">
+                    {{ estimate_result.estimated_avg_price|floatformat:0 }} دج
+                </div>
+            </div>
+
+            <div style="background: #064e3b; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 1.25rem; text-align: center;">
+                <small style="color: #a7f3d0; font-weight: 700;">الحد الأعلى التقديري (Max)</small>
+                <div style="font-size: 1.6rem; font-weight: 900; color: #f0fdf4; margin-top: 0.3rem;">
+                    {{ estimate_result.estimated_max_price|floatformat:0 }} دج
+                </div>
+            </div>
+        </div>
+
+        <!-- Factors List -->
+        <div>
+            <h4 style="color: #38bdf8; font-size: 1.05rem; font-weight: 900; margin-bottom: 0.5rem;">
+                <i class="fas fa-arrow-trend-up"></i> العوامل المؤثرة في احتساب التسعير المرجعي بالسوق:
+            </h4>
+            <ul style="background: #064e3b; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1rem 2rem; color: #f0fdf4; margin: 0; line-height: 1.8; font-weight: 600;">
+                {% for f in estimate_result.market_factors %}
+                <li>{{ f }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

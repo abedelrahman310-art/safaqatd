@@ -1,0 +1,1498 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}الرئيسية | صفقات ذكية{% endblock %}
+
+{% block extra_css %}
+<!-- Google Fonts: Amiri & Amiri Quran -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Amiri+Quran&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    royal_black: '#09090b',
+                    royal_charcoal: '#18181b',
+                    brand: {
+                        emerald: '#10b981',
+                        emerald_dark: '#059669',
+                        deepsea: '#09090b',
+                        deepsea_light: '#18181b',
+                        pearl: '#f8fafc',
+                        sand: '#f5f0e6',
+                        charcoal: '#27272a',
+                    }
+                },
+                fontFamily: {
+                    sans: ['"Amiri"', 'serif'],
+                    heading: ['"Amiri"', 'serif'],
+                    amiri: ['"Amiri"', 'serif'],
+                }
+            }
+        }
+    }
+</script>
+<style>
+    *, body, h1, h2, h3, h4, h5, h6, p, span, a, button, input, div, .font-cairo, .font-amiri {
+        font-family: 'Amiri', serif !important;
+        letter-spacing: 0.01em;
+    }
+    body { 
+        background-color: #f8fafc !important; 
+        color: #09090b !important; 
+        overflow-x: hidden; 
+    }
+    h1, h2, h3, h4, h5, h6, .text-slate-900, .text-slate-800 {
+        color: #09090b !important;
+    }
+    .dark body { background-color: #09090b !important; color: #f8fafc !important; }
+    
+    /* Clear & Distinct Panoramic Algerian Zellige Pattern */
+    .panoramic-zellige {
+        background-color: #f8fafc;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23047857' stroke-width='1.2' stroke-opacity='0.25'%3E%3Cpath d='M60 0L120 60L60 120L0 60Z'/%3E%3Cpath d='M0 0L120 120M120 0L0 120'/%3E%3Crect x='30' y='30' width='60' height='60' stroke='%23b45309' stroke-width='1' stroke-opacity='0.28'/%3E%3Cpolygon points='60,20 100,60 60,100 20,60' stroke='%230284c7' stroke-width='1' stroke-opacity='0.25'/%3E%3Ccircle cx='60' cy='60' r='8' fill='%23059669' fill-opacity='0.15' stroke='%23047857' stroke-width='1'/%3E%3Ccircle cx='0' cy='0' r='6' fill='%23d97706' fill-opacity='0.2'/%3E%3Ccircle cx='120' cy='0' r='6' fill='%23d97706' fill-opacity='0.2'/%3E%3Ccircle cx='0' cy='120' r='6' fill='%23d97706' fill-opacity='0.2'/%3E%3Ccircle cx='120' cy='120' r='6' fill='%23d97706' fill-opacity='0.2'/%3E%3C/g%3E%3C/svg%3E");
+        background-size: 120px 120px;
+    }
+    
+    .zellige-frieze {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='32' viewBox='0 0 80 32'%3E%3Cg fill='none' stroke='%23059669' stroke-width='1.5' stroke-opacity='0.4'%3E%3Cpath d='M0 16L20 0L40 16L60 0L80 16L60 32L40 16L20 32Z'/%3E%3Ccircle cx='20' cy='16' r='4' fill='%23d97706' fill-opacity='0.5'/%3E%3Ccircle cx='60' cy='16' r='4' fill='%23d97706' fill-opacity='0.5'/%3E%3C/g%3E%3C/svg%3E");
+        background-repeat: repeat-x;
+        background-size: 80px 32px;
+    }
+
+    /* Glassmorphism */
+    .glass {
+        background: rgba(253, 251, 247, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(218, 165, 32, 0.1);
+    }
+    .dark .glass {
+        background: rgba(15, 23, 42, 0.85);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Card Typography Scaling for Amiri */
+    .glass-card, .card, [class*="rounded-2xl"], [class*="rounded-3xl"] {
+        font-size: 1.08rem !important;
+        line-height: 1.75 !important;
+    }
+    .glass-card h3, .glass-card h4, .card h3, .card h4, [class*="rounded-2xl"] h3, [class*="rounded-3xl"] h3 {
+        font-size: 1.35rem !important;
+        font-weight: 700 !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.6rem !important;
+    }
+    .glass-card p, .card p, [class*="rounded-2xl"] p, [class*="rounded-3xl"] p {
+        font-size: 1.05rem !important;
+        line-height: 1.7 !important;
+    }
+    .glass-card .text-xs, .card .text-xs, [class*="rounded-2xl"] .text-xs, [class*="rounded-3xl"] .text-xs,
+    .glass-card .text-sm, .card .text-sm, [class*="rounded-2xl"] .text-sm, [class*="rounded-3xl"] .text-sm {
+        font-size: 0.98rem !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Cinematic Atmosphere & Lighting */
+    .cinematic-vignette {
+        box-shadow: inset 0 0 120px rgba(9, 9, 11, 0.06);
+    }
+    
+    @keyframes cinematicGlow {
+        0%, 100% {
+            opacity: 0.35;
+            transform: scale(1) translate(0px, 0px);
+        }
+        50% {
+            opacity: 0.6;
+            transform: scale(1.08) translate(15px, -10px);
+        }
+    }
+    
+    @keyframes cinematicBeam {
+        0% {
+            transform: rotate(-12deg) translateY(-20px);
+            opacity: 0.2;
+        }
+        50% {
+            transform: rotate(-8deg) translateY(20px);
+            opacity: 0.45;
+        }
+        100% {
+            transform: rotate(-12deg) translateY(-20px);
+            opacity: 0.2;
+        }
+    }
+    
+    .cinematic-beam {
+        background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.08) 50%, transparent 80%);
+        animation: cinematicBeam 12s ease-in-out infinite;
+    }
+    
+    .cinematic-orb-1 {
+        animation: cinematicGlow 8s ease-in-out infinite;
+    }
+    .cinematic-orb-2 {
+        animation: cinematicGlow 10s ease-in-out infinite 2s;
+    }
+    
+    /* Subtle Film Grain Texture Overlay */
+    .film-grain {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+    }
+
+    /* Glass Cards with Cinematic Depth */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 20px 25px -5px rgba(0, 0, 0, 0.04);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-card:hover {
+        transform: translateY(-5px) scale(1.01);
+        box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.15), 0 0 25px rgba(56, 189, 248, 0.1);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    .dark .glass-card {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+    .dark .glass-card:hover {
+        box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}
+<!-- 1. Custom Navbar for Landing Page (Compact Elegant Design) -->
+<nav class="fixed w-full z-50 bg-gradient-to-r from-brand-deepsea via-[#1e3a8a] to-brand-deepsea shadow-[0_4px_20px_rgba(15,23,42,0.6)] transition-all duration-300 border-b border-blue-500/30 font-cairo">
+    <div class="container mx-auto px-6 h-16 flex items-center justify-between">
+        
+        <!-- Glowing Circle Logo (Compact) -->
+        <div class="flex items-center gap-3">
+            <div class="relative flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-brand-emerald to-sky-400 p-[1.5px] shadow-[0_0_12px_rgba(16,185,129,0.7)]">
+                <div class="w-full h-full rounded-full bg-brand-deepsea flex items-center justify-center border border-white/20">
+                    <span class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-sky-200">ص</span>
+                </div>
+            </div>
+            <span class="text-lg font-black text-white hidden sm:inline-block">صفقات ذكية</span>
+        </div>
+        
+        <!-- Links -->
+        <div class="hidden lg:flex items-center gap-5 font-bold text-gray-300 text-sm">
+            <a href="#ai-showcase" class="text-sky-300 hover:text-white drop-shadow-[0_0_10px_rgba(56,189,248,0.6)] transition-all transform hover:-translate-y-0.5 flex items-center gap-1.5 font-black">
+                <i class="fas fa-sparkles text-amber-400 text-xs"></i> منظومة الذكاء الاصطناعي
+            </a>
+            <a href="#how-it-works" class="hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all transform hover:-translate-y-0.5 flex items-center gap-1">
+                <i class="fas fa-timeline text-amber-400 text-xs"></i> مسار الصفقة
+            </a>
+            <a href="#authority-journey" class="hover:text-sky-300 hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.8)] transition-all transform hover:-translate-y-0.5 flex items-center gap-1">
+                <i class="fas fa-building-columns text-sky-400 text-xs"></i> رحلة المصلحة
+            </a>
+            <a href="#supplier-journey" class="hover:text-emerald-300 hover:drop-shadow-[0_0_8px_rgba(16,185,129,0.8)] transition-all transform hover:-translate-y-0.5 flex items-center gap-1">
+                <i class="fas fa-route text-emerald-400 text-xs"></i> رحلة المتعامل
+            </a>
+            <a href="#central-admin-role" class="hover:text-rose-300 hover:drop-shadow-[0_0_8px_rgba(244,63,94,0.8)] transition-all transform hover:-translate-y-0.5 flex items-center gap-1">
+                <i class="fas fa-shield-halved text-rose-400 text-xs"></i> الإدارة المركزية
+            </a>
+            <a href="#trust" class="hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all transform hover:-translate-y-0.5">الثقة</a>
+        </div>
+        
+        <!-- Actions: Theme Toggle + Live Clock & Date (Compact) -->
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <button id="theme-toggle" class="text-sky-200 hover:text-white focus:outline-none rounded-full bg-white/5 w-8 h-8 flex items-center justify-center transition-all border border-white/10" aria-label="تبديل الوضع">
+                <i id="theme-toggle-dark-icon" class="hidden fas fa-moon text-sm"></i>
+                <i id="theme-toggle-light-icon" class="hidden fas fa-sun text-sm"></i>
+            </button>
+
+            <!-- Institutional Live Clock & Date Badge (Compact) -->
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 0.5rem; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 0 10px rgba(2, 132, 199, 0.2); color: #f0f9ff; font-family: 'Cairo', sans-serif;">
+                <!-- Clock Icon & Time -->
+                <div style="display: flex; align-items: center; gap: 0.35rem; border-left: 1px solid rgba(56, 189, 248, 0.25); padding-left: 0.5rem;">
+                    <i class="far fa-clock" style="color: #38bdf8; font-size: 0.85rem;"></i>
+                    <span id="live-navbar-clock" style="font-size: 0.9rem; font-weight: 800; letter-spacing: 0.05em; color: #ffffff; font-family: monospace;" dir="ltr">--:--:--</span>
+                </div>
+                <!-- Calendar Icon & Date -->
+                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                    <i class="far fa-calendar-alt" style="color: #34d399; font-size: 0.8rem;"></i>
+                    <span id="live-navbar-date" style="font-size: 0.78rem; font-weight: 700; color: #bae6fd;">--</span>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    function updateNavClock() {
+                        var now = new Date();
+                        var clockEl = document.getElementById('live-navbar-clock');
+                        var dateEl = document.getElementById('live-navbar-date');
+                        if (clockEl) {
+                            var h = String(now.getHours()).padStart(2, '0');
+                            var m = String(now.getMinutes()).padStart(2, '0');
+                            var s = String(now.getSeconds()).padStart(2, '0');
+                            clockEl.textContent = h + ':' + m + ':' + s;
+                        }
+                        if (dateEl) {
+                            var options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+                            dateEl.textContent = now.toLocaleDateString('ar-DZ', options);
+                        }
+                    }
+                    updateNavClock();
+                    setInterval(updateNavClock, 1000);
+                })();
+            </script>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<main dir="rtl" lang="ar" class="relative overflow-hidden bg-[#f8fafc] film-grain cinematic-vignette">
+    <!-- Cinematic Ambient Spotlight Beams Layer -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] pointer-events-none z-10 cinematic-beam"></div>
+
+    <!-- Panoramic Zellige Ambient Canvas Layer -->
+    <div class="absolute inset-0 pointer-events-none z-0 panoramic-zellige opacity-75"></div>
+
+    <!-- Zellige Panoramic Top Horizontal Frieze -->
+    <div class="w-full h-4 zellige-frieze opacity-70 border-b border-emerald-600/20 relative z-30"></div>
+
+    <!-- Ambient Background Orbs with Cinematic Pulsing Glow -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-[-8%] right-[-5%] w-[45rem] h-[45rem] bg-emerald-500/15 rounded-full blur-3xl cinematic-orb-1"></div>
+        <div class="absolute top-[18%] left-[-8%] w-[40rem] h-[40rem] bg-sky-500/15 rounded-full blur-3xl cinematic-orb-2"></div>
+        <div class="absolute top-[45%] right-[20%] w-[30rem] h-[30rem] bg-amber-500/10 rounded-full blur-3xl cinematic-orb-1"></div>
+    </div>
+
+    <!-- 2. Hero Section with Creative Digital Transformation Background in Soft Snow-White Theme -->
+    <section class="relative pt-28 pb-20 lg:pt-36 lg:pb-32 overflow-hidden border-b border-slate-200/80 bg-gradient-to-b from-[#f8fafc]/90 via-[#f1f5f9]/80 to-[#ffffff]/90">
+        
+        <!-- Panoramic Geometric Zellige Underlay -->
+        <div class="absolute inset-0 pointer-events-none z-0 panoramic-zellige opacity-60"></div>
+
+        <!-- High-Tech Transformation Backdrop with Vivid Visibility and Snow-White Harmonization -->
+        <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center">
+            <!-- The Transformation Image - Highlighted with Soft Ambient Overlay -->
+            <img src="{% static 'core/images/hero_transformation.jpg' %}" alt="التحول الرقمي للصفقات" class="w-full h-full object-cover object-center opacity-30 lg:opacity-40 scale-100 filter contrast-110 brightness-110 transform transition-all duration-1000 ease-out mix-blend-multiply">
+            
+            <!-- Soft Snow-White Edge Feathering -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#ffffff]/90 via-[#f8fafc]/50 to-[#f8fafc]/80"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-[#f8fafc]/80 via-transparent to-[#f8fafc]/80"></div>
+            
+            <!-- Radiant Glowing Core Light Effect -->
+            <div class="absolute top-1/2 left-[18%] -translate-y-1/2 w-72 h-72 rounded-full bg-emerald-400/20 blur-[90px] pointer-events-none animate-pulse"></div>
+            <div class="absolute top-1/2 right-[22%] -translate-y-1/2 w-80 h-80 rounded-full bg-sky-400/20 blur-[100px] pointer-events-none"></div>
+        </div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <!-- Floating Milky Frosted Glass Center Container -->
+            <div class="max-w-4xl mx-auto text-center backdrop-blur-xl bg-white/80 border border-white/80 rounded-3xl p-8 lg:p-12 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+                
+                <!-- Platform Name Semicircle Rising Arch -->
+                <div class="relative inline-flex items-center justify-center mb-6 pt-4 px-12 group">
+                    <!-- Semicircle Glowing Base -->
+                    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 sm:w-64 md:w-80 h-24 sm:h-32 md:h-40 rounded-t-full bg-gradient-to-t from-emerald-500/20 via-sky-400/20 to-transparent border-t-2 border-x-2 border-emerald-500/50 shadow-[0_-15px_40px_rgba(16,185,129,0.25)] pointer-events-none transition-all duration-700 group-hover:scale-105 group-hover:shadow-[0_-20px_50px_rgba(56,189,248,0.35)]">
+                        <!-- Internal Decorative Halo Rings -->
+                        <div class="absolute inset-2 rounded-t-full border-t border-x border-emerald-400/40 opacity-80"></div>
+                        <div class="absolute inset-5 rounded-t-full border-t border-x border-sky-300/40 opacity-60"></div>
+                        <!-- Semicircle Center Radial Flare -->
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-12 bg-amber-400/40 rounded-t-full blur-md"></div>
+                    </div>
+
+                    <!-- Floating Title Rising From Arch -->
+                    <div class="relative z-10 py-2 px-6 transform -translate-y-2 transition-transform duration-500 group-hover:-translate-y-4">
+                        <span class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight drop-shadow-sm font-cairo">
+                            صفقات ذكية
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Main Catchphrase with High-Contrast Deep Slate Typography -->
+                <h1 class="text-lg sm:text-xl md:text-2xl font-black leading-snug text-slate-900 mb-4 tracking-tight font-cairo">
+                    أدر صفقاتك بوضوح تام. <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-sky-600 to-indigo-600">واكتشف فرصك بذكاء سيادي.</span>
+                </h1>
+                
+                <!-- Subtitle with Enhanced Readability -->
+                <p class="text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto font-medium mb-8">
+                    منصة رقمية جزائرية تنقل منظومة المشتريات العمومية من المخططات التقليدية إلى بيئة تفاعلية ذكية موحدة وقابلة للتتبع الشامل وفق القانون رقم 23-12.
+                </p>
+
+                <!-- Quick Tenders Search Bar (محرك البحث السريع المباشر) -->
+                <div class="mt-6 pt-6 border-t border-slate-200/80">
+                    <form method="GET" action="{% url 'procurement:tender_list' %}" class="bg-white/95 backdrop-blur-md rounded-2xl p-2 sm:p-3 shadow-lg border border-emerald-500/30 flex flex-col md:flex-row gap-2.5 items-center">
+                        <div class="relative flex-1 w-full">
+                            <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" name="q" placeholder="ابحث في الصفقات (مثال: دراسات، تجهيزات، أشغال...)" class="w-full pr-11 pl-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all font-amiri">
+                        </div>
+                        <div class="w-full md:w-44">
+                            <select name="sector" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-amiri cursor-pointer">
+                                <option value="">كل القطاعات</option>
+                                <option value="construction">بناء وأشغال عمومية</option>
+                                <option value="equipment">توريد تجهيزات</option>
+                                <option value="services">خدمات واستشارات</option>
+                                <option value="tech">إعلام آلي واتصالات</option>
+                            </select>
+                        </div>
+                        <div class="w-full md:w-36">
+                            <select name="wilaya" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-amiri cursor-pointer">
+                                <option value="">كل الولايات</option>
+                                <option value="16">16 - الجزائر</option>
+                                <option value="31">31 - وهران</option>
+                                <option value="25">25 - قسنطينة</option>
+                                <option value="30">30 - ورقلة</option>
+                                <option value="other">أخرى...</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full md:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-bold rounded-xl shadow-md transition-all whitespace-nowrap flex items-center justify-center gap-2">
+                            <span>استكشاف</span>
+                            <i class="fas fa-arrow-left text-xs"></i>
+                        </button>
+                    </form>
+                    <div class="flex items-center justify-center gap-4 mt-3 text-xs text-slate-500">
+                        <span><i class="fas fa-bolt text-amber-500 ml-1"></i> صفقات مفتوحة حالياً: <strong class="text-slate-800">{{ total_published_count|default:"12" }}</strong></span>
+                        <span class="text-slate-300">|</span>
+                        <span><i class="fas fa-coins text-emerald-600 ml-1"></i> إجمالي ميزانيات معلنة: <strong class="text-emerald-700" style="font-family: monospace;">{{ total_budget_sum|floatformat:0|default:"45,000,000" }} دج</strong></span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 2.3 Live Published Tenders Showcase (شريط الصفقات الحية المباشرة) -->
+    <section class="py-14 bg-gradient-to-b from-[#ffffff] via-[#f8fafc] to-[#ffffff] border-b border-slate-200/80 relative overflow-hidden">
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-0">أحدث الصفقات المعلنة في المنظومة</h3>
+                    </div>
+                    <p class="text-xs md:text-sm text-slate-500 mt-1 mb-0">فرص حية ومفتوحة للإيداع وسحب دفاتر الشروط للمتعاملين الاقتصاديين</p>
+                </div>
+                <a href="{% url 'procurement:tender_list' %}" class="text-xs md:text-sm font-bold text-emerald-700 hover:text-emerald-600 flex items-center gap-1.5 transition-all group">
+                    <span>عرض جميع الصفقات المفتوحة</span>
+                    <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+
+            <!-- Tenders Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% if live_tenders %}
+                    {% for tender in live_tenders %}
+                    <div class="glass-card rounded-2xl p-6 border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group relative overflow-hidden bg-white/90">
+                        <div class="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-emerald-500 to-sky-500"></div>
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    {{ tender.get_sector_display|default:tender.sector|default:"صفقة عامة" }}
+                                </span>
+                                <span class="text-xs text-slate-400 font-mono">
+                                    <i class="far fa-clock ml-1"></i> {{ tender.created_at|date:"Y/m/d" }}
+                                </span>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-emerald-700 transition-colors">
+                                {{ tender.title }}
+                            </h4>
+                            <p class="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">
+                                {{ tender.description|truncatewords:20 }}
+                            </p>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-100 mt-auto">
+                            <div class="flex items-center justify-between text-xs mb-3">
+                                <span class="text-slate-500">الميزانية التقديرية:</span>
+                                <span class="font-bold text-slate-900 font-mono text-sm">{{ tender.budget|floatformat:2 }} دج</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs mb-4">
+                                <span class="text-slate-500">آخر أجل للإيداع:</span>
+                                <span class="font-bold text-rose-600 font-mono">{{ tender.deadline|date:"Y/m/d" }}</span>
+                            </div>
+                            <a href="{% url 'procurement:tender_detail' tender.id %}" class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white text-xs font-bold text-center transition-all flex items-center justify-center gap-2 shadow-sm">
+                                <span>سحب الدفتر والتفاصيل</span>
+                                <i class="fas fa-file-contract"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Fallback Sample Tenders when database is fresh -->
+                    <div class="glass-card rounded-2xl p-6 border border-slate-200/90 shadow-sm flex flex-col justify-between bg-white/90">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">أشغال عمومية</span>
+                                <span class="text-xs text-slate-400 font-mono">2026/08/15</span>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-900 mb-2">مشروع تهيئة وتعبيد المسالك البلدية - الشطر الثاني</h4>
+                            <p class="text-xs text-slate-500 mb-4">طلب عروض مفتوح مع اشتراط قدرات دنيا لإنجاز شبكة الطرقات وفق المواصفات التقنية.</p>
+                        </div>
+                        <div class="pt-4 border-t border-slate-100 mt-auto">
+                            <div class="flex items-center justify-between text-xs mb-3">
+                                <span class="text-slate-500">الميزانية:</span>
+                                <span class="font-bold text-slate-900 font-mono">18,500,000.00 دج</span>
+                            </div>
+                            <a href="{% url 'procurement:tender_list' %}" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white text-xs font-bold text-center transition-all">استكشاف العرض</a>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl p-6 border border-slate-200/90 shadow-sm flex flex-col justify-between bg-white/90">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-50 text-sky-800 border border-sky-200">إعلام آلي وتجهيزات</span>
+                                <span class="text-xs text-slate-400 font-mono">2026/08/14</span>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-900 mb-2">تجهيز مراكز البيانات بالمعدات الخادمة وشبكات الألياف</h4>
+                            <p class="text-xs text-slate-500 mb-4">توريد وتركيب خوادم متطورة وبنية أمان سحابية محلية مطابقة لمعايير السيادة الرقمية.</p>
+                        </div>
+                        <div class="pt-4 border-t border-slate-100 mt-auto">
+                            <div class="flex items-center justify-between text-xs mb-3">
+                                <span class="text-slate-500">الميزانية:</span>
+                                <span class="font-bold text-slate-900 font-mono">32,000,000.00 دج</span>
+                            </div>
+                            <a href="{% url 'procurement:tender_list' %}" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white text-xs font-bold text-center transition-all">استكشاف العرض</a>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl p-6 border border-slate-200/90 shadow-sm flex flex-col justify-between bg-white/90">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">دراسات واستشارات</span>
+                                <span class="text-xs text-slate-400 font-mono">2026/08/12</span>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-900 mb-2">دراسة ومتابعة إنجاز المجمع الإداري النموذجي</h4>
+                            <p class="text-xs text-slate-500 mb-4">مسابقة معمارية ومتابعة تقنية لإنجاز مقر المنظومة الذكية وفق المعايير الإيكولوجية.</p>
+                        </div>
+                        <div class="pt-4 border-t border-slate-100 mt-auto">
+                            <div class="flex items-center justify-between text-xs mb-3">
+                                <span class="text-slate-500">الميزانية:</span>
+                                <span class="font-bold text-slate-900 font-mono">7,800,000.00 دج</span>
+                            </div>
+                            <a href="{% url 'procurement:tender_list' %}" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white text-xs font-bold text-center transition-all">استكشاف العرض</a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- 2.5 Panoramic Sovereign Zellige Showcase Band -->
+    <section class="relative py-12 overflow-hidden border-y border-emerald-600/20 bg-[#f8fafc] shadow-inner">
+        <!-- The Rich Geometric Zellige Background Canvas -->
+        <div class="absolute inset-0 panoramic-zellige opacity-90"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-[#f8fafc] via-transparent to-[#f8fafc]"></div>
+        
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="max-w-4xl mx-auto backdrop-blur-md bg-white/90 border border-emerald-600/30 rounded-2xl p-6 shadow-lg text-center flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-4 text-right">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-amber-600 text-white flex items-center justify-center text-2xl shadow-md flex-shrink-0">
+                        <i class="fas fa-shapes"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900">الهوية والسيادة الرقمية الجزائرية</h3>
+                        <p class="text-xs text-slate-600">منظومة مصممة ومستضافة بالكامل على بنية تحتية وطنية لضمان سرية وأمان الصفقات العمومية.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-black whitespace-nowrap">
+                        <i class="fas fa-shield-halved text-emerald-600"></i> معايير مشفرة 100%
+                    </span>
+                    <span class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-300 text-xs font-black whitespace-nowrap">
+                        <i class="fas fa-landmark text-amber-600"></i> قانون 23-12
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Value Strip (Snow-White Luxury Theme) -->
+    <section class="py-8 bg-[#f8fafc] border-b border-slate-200/80 relative z-20 backdrop-blur-md">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center divide-x divide-x-reverse divide-slate-200">
+                <div class="p-4">
+                    <div class="text-emerald-600 mb-2"><i class="fas fa-sync-alt text-xl"></i></div>
+                    <div class="font-black text-slate-800 text-sm">دورة صفقة موحدة</div>
+                </div>
+                <div class="p-4">
+                    <div class="text-emerald-600 mb-2"><i class="fas fa-users-cog text-xl"></i></div>
+                    <div class="font-black text-slate-800 text-sm">مساحة عمل حسب الدور</div>
+                </div>
+                <div class="p-4">
+                    <div class="text-emerald-600 mb-2"><i class="fas fa-tasks text-xl"></i></div>
+                    <div class="font-black text-slate-800 text-sm">عروض قابلة للمتابعة</div>
+                </div>
+                <div class="p-4">
+                    <div class="text-emerald-600 mb-2"><i class="fas fa-robot text-xl"></i></div>
+                    <div class="font-black text-slate-800 text-sm">مساعد ذكي إرشادي</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Problem & Solution (Before/After) - Snow-White Theme -->
+    <section id="how-it-works-intro" class="py-24 bg-gradient-to-b from-[#ffffff] via-[#f8fafc] to-[#ffffff] text-slate-900 relative overflow-hidden border-b border-slate-200/80">
+        <!-- Abstract Glows -->
+        <div class="absolute top-1/2 left-0 w-80 h-80 bg-rose-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-1/2 right-0 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="text-center mb-14">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mb-4">من الفوضى إلى <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-sky-600">الوضوح التام</span></h2>
+                <p class="text-sm md:text-base text-slate-600">كيف نعالج التحديات اليومية للمشتريات العمومية وفق المرسوم 23-12.</p>
+            </div>
+            <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-10 items-center">
+                <!-- Problem -->
+                <div class="bg-white p-7 rounded-2xl border border-rose-200 shadow-lg">
+                    <h3 class="text-lg font-bold text-rose-700 mb-5 flex items-center gap-2">
+                        <i class="fas fa-times-circle text-rose-500"></i> الطريقة التقليدية السابقة
+                    </h3>
+                    <ul class="space-y-3.5 text-sm">
+                        <li class="flex items-start gap-3 text-slate-700">
+                            <i class="fas fa-exclamation-triangle text-rose-500 mt-1"></i> إجراءات ورقية متفرقة ومعقدة تستنزف الوقت.
+                        </li>
+                        <li class="flex items-start gap-3 text-slate-700">
+                            <i class="fas fa-exclamation-triangle text-rose-500 mt-1"></i> صعوبة معرفة حالة العرض أو الصفقة بدقة.
+                        </li>
+                        <li class="flex items-start gap-3 text-slate-700">
+                            <i class="fas fa-exclamation-triangle text-rose-500 mt-1"></i> ضعف الرؤية المشتركة ومخاطر الأخطاء الحسابية.
+                        </li>
+                    </ul>
+                </div>
+                <!-- Solution -->
+                <div class="bg-white p-7 rounded-2xl border border-emerald-300 shadow-xl relative">
+                    <div class="absolute -right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-emerald-600 rounded-full md:flex items-center justify-center text-white shadow-lg hidden font-black">
+                        <i class="fas fa-arrow-left text-sm"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-emerald-700 mb-5 flex items-center gap-2">
+                        <i class="fas fa-check-circle text-emerald-500"></i> الحل مع صفقات ذكية
+                    </h3>
+                    <ul class="space-y-3.5 text-sm">
+                        <li class="flex items-start gap-3 text-slate-800 font-bold">
+                            <i class="fas fa-check text-emerald-600 mt-1"></i> مساحة رقمية موحدة لجميع الأطراف المعنية.
+                        </li>
+                        <li class="flex items-start gap-3 text-slate-800 font-bold">
+                            <i class="fas fa-check text-emerald-600 mt-1"></i> مسارات تتبع آنية وتنبيهات فورية لكل خطوة.
+                        </li>
+                        <li class="flex items-start gap-3 text-slate-800 font-bold">
+                            <i class="fas fa-check text-emerald-600 mt-1"></i> سجل عمليات (Audit Log) سيادي وموثق لا يقبل التعديل.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Creative Authority Journey (رحلة المصلحة المتعاقدة الذكية) - Snow-White Theme -->
+    <section id="authority-journey" class="py-24 relative overflow-hidden bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#ffffff] text-slate-900 border-b border-slate-200/80">
+        <!-- Abstract Dynamic Background Glows -->
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <!-- Header -->
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+                    رحلة المصلحة المتعاقدة <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-emerald-600 to-teal-600">من التقدير حتى الترسية</span>
+                </h2>
+                <p class="text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
+                    مسار مؤسسي مؤتمت يسرّع إعداد دفاتر الشروط، يضمن الدقة الحسابية للجان، ويوثق كل قرار في سجل سيادي غير قابل للتعديل.
+                </p>
+            </div>
+
+            <!-- Horizontal Journey Track (5 Connected Nodes) -->
+            <div class="max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
+                    
+                    <!-- Authority Node 1 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-sky-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-sky-600 text-white font-black text-[11px] shadow-md">
+                            مرحلة 1
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-sky-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">التقدير وحساب التكلفة</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                تقدير التكلفة المرجعية وميزانية السوق العادلة لمنع الصفقات غير المجدية وتحديد الاعتمادات المالية بدقة.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-sky-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-chart-line"></i> تسعير مرجعي دقيق
+                        </div>
+                    </div>
+
+                    <!-- Authority Node 2 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-emerald-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[11px] shadow-md">
+                            مرحلة 2
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">توليد دفتر الشروط</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                صياغة آلية قياسية لدفتر الشروط وسلم التنقيط (100 نقطة) وفق المرسوم 23-12 خلال ثوانٍ معدودة.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-emerald-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-file-circle-check"></i> مطابقة قانونية 100%
+                        </div>
+                    </div>
+
+                    <!-- Authority Node 3 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-amber-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-amber-600 text-white font-black text-[11px] shadow-md">
+                            مرحلة 3
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">النشر والاستقبال المشفر</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                إطلاق الإعلان في البوابة وتلقي العروض المشفرة دون إمكانية الاطلاع عليها حتى جلسة الفتح الرسمية.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-amber-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-lock"></i> سرية وتشفير سيادي
+                        </div>
+                    </div>
+
+                    <!-- Authority Node 4 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-rose-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-black text-[11px] shadow-md">
+                            مرحلة 4
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-rose-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">التقييم وكشف الأخطاء</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                تفريغ العروض بضغطة زر، كشف الأخطاء الحسابية، واحتساب النقاط التقنية والمالية بدقة مطلقة.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-rose-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-check-double"></i> تدقيق حسابي آلي
+                        </div>
+                    </div>
+
+                    <!-- Authority Node 5 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-teal-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-teal-600 text-white font-black text-[11px] shadow-md">
+                            مرحلة 5
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">المحضر والمنح المؤقت</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                توليد مسودة محضر جلسة تقييم العروض (PV) ونشر قرار المنح المؤقت بشفافية وتوثيق سيادي.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-teal-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-award"></i> محضر رسمي معتمد
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Call to Action Banner for Authority -->
+                <div class="mt-12 p-6 rounded-2xl bg-gradient-to-r from-sky-100 via-emerald-50 to-white border border-slate-200 shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-sky-600 text-white flex items-center justify-center text-xl font-black shadow-md">
+                            <i class="fas fa-building-columns"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-base font-black text-slate-900">هل أنت مصلحة أو هيئة عمومية متعاقدة؟</h4>
+                            <p class="text-xs text-slate-600">فعّل حسابك المؤسسي واستفد من التوليد الآلي لدفاتر الشروط والتقييم الذكي.</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'accounts:register_authority' %}" class="px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white font-black rounded-xl text-sm shadow-md transition-all whitespace-nowrap">
+                        اعتماد مصلحة متعاقدة <i class="fas fa-arrow-left mr-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5.5. Central Administration & Sovereign Oversight Section - Snow-White Theme -->
+    <section id="central-admin-role" class="py-24 relative overflow-hidden bg-gradient-to-b from-[#ffffff] via-[#f8fafc] to-[#f1f5f9] text-slate-900 border-b border-slate-200/80">
+        <!-- Abstract Dynamic Background Glows -->
+        <div class="absolute top-0 right-1/4 w-96 h-96 bg-rose-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <!-- Header -->
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+                    دور الإدارة المركزية <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-600 via-amber-600 to-yellow-600">في الرقابة والشفافية</span>
+                </h2>
+                <p class="text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
+                    أدوات رقابية متقدمة تمنح الإدارة المركزية وسلطات الضبط رؤية فورية، كشفاً استباقياً للتواطؤ، وضماناً صارماً لحرية المنافسة والمال العام.
+                </p>
+            </div>
+
+            <!-- Horizontal Oversight Nodes (5 Nodes) -->
+            <div class="max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
+                    
+                    <!-- Admin Node 1 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-rose-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-black text-[11px] shadow-md">
+                            محور 1
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-rose-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-radar"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">رادار كشف التواطؤ</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                خوارزميات ذكية ترصد الإيداع المتزامن من نفس العناوين الرقمية وتطابق بصمات الملفات المشبوهة.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-rose-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-satellite-dish"></i> إنذار استباقي مبكر
+                        </div>
+                    </div>
+
+                    <!-- Admin Node 2 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-amber-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-amber-600 text-white font-black text-[11px] shadow-md">
+                            محور 2
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-file-shield"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">تدقيق دفاتر الشروط</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                فحص آلي يرصد الشروط التعجيزية والمواصفات المقيدة للمنافسة وحظر العلامات الحصرية دون بدائل.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-amber-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-check-to-slot"></i> حماية حرية المنافسة
+                        </div>
+                    </div>
+
+                    <!-- Admin Node 3 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-yellow-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-yellow-600 text-white font-black text-[11px] shadow-md">
+                            محور 3
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-yellow-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">المرصد الوطني للمؤشرات</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                لوحة قيادة استراتيجية فورية توضح حجم الإنفاق العمومي، متوسط مدد الإجراءات، ومعدلات المنافسة.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-yellow-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-gauge-high"></i> مؤشرات أداء آنية
+                        </div>
+                    </div>
+
+                    <!-- Admin Node 4 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-sky-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-sky-600 text-white font-black text-[11px] shadow-md">
+                            محور 4
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-sky-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-scale-balanced"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">المستشار القانوني السيادي</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                نظام استشاري فوري RAG يفسر ويجيب على الاستفسارات المعقدة بالنصوص الصريحة للمرسوم 23-12.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-sky-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-book-bookmark"></i> سند تشريعي موثوق
+                        </div>
+                    </div>
+
+                    <!-- Admin Node 5 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-emerald-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[11px] shadow-md">
+                            محور 5
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-clock-rotate-left"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">سجل التدقيق الجنائي</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                توثيق زمني كامل لكل حركة وإجراء على النظام مع حفظ البصمات الرقمية لمساءلة قانونية لا تقبل الجدل.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-emerald-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-fingerprint"></i> سجل غير قابل للتعديل
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Call to Action Banner for Central Admin -->
+                <div class="mt-12 p-6 rounded-2xl bg-gradient-to-r from-rose-100 via-amber-50 to-white border border-slate-200 shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-rose-600 text-white flex items-center justify-center text-xl font-black shadow-md">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-base font-black text-slate-900">فضاء مخصص لهيئات الرقابة وسلطة الضبط</h4>
+                            <p class="text-xs text-slate-600">صلاحيات حصرية، تدقيق جنائي متقدم، وبيئة مؤمنة بالكامل للرقابة المركزية.</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'accounts:register_central_admin' %}" class="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl text-sm shadow-md transition-all whitespace-nowrap">
+                        تسجيل الإدارة المركزية <i class="fas fa-arrow-left mr-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Sovereign AI Tri-Pillar Showcase (منظومة الذكاء الاصطناعي السيادية) - Snow-White Theme -->
+    <section id="ai-showcase" class="py-24 bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#ffffff] text-slate-900 relative overflow-hidden border-b border-slate-200/80">
+        <!-- Ambient decorative Glow -->
+        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-[50rem] h-[30rem] bg-sky-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+                    ذكاء اصطناعي موجه <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-sky-600">لحوكمة الصفقات العمومية</span>
+                </h2>
+                <p class="text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
+                    محركات متخصصة ومصممة خصيصاً وفق القانون رقم 23-12، تخدم كل دور وتضمن النزاهة والسرعة والامتثال القانوني التام.
+                </p>
+            </div>
+
+            <!-- Tri-Pillar Bento Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto mb-14">
+                
+                <!-- Pillar 1: Regulator AI (الإدارة المركزية) -->
+                <div class="bg-white rounded-2xl p-7 border border-rose-200 shadow-md relative overflow-hidden flex flex-col justify-between hover:shadow-xl hover:border-rose-400 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-rose-500 to-amber-500"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl border border-rose-200">
+                                <i class="fas fa-shield-halved"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-full text-xs font-black border border-rose-200">
+                                للإدارة المركزية والرقابة
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900 mb-2">الذكاء الاصطناعي الرقابي</h3>
+                        <p class="text-slate-600 text-xs leading-relaxed mb-5">
+                            منظومة رصد التواطؤ والتحليل الجنائي للوثائق وحماية المنافسة والمال العام.
+                        </p>
+                        <div class="space-y-2.5 text-xs text-slate-700 border-t border-slate-100 pt-4">
+                            <div class="flex items-center gap-2"><i class="fas fa-check text-rose-600"></i> رصد الإيداع المشبوه من نفس عناوين IP.</div>
+                            <div class="flex items-center gap-2"><i class="fas fa-check text-rose-600"></i> كشف الشروط التعجيزية والمواصفات الموجهة.</div>
+                            <div class="flex items-center gap-2"><i class="fas fa-check text-rose-600"></i> مؤشرات حية لإنفاق المال العام والمدد.</div>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100">
+                        <a href="{% url 'accounts:register_central_admin' %}" class="text-xs font-black text-rose-700 hover:text-rose-800 flex items-center justify-between">
+                            <span>فضاء الإدارة المركزية والضبط</span>
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pillar 2: Authority AI (المصلحة المتعاقدة) -->
+                <div class="bg-white rounded-2xl p-7 border border-emerald-200 shadow-md relative overflow-hidden flex flex-col justify-between hover:shadow-xl hover:border-emerald-400 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl border border-emerald-200">
+                                <i class="fas fa-building-columns"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-black border border-emerald-200">
+                                للمصالح المتعاقدة
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900 mb-2">مساعد إعداد وتدقيق الصفقات</h3>
+                        <p class="text-slate-600 text-xs leading-relaxed mb-5">
+                            صياغة دفاتر الشروط القانونية وسلالم التنقيط، وتدقيق حسابات العروض آلياً.
+                        </p>
+                        <div class="space-y-2.5 text-xs text-slate-700 border-t border-slate-100 pt-4">
+                            <div class="flex items-center gap-2"><i class="fas fa-check text-emerald-600"></i> صياغة فورية لدفاتر الشروط وفق المرسوم 23-12.</div>
+                            <div class="flex items-center gap-2"><i class="fas fa-check text-emerald-600"></i> سلم تنقيط متوازن (100 نقطة) آلي ومعياري.</div>
+                            <div class="flex items-center gap-2"><i class="fas fa-check text-emerald-600"></i> كشف الأخطاء الحسابية في عروض الموردين.</div>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100">
+                        <a href="{% url 'accounts:register_authority' %}" class="text-xs font-black text-emerald-700 hover:text-emerald-800 flex items-center justify-between">
+                            <span>اعتماد مصلحة متعاقدة</span>
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pillar 3: Supplier AI (المتعامل الاقتصادي) -->
+                <div class="bg-white rounded-2xl p-7 border border-sky-200 shadow-md relative overflow-hidden flex flex-col justify-between hover:shadow-xl hover:border-sky-400 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-sky-500 to-indigo-500"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl border border-sky-200">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 bg-sky-50 text-sky-700 rounded-full text-xs font-black border border-sky-200">
+                                للمتعاملين الاقتصاديين
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900 mb-2">محرك الفرص والتأهيل</h3>
+                        <p class="text-slate-600 text-xs leading-relaxed mb-5">
+                            اكتشاف الصفقات الملائمة لقدراتكم، تحليل المتطلبات، وتفادي الإقصاء الإداري.
+                        </p>
+                        <div class="space-y-2.5 text-xs text-slate-700 border-t border-slate-100 pt-4">
+                            <div class="flex items-center gap-2"><i class="fas fa-check text-sky-600"></i> مطابقة ذكية (Matchmaking) حسب التخصص والولاية.</div>
+                            <div class="flex items-center gap-2"><i class="fas fa-check text-sky-600"></i> فحص اكتمال الملف الإداري قبل الإيداع النهائي.</div>
+                            <div class="flex items-center gap-2"><i class="fas fa-check text-sky-600"></i> تلخيص اشتراطات دفتر الشروط والضمانات المطلوبة.</div>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100">
+                        <a href="{% url 'accounts:register_supplier' %}" class="text-xs font-black text-sky-700 hover:text-sky-800 flex items-center justify-between">
+                            <span>تسجيل حساب مورد</span>
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. Creative Supplier Journey (رحلة المتعامل الاقتصادي الذكية) - Snow-White Theme -->
+    <section id="supplier-journey" class="py-24 relative overflow-hidden bg-gradient-to-b from-[#ffffff] via-[#f8fafc] to-[#f1f5f9] text-slate-900 border-b border-slate-200/80">
+        <!-- Abstract Dynamic Background Glows -->
+        <div class="absolute top-0 right-1/4 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-0 left-1/4 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <!-- Header -->
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+                    رحلة المتعامل الاقتصادي <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600">من اكتشاف الفرصة حتى الترسية</span>
+                </h2>
+                <p class="text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
+                    مسار سلس يزيل العوائق البيروقراطية، يضمن تكافؤ الفرص، ويمنح المورد وصل إيداع رقمي فوري وموثق لا يقبل الإنكار.
+                </p>
+            </div>
+
+            <!-- Horizontal Journey Track (5 Connected Nodes) -->
+            <div class="max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
+                    
+                    <!-- Supplier Node 1 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-emerald-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[11px] shadow-md">
+                            خطوة 1
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-compass"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">اكتشاف الفرص والمطابقة</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                إشعارات فورية وتنبيهات مخصصة للصفقات المطابقة لشهادة التأهيل والتصنيف المهني لنشاطك.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-emerald-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-bell"></i> تنبيهات آنية دقيقة
+                        </div>
+                    </div>
+
+                    <!-- Supplier Node 2 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-sky-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-sky-600 text-white font-black text-[11px] shadow-md">
+                            خطوة 2
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-sky-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">السحب والدفع الإلكتروني</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                دفع حقوق سحب دفتر الشروط إلكترونياً (SATIM/CIB) وتحميل الوثائق المعتمدة ببصمة رقمية.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-sky-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-credit-card"></i> دفع سيادي SATIM
+                        </div>
+                    </div>
+
+                    <!-- Supplier Node 3 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-amber-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-amber-600 text-white font-black text-[11px] shadow-md">
+                            خطوة 3
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-spell-check"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">التدقيق ومنع الإقصاء</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                فحص ذكي مسبق لاكتمال الملف الإداري وصلاحية الوثائق والضمانات قبل إتمام عملية التشفير.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-amber-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-shield-check"></i> حماية من الإقصاء الشكلي
+                        </div>
+                    </div>
+
+                    <!-- Supplier Node 4 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-purple-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-purple-600 text-white font-black text-[11px] shadow-md">
+                            خطوة 4
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-envelope-circle-check"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">الإيداع المشفر والوصل</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                تشفير الأظرفة ببروتوكول AES-256، واستلام وصل إيداع رسمي فوري مختوم بختم زمني سيادي.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-purple-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-receipt"></i> وصل إيداع رسمي فوري
+                        </div>
+                    </div>
+
+                    <!-- Supplier Node 5 -->
+                    <div class="relative bg-white rounded-2xl p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-teal-400 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col justify-between">
+                        <div class="absolute -top-3.5 right-4 px-2.5 py-0.5 rounded-full bg-teal-600 text-white font-black text-[11px] shadow-md">
+                            خطوة 5
+                        </div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <h3 class="text-base font-black text-slate-900 mb-1.5">المتابعة المباشرة والنتائج</h3>
+                            <p class="text-slate-600 text-xs leading-relaxed mb-3">
+                                حضور جلسة فتح الأظرفة عن بعد، الاطلاع على جدول الأسعار المقروءة علناً، وتتبع قرار الترسية.
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 text-[11px] text-teal-700 font-bold flex items-center gap-1.5">
+                            <i class="fas fa-users-viewfinder"></i> شفافية علنية تامة
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Call to Action Banner for Supplier -->
+                <div class="mt-12 p-6 rounded-2xl bg-gradient-to-r from-emerald-100 via-sky-50 to-white border border-slate-200 shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-black shadow-md">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-base font-black text-slate-900">هل أنت متعامل اقتصادي أو مقاول مؤهل؟</h4>
+                            <p class="text-xs text-slate-600">سجل شركتك الآن وشارك في كبرى الصفقات الوطنية بضمان الشفافية والسرية المطلقة.</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'accounts:register_supplier' %}" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-sm shadow-md transition-all whitespace-nowrap">
+                        سجّل كمتعامل اقتصادي <i class="fas fa-arrow-left mr-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7.5 Interactive Institutional Deal Lifecycle (مسار الصفقة التفاعلي) - Snow-White Theme -->
+    <section id="how-it-works" class="py-24 bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#ffffff] text-slate-900 border-b border-slate-200/80 relative overflow-hidden">
+        <!-- Abstract Glows -->
+        <div class="absolute top-1/4 left-10 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-10 right-10 w-96 h-96 bg-sky-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mb-4">
+                    مسار دورة الصفقة الرقمية <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-emerald-600 to-teal-600">وفق القانون رقم 23-12</span>
+                </h2>
+                <p class="text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
+                    تسلسل إجرائي مؤتمت ومحكم يضمن الانتقال السلس والموثق بين جميع محطات الصفقة العمومية.
+                </p>
+            </div>
+
+            <!-- Horizontal Stages Grid (4 Key Milestones) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                
+                <!-- Stage 1 -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-md relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:border-sky-400 flex flex-col justify-between group">
+                    <div class="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-sky-400 to-sky-600"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 font-black text-base flex items-center justify-center border border-sky-200 shadow-sm">
+                                01
+                            </span>
+                            <span class="px-2.5 py-0.5 bg-sky-50 text-sky-800 rounded-full text-xs font-black border border-sky-200">
+                                المصلحة المتعاقدة
+                            </span>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-file-signature"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-slate-900 mb-2">الصياغة والتدقيق</h3>
+                        <p class="text-slate-600 text-xs leading-relaxed mb-4">
+                            صياغة دفتر الشروط بواسطة الذكاء الاصطناعي، تحديد سلم التنقيط (100 نقطة)، والتحقق المسبق من مطابقة النصوص للمرسوم 23-12.
+                        </p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-sky-700 font-black">
+                        <span>جاهزية الاعتماد</span>
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+
+                <!-- Stage 2 -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-md relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:border-emerald-400 flex flex-col justify-between group">
+                    <div class="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 font-black text-base flex items-center justify-center border border-emerald-200 shadow-sm">
+                                02
+                            </span>
+                            <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 rounded-full text-xs font-black border border-emerald-200">
+                                النشر والترشح
+                            </span>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-slate-900 mb-2">الإعلان والمطابقة</h3>
+                        <p class="text-slate-600 text-xs leading-relaxed mb-4">
+                            إطلاق الإعلان الرسمي، إشعار الموردين المؤهلين آلياً بمحرك Matchmaking الذكي، وسحب دفاتر الشروط بالبصمة الرقمية.
+                        </p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-emerald-700 font-black">
+                        <span>إشعارات فورية</span>
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                </div>
+
+                <!-- Stage 3 -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-md relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:border-amber-400 flex flex-col justify-between group">
+                    <div class="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-amber-400 to-amber-600"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 font-black text-base flex items-center justify-center border border-amber-200 shadow-sm">
+                                03
+                            </span>
+                            <span class="px-2.5 py-0.5 bg-amber-50 text-amber-800 rounded-full text-xs font-black border border-amber-200">
+                                تشفير عالي
+                            </span>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-slate-900 mb-2">إيداع العروض المشفرة</h3>
+                        <p class="text-slate-600 text-xs leading-relaxed mb-4">
+                            تشفير الأظرفة المالية والتقنية بخوارزميات AES-256 وأختام زمنية غير قابلة للاختراق حتى موعد جلسة الفتح الرسمية.
+                        </p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-amber-700 font-black">
+                        <span>ختم مشفر SHA-256</span>
+                        <i class="fas fa-shield"></i>
+                    </div>
+                </div>
+
+                <!-- Stage 4 -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-md relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:border-purple-400 flex flex-col justify-between group">
+                    <div class="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-purple-400 to-indigo-600"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 font-black text-base flex items-center justify-center border border-purple-200 shadow-sm">
+                                04
+                            </span>
+                            <span class="px-2.5 py-0.5 bg-purple-50 text-purple-800 rounded-full text-xs font-black border border-purple-200">
+                                علنية وموثقة
+                            </span>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-gavel"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-slate-900 mb-2">الفتح والترسية والرقابة</h3>
+                        <p class="text-slate-600 text-xs leading-relaxed mb-4">
+                            انعقاد جلسة الفتح العلنية، التدقيق الآلي للأخطاء الحسابية، فحص رادار التواطؤ، وإعلان المنح المؤقت بشفافية تامة.
+                        </p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-purple-700 font-black">
+                        <span>محضر رسمي معتمد</span>
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Unique Innovation - Snow-White Theme with Panoramic Zellige -->
+    <section class="py-20 bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 text-slate-900 text-center border-b border-slate-200/80 relative overflow-hidden">
+        <div class="absolute inset-0 pointer-events-none panoramic-zellige opacity-30"></div>
+        <div class="container mx-auto px-6 max-w-4xl relative z-10">
+            <h2 class="inline-block px-6 py-2 rounded-full border border-emerald-300 shadow-sm bg-white text-2xl md:text-3xl font-black mb-6 text-slate-900">الابتكار الذي يربط الفرصة بالقرار</h2>
+            <p class="text-lg md:text-xl leading-relaxed text-slate-700">
+                "الذكاء الاصطناعي في منصتنا <span class="font-bold text-emerald-700 underline decoration-2 underline-offset-4">لا يستبدل الإنسان</span>؛ بل يمنحه رؤية أوضح، وسياقاً أفضل لاتخاذ القرار البشري الموثق والنهائي."
+            </p>
+        </div>
+    </section>
+
+    <!-- 9. Trust & Transparency - Snow-White Theme -->
+    <section id="trust" class="py-20 bg-[#ffffff] text-slate-900 border-b border-slate-200/80 relative">
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto text-center">
+                <div class="p-6 rounded-2xl bg-[#f8fafc] border border-slate-200 shadow-sm">
+                    <i class="fas fa-user-shield text-3xl text-emerald-600 mb-3"></i>
+                    <h3 class="font-bold text-lg mb-2 text-slate-900">صلاحيات صارمة</h3>
+                    <p class="text-xs text-slate-600">عزل تام لبيانات الموردين عن بعضهم البعض، وقيود دقيقة على الوصول.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-[#f8fafc] border border-slate-200 shadow-sm">
+                    <i class="fas fa-file-contract text-3xl text-emerald-600 mb-3"></i>
+                    <h3 class="font-bold text-lg mb-2 text-slate-900">قرارات بشرية 100%</h3>
+                    <p class="text-xs text-slate-600">لا يوجد أي تنفيذ تعاقدي آلي. المساعد مخصص للإرشاد فقط.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-[#f8fafc] border border-slate-200 shadow-sm">
+                    <i class="fas fa-server text-3xl text-emerald-600 mb-3"></i>
+                    <h3 class="font-bold text-lg mb-2 text-slate-900">سيادة كاملة</h3>
+                    <p class="text-xs text-slate-600">بنية النظام جاهزة للاستضافة داخل التراب الوطني للالتزام بالقوانين.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. Final CTA - Snow-White Theme with Panoramic Zellige Backdrop -->
+    <section class="py-24 bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9] to-[#ffffff] text-center relative overflow-hidden">
+        <div class="absolute inset-0 pointer-events-none panoramic-zellige opacity-35 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"></div>
+        <div class="container mx-auto px-6 relative z-10">
+            <h2 class="inline-block px-6 py-2 rounded-full border border-sky-300 bg-white shadow-sm text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mb-8">ابدأ دورة صفقات أكثر وضوحاً وسيادة.</h2>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="{% url 'accounts:register_supplier' %}" class="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-sm transition-all shadow-md">
+                    سجّل كمتعامل اقتصادي
+                </a>
+                <a href="{% url 'accounts:register_authority' %}" class="px-8 py-3.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-black text-sm transition-all shadow-md">
+                    ابدأ كمصلحة متعاقدة
+                </a>
+                <a href="{% url 'accounts:register_central_admin' %}" class="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-black text-sm transition-all shadow-md">
+                    تسجيل الإدارة المركزية
+                </a>
+            </div>
+        </div>
+    </section>
+
+</main>
+{% endblock %}
+
+{% block footer %}
+<!-- Expanded Institutional Sovereign Footer (التذييل المؤسسي الموسع باللون الأزرق الرسمي) -->
+<footer class="bg-gradient-to-b from-[#0b1329] via-[#0f1e3d] to-[#070d1e] text-white pt-16 pb-12 border-t-4 border-emerald-500 relative overflow-hidden font-amiri" dir="rtl">
+    <!-- Subtle Background Zellige Overlay on Royal Navy Blue Footer -->
+    <div class="absolute inset-0 pointer-events-none opacity-10 [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_90%)] panoramic-zellige"></div>
+    
+    <!-- Top Ambient Blue Flare -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-32 bg-sky-500/10 blur-3xl pointer-events-none"></div>
+
+    <div class="container mx-auto px-6 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-sky-900/60">
+            
+            <!-- Column 1: Identity & Sovereign Statement -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-sky-400 p-[2px] shadow-[0_0_20px_rgba(56,189,248,0.4)] flex items-center justify-center">
+                        <div class="w-full h-full rounded-2xl bg-[#0b1329] flex items-center justify-center text-emerald-400 font-black text-xl">
+                            <i class="fas fa-landmark"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-white tracking-wide mb-0">صفقات ذكية</h3>
+                        <span class="text-xs text-sky-300 font-bold tracking-wider font-sans">المنظومة الوطنية للصفقات العمومية</span>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-200 leading-relaxed font-sans font-medium">
+                    منصة رقمية سيادية موحدة لحوكمة دورة الطلبيات والصفقات العمومية بالجمهورية الجزائرية الديمقراطية الشعبية، مصممة بأعلى معايير الشفافية، النزاهة الجنائية، والمطابقة التشريعية.
+                </p>
+                <div class="pt-2 flex items-center gap-2.5 text-xs text-emerald-300 font-sans font-bold bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-500/30">
+                    <i class="fas fa-server text-emerald-400 text-sm"></i>
+                    <span>بنية تحتية مشفرة ومستضافة داخل التراب الوطني 100%</span>
+                </div>
+            </div>
+
+            <!-- Column 2: Legal References & Compliance -->
+            <div>
+                <h4 class="text-lg font-bold text-sky-300 mb-5 pb-2.5 border-b border-sky-800/80 flex items-center gap-2.5">
+                    <i class="fas fa-balance-scale text-emerald-400"></i> المرجعية القانونية والتنظيمية
+                </h4>
+                <ul class="space-y-3 text-sm text-slate-200 font-sans">
+                    <li class="flex items-start gap-2.5 hover:text-white transition-colors">
+                        <i class="fas fa-check-circle text-emerald-400 text-xs mt-1.5"></i>
+                        <span class="font-medium"><strong>القانون رقم 23-12</strong> المحدد للقواعد العامة للصفقات العمومية.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5 hover:text-white transition-colors">
+                        <i class="fas fa-check-circle text-emerald-400 text-xs mt-1.5"></i>
+                        <span class="font-medium"><strong>القانون العضوي رقم 18-15</strong> المتعلق بقوانين المالية (LOLF).</span>
+                    </li>
+                    <li class="flex items-start gap-2.5 hover:text-white transition-colors">
+                        <i class="fas fa-check-circle text-emerald-400 text-xs mt-1.5"></i>
+                        <span class="font-medium"><strong>القانون رقم 18-07</strong> المتعلق بحماية المعطيات ذات الطابع الشخصي.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5 hover:text-white transition-colors">
+                        <i class="fas fa-check-circle text-emerald-400 text-xs mt-1.5"></i>
+                        <span class="font-medium">أحكام وإجراءات لجان فتح الأظرفة وتقييم العروض والطعون الإدارية.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Column 3: Platform Portals & Services -->
+            <div>
+                <h4 class="text-lg font-bold text-sky-300 mb-5 pb-2.5 border-b border-sky-800/80 flex items-center gap-2.5">
+                    <i class="fas fa-network-wired text-sky-400"></i> بوابات المنظومة
+                </h4>
+                <ul class="space-y-2.5 text-sm text-slate-200 font-sans">
+                    <li>
+                        <a href="{% url 'procurement:tender_list' %}" class="hover:text-emerald-300 transition-colors flex items-center gap-2.5 p-1 rounded hover:bg-white/5">
+                            <i class="fas fa-search text-sky-400"></i> <span class="font-medium">بوابة استكشاف الصفقات المفتوحة</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'accounts:login' %}" class="hover:text-emerald-300 transition-colors flex items-center gap-2.5 p-1 rounded hover:bg-white/5">
+                            <i class="fas fa-building text-sky-400"></i> <span class="font-medium">فضاء المصلحة المتعاقدة (إبرام وبرمجة)</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'accounts:login' %}" class="hover:text-emerald-300 transition-colors flex items-center gap-2.5 p-1 rounded hover:bg-white/5">
+                            <i class="fas fa-briefcase text-sky-400"></i> <span class="font-medium">فضاء المتعامل الاقتصادي (العروض والدفع)</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'accounts:login' %}" class="hover:text-emerald-300 transition-colors flex items-center gap-2.5 p-1 rounded hover:bg-white/5">
+                            <i class="fas fa-shield-halved text-sky-400"></i> <span class="font-medium">فضاء الإدارة المركزية وهيئات الرقابة</span>
+                        </a>
+                    </li>
+                    <li class="pt-1">
+                        <a href="{% url 'accounts:register_supplier' %}" class="text-emerald-300 hover:text-emerald-200 transition-colors flex items-center gap-2.5 p-2 rounded-xl bg-emerald-900/40 border border-emerald-500/40 font-bold">
+                            <i class="fas fa-user-plus text-emerald-400"></i> <span>إنشاء حساب معتمد جديد</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Column 4: Institutional Assurance & Security -->
+            <div>
+                <h4 class="text-lg font-bold text-sky-300 mb-5 pb-2.5 border-b border-sky-800/80 flex items-center gap-2.5">
+                    <i class="fas fa-shield-alt text-amber-400"></i> الأمان والشفافية الجنائية
+                </h4>
+                <div class="space-y-3.5 text-xs text-slate-200 font-sans">
+                    <div class="p-3.5 rounded-2xl bg-[#070f24] border border-sky-800/60 shadow-sm">
+                        <div class="font-bold text-white mb-1.5 flex items-center gap-2 text-sm">
+                            <i class="fas fa-fingerprint text-emerald-400"></i> تشفير العروض (Sealed Bids)
+                        </div>
+                        <p class="text-xs text-slate-300 mb-0 leading-relaxed">
+                            تشفير تام <strong>AES-256</strong> للعروض المالية والتقنية يمنع أي اطلاع مسبق قبل انقضاء الآجال وجلسة الفتح العلنية.
+                        </p>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-[#070f24] border border-sky-800/60 shadow-sm">
+                        <div class="font-bold text-white mb-1.5 flex items-center gap-2 text-sm">
+                            <i class="fas fa-credit-card text-sky-400"></i> دفع إلكتروني حكومي مؤمن
+                        </div>
+                        <p class="text-xs text-slate-300 mb-0 leading-relaxed">
+                            سحب فوري لدفاتر الشروط عبر بوابة <strong>SATIM (البطاقة الذهبية / CIB)</strong> مع وصل إيداع خزانة رسمي موثق.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Copyright & Compliance Bar -->
+        <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-300 font-sans">
+            <div class="font-medium text-slate-300">
+                &copy; {% now "Y" %} <strong class="text-white">صفقات ذكية</strong>. جميع الحقوق محفوظة للجمهورية الجزائرية الديمقراطية الشعبية.
+            </div>
+            <div class="flex items-center gap-4 sm:gap-6">
+                <span class="flex items-center gap-1.5 text-emerald-400 font-bold bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-500/30">
+                    <i class="fas fa-shield-check"></i> نظام معتمد وفق القانون 23-12
+                </span>
+                <span class="text-sky-900">|</span>
+                <a href="#trust" class="text-slate-300 hover:text-white transition-colors">ميثاق الخصوصية والأمان</a>
+                <span class="text-sky-900">|</span>
+                <a href="#how-it-works" class="text-slate-300 hover:text-white transition-colors">دليل الإجراءات</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Dark mode toggle script for landing page
+    var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+    // Force Light Mode by Default for Landing Page luxury snow-white theme
+    if (localStorage.getItem('color-theme') === 'dark') {
+        themeToggleLightIcon.classList.remove('hidden');
+        document.documentElement.classList.add('dark');
+    } else {
+        themeToggleDarkIcon.classList.remove('hidden');
+        document.documentElement.classList.remove('dark');
+    } else {
+        themeToggleDarkIcon.classList.remove('hidden');
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('color-theme', 'light');
+    }
+
+    var themeToggleBtn = document.getElementById('theme-toggle');
+
+    themeToggleBtn.addEventListener('click', function() {
+        themeToggleDarkIcon.classList.toggle('hidden');
+        themeToggleLightIcon.classList.toggle('hidden');
+
+        if (localStorage.getItem('color-theme')) {
+            if (localStorage.getItem('color-theme') === 'light') {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            }
+        } else {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            }
+        }
+    });
+
+    function updateNavbarDateTime() {
+        var now = new Date();
+        var clockEl = document.getElementById('live-navbar-clock');
+        var dateEl = document.getElementById('live-navbar-date');
+        
+        if (clockEl) {
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            var seconds = String(now.getSeconds()).padStart(2, '0');
+            clockEl.textContent = hours + ':' + minutes + ':' + seconds;
+        }
+        
+        if (dateEl) {
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateEl.textContent = now.toLocaleDateString('ar-DZ', options);
+        }
+    }
+    updateNavbarDateTime();
+    setInterval(updateNavbarDateTime, 1000);
+</script>
+{% endblock %}

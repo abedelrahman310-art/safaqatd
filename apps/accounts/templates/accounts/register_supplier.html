@@ -1,171 +1,171 @@
 {% extends 'core/base.html' %}
 
-{% block title %}إنشاء حساب متعامل اقتصادي{% endblock %}
+{% block title %}إنشاء حساب متعامل اقتصادي | صفقات ذكية{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+    
+    *, html, body, input, select, textarea, button, label, p, h1, h2, h3, h4, span, a {
+        font-family: 'Cairo', sans-serif !important;
+    }
+    
+    .font-mono-custom {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
 
 {% block content %}
-<!-- Sky Blue Premium Background -->
-<div style="display: none;">
-</div>
+<section class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 font-cairo text-[#09090b]" style="background: #f8fafc; min-height: 100vh;" dir="rtl">
+    
+    <!-- Background Ambient Grid -->
+    <div class="absolute inset-0 pointer-events-none opacity-40 [background-image:radial-gradient(#059669_0.75px,transparent_0.75px)] [background-size:16px_16px]"></div>
 
-<section style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 5%; position: relative; z-index: 1;">
+    <!-- Error/Success Messages -->
     {% if messages %}
-    <div style="max-width: 800px; margin: 0 auto 1rem auto; width: 100%;">
+    <div class="w-full max-w-3xl mb-4 font-sans">
         {% for message in messages %}
-        <div style="background: rgba(220, 38, 38, 0.9); color: white; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 0.5rem; backdrop-filter: blur(10px);">
-            {{ message }}
+        <div class="p-3.5 rounded-2xl text-xs font-bold text-center shadow-sm {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+            <i class="fas fa-exclamation-circle ml-1"></i> {{ message }}
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.2); padding: 3rem 2rem; border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.5); max-width: 800px; width: 100%; position: relative; color: white;">
+    <!-- Luxury Soft White Card -->
+    <div class="w-full max-w-3xl bg-white rounded-3xl p-8 sm:p-12 shadow-[0_15px_45px_rgba(15,23,42,0.08)] border border-slate-200/80 relative text-slate-900">
         
-        <a href="{% url 'core:index' %}" style="position: absolute; top: 1.5rem; right: 1.5rem; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 1.2rem; transition: color 0.3s ease;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" title="عودة للرئيسية">
-            <i class="fas fa-arrow-right"></i>
+        <!-- Back Button -->
+        <a href="{% url 'core:index' %}" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition-all border border-slate-200" title="العودة للرئيسية">
+            <i class="fas fa-arrow-right text-sm"></i>
         </a>
 
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px dashed #4ade80; margin-bottom: 1rem;">
-                <i class="fas fa-building fa-2x" style="color: #4ade80;"></i>
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-sm mb-3 text-2xl">
+                <i class="fas fa-building"></i>
             </div>
-            <h2 style="margin: 0; font-size: 2rem; font-weight: 800; background: linear-gradient(to right, #ffffff, #e2e8f0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">تسجيل متعامل اقتصادي</h2>
-            <p style="color: rgba(255,255,255,0.7); margin-top: 0.5rem; font-size: 1rem;">انضم كشركة أو مؤسسة خاصة للوصول إلى الصفقات</p>
+            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mb-1">تسجيل متعامل اقتصادي</h2>
+            <p class="text-xs sm:text-sm text-slate-500 font-sans">فتح حساب شركة / مؤسسة مؤهلة للمشاركة في الصفقات والطلبيات العمومية</p>
         </div>
 
-        <form method="post">
+        <form method="post" class="font-sans space-y-6">
             {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group premium-input-group">
-                    <label><i class="fas fa-user"></i> اسم ممثل الشركة</label>
-                    <div class="input-wrapper">
-                        <input type="text" name="full_name" required placeholder="الاسم الكامل للمسؤول">
+            
+            <!-- Section 1: Representative & Account Info -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                        <i class="fas fa-user text-slate-400 ml-1"></i> اسم ممثل الشركة أو المسير *
+                    </label>
+                    <input type="text" name="full_name" required placeholder="الاسم واللقب كاملاً" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                        <i class="fas fa-envelope text-slate-400 ml-1"></i> البريد الإلكتروني الرسمي *
+                    </label>
+                    <input type="email" name="email" required placeholder="contact@company.dz" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all font-sans">
+                </div>
+            </div>
+
+            <!-- Section 2: Official Fiscal & Commercial Box -->
+            <div class="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/90 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 mb-1.5">
+                            <i class="fas fa-file-invoice text-emerald-600 ml-1"></i> رقم السجل التجاري (RC) *
+                        </label>
+                        <input type="text" name="commercial_register" required placeholder="مثال: 16/00-0012345B26" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 mb-1.5">
+                            <i class="fas fa-receipt text-amber-600 ml-1"></i> رقم التعريف الجبائي (NIF) *
+                        </label>
+                        <input type="text" name="nif_number" required placeholder="15 رقماً - مثال: 000116001234567" maxlength="20" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-mono">
                     </div>
                 </div>
-                <div class="form-group premium-input-group">
-                    <label><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
-                    <div class="input-wrapper">
-                        <input type="email" name="email" required placeholder="example@mail.com">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            <i class="fas fa-chart-line text-slate-400 ml-1"></i> رقم التعريف الإحصائي (NIS)
+                        </label>
+                        <input type="text" name="nis_number" placeholder="رقم NIS (اختياري)" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            <i class="fas fa-id-card text-slate-400 ml-1"></i> بطاقة التعريف الوطني للمسير
+                        </label>
+                        <input type="text" name="national_id" placeholder="رقم بطاقة التعريف الوطني (NIN)" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-mono">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            <i class="fas fa-industry text-slate-400 ml-1"></i> الشكل القانوني للشركة *
+                        </label>
+                        <select name="company_type" required class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer">
+                            <option value="" disabled selected>-- اختر الشكل القانوني --</option>
+                            <option value="eurl">ش.ذ.م.م بـشخص وحيد (EURL)</option>
+                            <option value="sarl">شركة ذات مسؤولية محدودة (SARL)</option>
+                            <option value="spa">شركة مساهمة (SPA)</option>
+                            <option value="snc">شركة التضامن (SNC)</option>
+                            <option value="indiv">مؤسسة فردية / حرفي</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            <i class="fas fa-briefcase text-slate-400 ml-1"></i> قطاع النشاط الرئيسي *
+                        </label>
+                        <select name="sector" required class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer">
+                            <option value="" disabled selected>-- اختر القطاع --</option>
+                            <option value="construction">بناء وأشغال عمومية وري</option>
+                            <option value="tech">إعلام آلي ورقمنة واتصالات</option>
+                            <option value="supplies">توريد معدات وتجهيزات</option>
+                            <option value="services">خدمات واستشارات ودراسات</option>
+                            <option value="medical">تجهيزات طبية وصيدلانية</option>
+                            <option value="other">قطاع آخر...</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <div style="padding: 1rem; background: rgba(0,0,0,0.02); border-radius: 8px; margin-bottom: 1rem; border: 1px dashed var(--accent-secondary);">
-                <h4 style="margin-top: 0; margin-bottom: 1rem; color: var(--accent-secondary);"><i class="fas fa-building"></i> معلومات الشركة</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group premium-input-group">
-                        <label><i class="fas fa-id-card"></i> بطاقة التعريف الوطني للمسير</label>
-                        <div class="input-wrapper">
-                            <input type="text" name="national_id" required placeholder="رقم بطاقة التعريف">
-                        </div>
-                    </div>
-                    <div class="form-group premium-input-group">
-                        <label><i class="fas fa-file-invoice"></i> رقم السجل التجاري</label>
-                        <div class="input-wrapper">
-                            <input type="text" name="commercial_register" required placeholder="رقم السجل التجاري">
-                        </div>
-                    </div>
+            <!-- Section 3: Password -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                        <i class="fas fa-lock text-slate-400 ml-1"></i> كلمة المرور *
+                    </label>
+                    <input type="password" name="password" required placeholder="8 أحرف على الأقل..." class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-                    <div class="form-group premium-input-group">
-                        <label><i class="fas fa-industry"></i> نوع الشركة</label>
-                        <div class="input-wrapper">
-                            <select name="company_type" required>
-                                <option value="" disabled selected>-- اختر نوع الشركة --</option>
-                                <option value="eurl">ش.ذ.م.م بـشخص وحيد (EURL)</option>
-                                <option value="sarl">ش.ذ.م.م (SARL)</option>
-                                <option value="spa">شركة مساهمة (SPA)</option>
-                                <option value="snc">شركة التضامن (SNC)</option>
-                                <option value="indiv">مؤسسة فردية</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group premium-input-group">
-                        <label><i class="fas fa-briefcase"></i> قطاع النشاط (لترشيح الصفقات)</label>
-                        <div class="input-wrapper">
-                            <select name="sector" required>
-                                <option value="" disabled selected>-- اختر القطاع --</option>
-                                <option value="it">إعلام آلي ورقمنة</option>
-                                <option value="construction">بناء وأشغال عمومية</option>
-                                <option value="medical">تجهيزات طبية وشبه طبية</option>
-                                <option value="services">خدمات واستشارات</option>
-                                <option value="supplies">توريد معدات ومكاتب</option>
-                                <option value="other">أخرى</option>
-                            </select>
-                        </div>
-                    </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                        <i class="fas fa-check-double text-slate-400 ml-1"></i> تأكيد كلمة المرور *
+                    </label>
+                    <input type="password" name="confirm_password" required placeholder="أعد إدخال كلمة المرور..." class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group premium-input-group">
-                    <label><i class="fas fa-lock"></i> كلمة المرور</label>
-                    <div class="input-wrapper">
-                        <input type="password" name="password" required placeholder="كلمة المرور">
-                    </div>
-                </div>
-                <div class="form-group premium-input-group">
-                    <label><i class="fas fa-lock"></i> تأكيد كلمة المرور</label>
-                    <div class="input-wrapper">
-                        <input type="password" name="confirm_password" required placeholder="تأكيد كلمة المرور">
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" class="premium-btn" style="margin-top: 2rem;">تسجيل حساب متعامل <i class="fas fa-arrow-left"></i></button>
+            <!-- Submit Button -->
+            <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 mt-4">
+                <span>تأكيد تسجيل حساب المتعامل الاقتصادي</span>
+                <i class="fas fa-arrow-left text-xs"></i>
+            </button>
         </form>
         
-        <div style="text-align: center; margin-top: 2rem;">
-            <p style="font-size: 0.95rem; color: rgba(255,255,255,0.7);">لديك حساب بالفعل؟ <a href="{% url 'accounts:login' %}" style="color: #fff; font-weight: bold; text-decoration: underline; text-underline-offset: 4px;">تسجيل الدخول</a></p>
+        <div class="text-center mt-6 pt-6 border-t border-slate-100 font-sans">
+            <p class="text-xs text-slate-500">
+                لديك حساب مسجل بالفعل؟ 
+                <a href="{% url 'accounts:login' %}" class="text-emerald-700 font-bold hover:underline ml-1">تسجيل الدخول</a>
+            </p>
         </div>
     </div>
 </section>
-
-<style>
-    @keyframes waveColors {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    @keyframes orbFloat {
-        0% { transform: translate(0, 0) scale(1); }
-        100% { transform: translate(50px, -50px) scale(1.1); }
-    }
-
-    .premium-input-group {
-        margin-bottom: 1.5rem;
-    }
-    .premium-input-group label {
-        display: block;
-        color: rgba(255,255,255,0.8);
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-    }
-    .input-wrapper input, .input-wrapper select {
-        width: 100%;
-        padding: 0.9rem 1.2rem;
-        background: rgba(0,0,0,0.25);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 12px;
-        color: #fff;
-        font-size: 0.95rem;
-        transition: all 0.3s ease;
-        outline: none;
-    }
-    .input-wrapper select option {
-        background: #0f141e;
-        color: white;
-    }
-    .input-wrapper input:focus, .input-wrapper select:focus {
-        border-color: #38bdf8;
-        background: rgba(0,0,0,0.4);
-        box-shadow: 0 0 0 3px rgba(56,189,248,0.2);
-    }
-    .premium-btn {
-        width: 100%;
-        padding: 1rem;
-        background: linear-gradient(135deg, #10b981, #059669);
-        border: none;
         border-radius: 12px;
         color: white;
         font-size: 1.1rem;

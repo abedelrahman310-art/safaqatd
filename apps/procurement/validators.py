@@ -29,3 +29,8 @@ def validate_file_mimetype(file):
             _('نوع الملف غير مدعوم أو أن المحتوى مزور. يُسمح فقط بملفات PDF أو ZIP. (نوع الملف المكتشف: %(mime_type)s)'),
             params={'mime_type': detected_mime},
         )
+
+def validate_file_size(file):
+    max_size_mb = 20
+    if file.size > max_size_mb * 1024 * 1024:
+        raise ValidationError(_(f'حجم الملف يتجاوز الحد الأقصى المسموح به ({max_size_mb}MB).'))

@@ -1,0 +1,67 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 text-gray-800">إدارة العقود</h2>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>رقم العقد</th>
+                            <th>المورد</th>
+                            <th>المصلحة المتعاقدة</th>
+                            <th>تاريخ البداية</th>
+                            <th>تاريخ النهاية</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contract in contracts %}
+                        <tr>
+                            <td>{{ contract.contract_number|default:"-- مسودة --" }}</td>
+                            <td>{{ contract.supplier.full_name }}</td>
+                            <td>{{ contract.authority.full_name }}</td>
+                            <td>{{ contract.start_date|date:"Y/m/d"|default:"غير محدد" }}</td>
+                            <td>{{ contract.end_date|date:"Y/m/d"|default:"غير محدد" }}</td>
+                            <td>
+                                {% if contract.status == 'active' %}
+                                    <span class="badge bg-success">ساري المفعول</span>
+                                {% elif contract.status == 'draft' %}
+                                    <span class="badge bg-secondary">مسودة قيد التحضير</span>
+                                {% elif contract.status == 'completed' %}
+                                    <span class="badge bg-primary">مكتمل</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{{ contract.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'procurement:contract_detail' contract.pk %}" class="btn btn-sm btn-info text-white">
+                                    <i class="fas fa-folder-open"></i> إدارة العقد
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                لا توجد عقود مسجلة حالياً.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if is_paginated %}
+            <!-- Pagination Code -->
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

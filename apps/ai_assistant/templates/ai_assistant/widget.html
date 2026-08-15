@@ -1,0 +1,164 @@
+{% if user.is_authenticated %}
+<!-- Alpine.js is required for this widget -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<div x-data="aiAssistantWidget()" class="ai-widget-container" style="position: fixed; bottom: 20px; left: 20px; z-index: 1050; font-family: 'Tajawal', sans-serif;">
+    
+    <!-- Widget Button -->
+    <button @click="toggle()" class="btn btn-primary rounded-circle shadow-lg" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
+        <i class="fas fa-robot text-white" style="font-size: 24px;"></i>
+    </button>
+
+    <!-- Chat Box -->
+    <div x-show="isOpen" @click.away="close()" x-transition.opacity.duration.300ms class="card shadow-lg" style="position: absolute; bottom: 80px; left: 0; width: 350px; max-height: 500px; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; display: none;">
+        
+        <!-- Header -->
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border-bottom: none;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-robot me-2"></i> المساعد الذكي</h5>
+                <button @click="close()" class="btn btn-sm btn-link text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <small class="text-white-50">جاهز للإجابة بخصوص دورك والمنصة</small>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="card-body bg-light" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;" id="ai-chat-messages">
+            
+            <template x-for="(msg, index) in messages" :key="index">
+                <div :class="msg.sender === 'user' ? 'text-start' : 'text-end'">
+                    <div :class="msg.sender === 'user' ? 'bg-primary text-white' : 'bg-white text-dark border'" style="display: inline-block; padding: 10px 15px; border-radius: 15px; max-width: 85%; font-size: 0.9rem;">
+                        <!-- AI Title if present -->
+                        <template x-if="msg.sender === 'ai' && msg.title">
+                            <strong class="d-block mb-1 text-primary" x-text="msg.title"></strong>
+                        </template>
+                        
+                        <!-- AI Answer or User Question -->
+                        <span x-text="msg.text"></span>
+                        
+                        <!-- Suggested Actions -->
+                        <template x-if="msg.sender === 'ai' && msg.suggested_actions && msg.suggested_actions.length > 0">
+                            <div class="mt-2 pt-2 border-top">
+                                <template x-for="action in msg.suggested_actions">
+                                    <span class="badge bg-light text-primary border me-1 mb-1" x-text="action"></span>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+            
+            <!-- Loading Indicator -->
+            <div x-show="isLoading" class="text-end">
+                <div class="bg-white text-dark border" style="display: inline-block; padding: 10px 15px; border-radius: 15px;">
+                    <i class="fas fa-circle-notch fa-spin text-primary"></i> يفكر...
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Input Area -->
+        <div class="card-footer bg-white border-top">
+            <form @submit.prevent="sendMessage()" class="d-flex gap-2">
+                <input x-model="question" type="text" class="form-control form-control-sm" placeholder="اكتب سؤالك هنا..." :disabled="isLoading" required>
+                <button type="submit" class="btn btn-primary btn-sm" :disabled="isLoading || !question.trim()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    function aiAssistantWidget() {
+        return {
+            isOpen: false,
+            isLoading: false,
+            question: '',
+            messages: [
+                { sender: 'ai', title: 'مرحباً!', text: 'أنا المساعد الذكي. كيف يمكنني مساعدتك اليوم بخصوص حسابك والمنصة؟' }
+            ],
+            
+            toggle() {
+                this.isOpen = !this.isOpen;
+                if(this.isOpen) {
+                    this.$el.querySelector('.card').style.display = 'flex';
+                    this.scrollToBottom();
+                } else {
+                    setTimeout(() => { this.$el.querySelector('.card').style.display = 'none'; }, 300);
+                }
+            },
+            
+            close() {
+                this.isOpen = false;
+                setTimeout(() => { this.$el.querySelector('.card').style.display = 'none'; }, 300);
+            },
+            
+            scrollToBottom() {
+                setTimeout(() => {
+                    const container = document.getElementById('ai-chat-messages');
+                    if(container) container.scrollTop = container.scrollHeight;
+                }, 50);
+            },
+            
+            async sendMessage() {
+                if(!this.question.trim()) return;
+                
+                const qText = this.question;
+                this.messages.push({ sender: 'user', text: qText });
+                this.question = '';
+                this.isLoading = true;
+                this.scrollToBottom();
+                
+                try {
+                    const csrfToken = this.getCookie('csrftoken');
+                    const response = await fetch('/ai/assistant/secure/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({ question: qText })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if(response.ok) {
+                        this.messages.push({
+                            sender: 'ai',
+                            title: data.title,
+                            text: data.answer,
+                            suggested_actions: data.suggested_actions || []
+                        });
+                    } else {
+                        this.messages.push({
+                            sender: 'ai',
+                            text: data.error || 'حدث خطأ. يرجى المحاولة لاحقاً.'
+                        });
+                    }
+                } catch(error) {
+                    this.messages.push({ sender: 'ai', text: 'حدث خطأ في الاتصال.' });
+                } finally {
+                    this.isLoading = false;
+                    this.scrollToBottom();
+                }
+            },
+            
+            getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        }
+    }
+</script>
+{% endif %}

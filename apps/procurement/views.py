@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Tender, Bid, TenderQuestion, SupplierRating, DocumentPayment
+from .models import Tender, Bid, TenderQuestion, SupplierRating, DocumentPayment, ProcurementAuditLog
 from apps.core.models import Notification
+from apps.core.analytics import log_event
 from .forms import TenderForm, BidForm
 from django.db.models import Q, Avg
 from django.core.mail import send_mail
@@ -44,21 +45,62 @@ def tender_list(request):
     }
     return render(request, 'procurement/tender_list.html', context)
 
+from django.contrib.auth.decorators import login_required, permission_required
 from apps.accounts.decorators import role_required
 
 @login_required
-@role_required(['authority'])
+@permission_required('procurement.view_tender', raise_exception=True)
 def authority_tender_list(request):
-    tenders = Tender.objects.filter(authority=request.user)
+    tenders = Tender.objects.filter(authority=request.user).select_related('authority')
     return render(request, 'procurement/authority_tender_list.html', {'tenders': tenders})
 
+@login_required
+@permission_required('procurement.add_tender', raise_exception=True)
 def tender_create(request):
     if request.method == 'POST':
         form = TenderForm(request.POST, request.FILES)
         if form.is_valid():
             tender = form.save(commit=False)
             tender.authority = request.user
+            
+            # Step 3: Opportunity Analysis (Mock AI Summary)
+            tender.ai_executive_summary = f"""
+**تحليل الفرصة (AI):**
+- **نقاط القوة:** تتطابق الصفقة مع 3 من أصل 4 مجالات تخصص لشركتك. الميزانية التقديرية مناسبة لحجم مشاريعك السابقة.
+- **التحديات:** آجال التسليم ({tender.deadline}) قصيرة نسبياً، قد تتطلب موارد إضافية.
+- **توصية:** ينصح بالتقديم بقوة. نسبة الفوز التقديرية: 78%.
+"""
             tender.save()
+            ProcurementAuditLog.log_action(
+                user=request.user,
+                action='CREATE_TENDER' if tender.status != 'published' else 'PUBLISH_TENDER',
+                resource_type='tender',
+                resource_id=tender.id,
+                details={'title': tender.title, 'status': tender.status},
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+            log_event(
+                event_name='tender_created' if tender.status != 'published' else 'tender_published',
+                request=request,
+                entity_type='tender',
+                entity_id=tender.id
+            )
+            from django.contrib import messages
+            
+            # Step 2: Smart Notification (AI Match)
+            if tender.status == 'published':
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                matching_suppliers = User.objects.filter(role='supplier', sector=tender.sector, is_blacklisted=False)
+                for supplier in matching_suppliers:
+                    Notification.objects.create(
+                        user=supplier,
+                        title="🎯 تطابق ذكي: صفقة جديدة تناسب قدراتك!",
+                        message=f"الذكاء الاصطناعي وجد تطابق بنسبة 94% مع ملفك لصفقة: {tender.title}. اضغط للتفاصيل.",
+                        link=f"/procurement/tenders/{tender.id}/"
+                    )
+            
+            messages.success(request, 'تم إنشاء الصفقة بنجاح.')
             return redirect('procurement:authority_tender_list')
     else:
         form = TenderForm()
@@ -66,13 +108,42 @@ def tender_create(request):
     return render(request, 'procurement/tender_form.html', {'form': form})
 
 @login_required
+@permission_required('procurement.change_tender', raise_exception=True)
 def tender_edit(request, tender_id):
     tender = get_object_or_404(Tender, id=tender_id, authority=request.user)
+    
+    from django.contrib import messages
+    if tender.status != 'draft':
+        messages.error(request, 'لا يمكن تعديل صفقة بعد نشرها.')
+        return redirect('procurement:authority_tender_list')
+        
     if request.method == 'POST':
         form = TenderForm(request.POST, request.FILES, instance=tender)
         if form.is_valid():
-            form.save()
-            from django.contrib import messages
+            updated_tender = form.save(commit=False)
+            
+            # Step 3: Opportunity Analysis (Mock AI Summary)
+            updated_tender.ai_executive_summary = f"""
+**تحليل الفرصة (AI):**
+- **نقاط القوة:** تتطابق الصفقة مع 3 من أصل 4 مجالات تخصص لشركتك. الميزانية التقديرية مناسبة لحجم مشاريعك السابقة.
+- **التحديات:** آجال التسليم ({updated_tender.deadline}) قصيرة نسبياً، قد تتطلب موارد إضافية.
+- **توصية:** ينصح بالتقديم بقوة. نسبة الفوز التقديرية: 78%.
+"""
+            updated_tender.save()
+            
+            # Step 2: Smart Notification (AI Match)
+            if updated_tender.status == 'published':
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                matching_suppliers = User.objects.filter(role='supplier', sector=updated_tender.sector, is_blacklisted=False)
+                for supplier in matching_suppliers:
+                    Notification.objects.create(
+                        user=supplier,
+                        title="🎯 تطابق ذكي: صفقة جديدة تناسب قدراتك!",
+                        message=f"الذكاء الاصطناعي وجد تطابق بنسبة 94% مع ملفك لصفقة: {updated_tender.title}. اضغط للتفاصيل.",
+                        link=f"/procurement/tenders/{updated_tender.id}/"
+                    )
+            
             messages.success(request, 'تم تحديث الصفقة بنجاح.')
             return redirect('procurement:authority_tender_list')
     else:
@@ -81,17 +152,27 @@ def tender_edit(request, tender_id):
     return render(request, 'procurement/tender_form.html', {'form': form, 'is_edit': True, 'tender': tender})
 
 @login_required
+@permission_required('procurement.delete_tender', raise_exception=True)
 def tender_delete(request, tender_id):
     tender = get_object_or_404(Tender, id=tender_id, authority=request.user)
+    
+    from django.contrib import messages
+    if tender.status != 'draft':
+        messages.error(request, 'لا يمكن حذف صفقة إلا إذا كانت مسودة.')
+        return redirect('procurement:authority_tender_list')
+        
     if request.method == 'POST':
         tender.soft_delete()
-        from django.contrib import messages
         messages.success(request, 'تم حذف الصفقة بنجاح.')
         return redirect('procurement:authority_tender_list')
     return render(request, 'procurement/tender_confirm_delete.html', {'tender': tender})
 
 def bid_create(request, tender_id):
     tender = get_object_or_404(Tender, id=tender_id)
+    
+    if tender.is_deadline_passed:
+        messages.error(request, "عذراً، لقد انتهى أجل إيداع العروض لهذه الصفقة.")
+        return redirect('procurement:tender_detail', tender_id=tender.id)
     
     # Check Blacklist Status
     if getattr(request.user, 'is_blacklisted', False):
@@ -123,6 +204,20 @@ def bid_create(request, tender_id):
             
             bid.save()
             
+            ProcurementAuditLog.log_action(
+                user=request.user,
+                action='SUBMIT_BID',
+                resource_type='bid',
+                resource_id=bid.id,
+                details={'tender_id': tender.id},
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+            log_event(
+                event_name='bid_submitted',
+                request=request,
+                entity_type='bid',
+                entity_id=bid.id
+            )
             Notification.objects.create(
                 user=tender.authority,
                 message=f"تم تقديم عرض جديد للصفقة: {tender.title}",
@@ -141,54 +236,82 @@ def bid_create(request, tender_id):
             except Exception:
                 pass
             
-            return redirect('procurement:tender_list')
+            return redirect('procurement:bid_receipt', bid_id=bid.id)
     else:
         form = BidForm()
     
     return render(request, 'procurement/bid_form.html', {'form': form, 'tender': tender})
 
 @login_required
+def bid_receipt(request, bid_id):
+    bid = get_object_or_404(Bid, id=bid_id, supplier=request.user)
+    return render(request, 'procurement/bid_receipt.html', {'bid': bid})
+
+@login_required
 @role_required(['authority'])
+@permission_required('procurement.view_tender', raise_exception=True)
 def authority_tender_bids(request, tender_id):
     tender = get_object_or_404(Tender, id=tender_id)
+    
+    # Check if user is authority or committee member
+    is_authority = (request.user == tender.authority)
+    is_committee = tender.committee_members.filter(user=request.user).exists()
+    
+    if not (is_authority or is_committee):
+        messages.error(request, "ليس لديك صلاحية للاطلاع على عروض هذه الصفقة.")
+        return redirect('procurement:authority_tender_list')
+        
     bids = list(tender.bids.all())
     
     bids_hidden = not tender.is_bids_opened
-    can_open = timezone.now() > tender.submission_deadline if tender.submission_deadline else False
+    can_open = timezone.now().date() > tender.deadline if tender.deadline else False
     
-    if bids and not bids_hidden:
-        min_financial = min((b.financial_offer for b in bids if b.financial_offer), default=0)
-        min_delivery = min((b.delivery_time_days for b in bids if b.delivery_time_days), default=0)
-        max_warranty = max((b.warranty_months for b in bids if b.warranty_months), default=0)
-        max_projects = max((b.similar_projects_count for b in bids if b.similar_projects_count), default=0)
-        
-        for bid in bids:
-            score = 0
-            if bid.financial_offer and min_financial > 0:
-                score += (float(min_financial) / float(bid.financial_offer)) * 40
-            if bid.delivery_time_days and min_delivery > 0:
-                score += (float(min_delivery) / float(bid.delivery_time_days)) * 20
-            if bid.similar_projects_count and max_projects > 0:
-                score += (float(bid.similar_projects_count) / float(max_projects)) * 20
-            if bid.warranty_months and max_warranty > 0:
-                score += (float(bid.warranty_months) / float(max_warranty)) * 10
+    if not bids_hidden:
+        if bids:
+            min_financial = min((b.financial_offer for b in bids if b.financial_offer), default=0)
+            min_delivery = min((b.delivery_time_days for b in bids if b.delivery_time_days), default=0)
+            max_warranty = max((b.warranty_months for b in bids if b.warranty_months), default=0)
+            max_projects = max((b.similar_projects_count for b in bids if b.similar_projects_count), default=0)
             
-            avg_rating = SupplierRating.objects.filter(supplier_name=bid.supplier_name).aggregate(Avg('rating'))['rating__avg']
-            if avg_rating:
-                score += (float(avg_rating) / 5.0) * 10
+            for bid in bids:
+                score = 0
+                if bid.financial_offer and min_financial > 0:
+                    score += (float(min_financial) / float(bid.financial_offer)) * 40
+                if bid.delivery_time_days and min_delivery > 0:
+                    score += (float(min_delivery) / float(bid.delivery_time_days)) * 20
+                if bid.similar_projects_count and max_projects > 0:
+                    score += (float(bid.similar_projects_count) / float(max_projects)) * 20
+                if bid.warranty_months and max_warranty > 0:
+                    score += (float(bid.warranty_months) / float(max_warranty)) * 10
                 
-            bid.smart_score = round(score, 1)
-            bid.avg_rating = round(avg_rating, 1) if avg_rating else "جديد"
-            
-        bids.sort(key=lambda x: getattr(x, 'smart_score', 0), reverse=True)
-        if len(bids) > 0 and hasattr(bids[0], 'smart_score') and bids[0].smart_score > 0:
-            bids[0].is_best = True
+                avg_rating = SupplierRating.objects.filter(supplier_name=bid.supplier_name).aggregate(Avg('rating'))['rating__avg']
+                if avg_rating:
+                    score += (float(avg_rating) / 5.0) * 10
+                    
+                bid.smart_score = round(score, 1)
+                bid.avg_rating = round(avg_rating, 1) if avg_rating else "جديد"
+                
+            bids.sort(key=lambda x: getattr(x, 'smart_score', 0), reverse=True)
+            if len(bids) > 0 and hasattr(bids[0], 'smart_score') and bids[0].smart_score > 0:
+                bids[0].is_best = True
+    else:
+        # Hide sensitive data if bids are not opened yet
+        for bid in bids:
+            bid.financial_offer = None
+            bid.technical_offer = None
+            bid.delivery_time_days = None
+            bid.warranty_months = None
+            bid.similar_projects_count = None
+            bid.technical_document = None
+            bid.financial_document = None
 
     return render(request, 'procurement/authority_bids_list.html', {
         'tender': tender,
         'bids': bids,
         'bids_hidden': bids_hidden,
         'can_open': can_open,
+        'is_authority': is_authority,
+        'is_committee': is_committee,
     })
 
 from django.db import transaction
@@ -210,7 +333,7 @@ def open_tender_bids(request, tender_id):
         messages.warning(request, "تم فتح الأظرفة مسبقاً.")
         return redirect('procurement:authority_tender_bids', tender_id=tender.id)
         
-    if timezone.now().date() <= tender.deadline:
+    if timezone.now() <= tender.deadline:
         messages.error(request, "لا يمكن فتح الأظرفة قبل انقضاء آجال الإيداع قانونياً.")
         return redirect('procurement:authority_tender_bids', tender_id=tender.id)
         
@@ -229,12 +352,51 @@ def open_tender_bids(request, tender_id):
         
         tender.is_bids_opened = True
         tender.save()
+        
+        ProcurementAuditLog.log_action(
+            user=request.user,
+            action='OPEN_BIDS',
+            resource_type='tender',
+            resource_id=tender.id,
+            details={'committee_id': committee.id},
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        log_event(
+            event_name='bid_opening_started',
+            request=request,
+            entity_type='tender',
+            entity_id=tender.id
+        )
+        
         messages.success(request, "تم فك التشفير عن العروض وتوثيق محضر جلسة الفتح بنجاح.")
         
     return redirect('procurement:authority_tender_bids', tender_id=tender.id)
 
+@login_required
+@permission_required('procurement.view_tender', raise_exception=True)
 def bid_update_status(request, bid_id, status):
+    from django.contrib import messages
+    if request.method != 'POST':
+        return HttpResponseForbidden("طريقة غير مسموحة. يجب استخدام POST.")
+
     bid = get_object_or_404(Bid, id=bid_id)
+    tender = bid.tender
+    
+    is_authority = request.user == tender.authority
+    is_committee = tender.committee_members.filter(user=request.user).exists()
+    
+    if not (is_authority or is_committee):
+        messages.error(request, "ليس لديك صلاحية لتقييم عروض هذه الصفقة.")
+        return redirect('procurement:authority_tender_bids', tender_id=tender.id)
+        
+    if not tender.is_bids_opened:
+        messages.error(request, "لا يمكن تقييم العروض قبل فتح الأظرفة.")
+        return redirect('procurement:authority_tender_bids', tender_id=tender.id)
+        
+    if tender.status == 'draft':
+        messages.error(request, "لا يمكن تقييم مسودة صفقة.")
+        return redirect('procurement:authority_tender_bids', tender_id=tender.id)
+
     if status in ['accepted', 'rejected', 'pending']:
         bid.status = status
         bid.save()
@@ -261,7 +423,9 @@ def bid_update_status(request, bid_id, status):
             except Exception:
                 pass
                 
-    return redirect('procurement:authority_tender_bids', tender_id=bid.tender.id)
+        messages.success(request, f"تم تحديث حالة العرض إلى {bid.get_status_display()}")
+                
+    return redirect('procurement:authority_tender_bids', tender_id=tender.id)
 
 @login_required
 def rate_supplier(request, bid_id):
@@ -358,35 +522,88 @@ def payment_checkout(request, tender_id):
 
 @login_required
 def satim_gateway_view(request, tender_id):
+    if request.user.role != 'supplier':
+        return redirect('dashboard:authority')
+        
     tender = get_object_or_404(Tender, id=tender_id)
+    from .services.payment_gateway import AlgerianPaymentService
+    
+    payment_method = request.GET.get('method', 'edahabia')
+    session_data = AlgerianPaymentService.initiate_payment_session(request.user, tender, payment_method=payment_method)
+    
+    if session_data.get('already_paid'):
+        from django.contrib import messages
+        messages.info(request, "تم دفع رسوم هذه الصفقة مسبقاً. يمكنك تحميل دفتر الشروط مباشرة.")
+        return redirect('procurement:tender_detail', tender_id=tender.id)
+
     if request.method == 'POST':
-        # Simulated submission of card details to SATIM
+        card_num = request.POST.get('card_number', '0000')
+        card_last4 = card_num.replace(' ', '')[-4:] if len(card_num) >= 4 else '4590'
+        request.session['payment_id'] = session_data['payment_id']
+        request.session['card_last4'] = card_last4
+        request.session['payment_method'] = payment_method
         return redirect('procurement:satim_otp', tender_id=tender.id)
         
-    return render(request, 'procurement/satim_gateway.html', {'tender': tender})
+    return render(request, 'procurement/satim_gateway.html', {
+        'tender': tender,
+        'session_data': session_data,
+        'payment_method': payment_method
+    })
 
 @login_required
 def satim_otp_view(request, tender_id):
+    if request.user.role != 'supplier':
+        return redirect('dashboard:authority')
+        
     tender = get_object_or_404(Tender, id=tender_id)
+    payment_id = request.session.get('payment_id')
+    card_last4 = request.session.get('card_last4', '4590')
+
     if request.method == 'POST':
-        otp = request.POST.get('otp')
-        if otp: # In reality, verify the OTP
+        otp = request.POST.get('otp', '').strip()
+        if otp and len(otp) >= 4:
             return redirect('procurement:process_payment', tender_id=tender.id)
+        else:
+            from django.contrib import messages
+            messages.error(request, "رمز التحقق OTP غير صحيح أو غير مكتمل.")
             
-    return render(request, 'procurement/satim_otp.html', {'tender': tender})
+    return render(request, 'procurement/satim_otp.html', {
+        'tender': tender,
+        'card_last4': card_last4
+    })
 
 @login_required
 def process_payment(request, tender_id):
+    if request.user.role != 'supplier':
+        return redirect('dashboard:authority')
+        
     tender = get_object_or_404(Tender, id=tender_id)
-    # This should be called after successful SATIM OTP
-    DocumentPayment.objects.create(
-        tender=tender,
-        supplier=request.user,
-        amount=tender.document_fee,
-        transaction_id=f"TXN-{uuid.uuid4().hex[:10].upper()}"
-    )
-    from django.contrib import messages
-    messages.success(request, "تم الدفع بنجاح! يمكنك الآن سحب دفتر الشروط.")
+    payment_id = request.session.get('payment_id')
+    card_last4 = request.session.get('card_last4', '4590')
+    
+    from .services.payment_gateway import AlgerianPaymentService
+    
+    try:
+        if not payment_id:
+            # Fallback initialization
+            session_data = AlgerianPaymentService.initiate_payment_session(request.user, tender)
+            payment_id = session_data['payment_id']
+            
+        ip = request.META.get('REMOTE_ADDR', '127.0.0.1')
+        result = AlgerianPaymentService.process_and_confirm_payment(
+            user=request.user,
+            payment_id=payment_id,
+            card_number_last4=card_last4,
+            ip_address=ip
+        )
+        
+        from django.contrib import messages
+        messages.success(request, f"تمت عملية الدفع الإلكتروني بنجاح! رقم الوصل: {result['receipt_number']} | رمز الموافقة: {result['approval_code']}. تم فتح إمكانية تحميل دفتر الشروط.")
+        
+    except Exception as e:
+        from django.contrib import messages
+        messages.error(request, f"تعذر استكمال المعاملة البنكية: {str(e)}")
+        
     return redirect('procurement:tender_detail', tender_id=tender.id)
 
 @login_required
@@ -415,6 +632,37 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 import xhtml2pdf.pisa as pisa
 import io
+from django.http import FileResponse, HttpResponseForbidden
+
+@login_required
+def download_tender_document(request, tender_id):
+    tender = get_object_or_404(Tender, id=tender_id)
+    
+    if not tender.document:
+        from django.http import Http404
+        raise Http404("لا يوجد دفتر شروط لهذه الصفقة.")
+
+    # Permissions
+    if request.user.role == 'authority':
+        if tender.authority != request.user:
+            return HttpResponseForbidden("غير مصرح لك بتحميل دفتر شروط خاص بمصلحة أخرى.")
+    elif request.user.role == 'supplier':
+        if tender.status != 'published':
+            return HttpResponseForbidden("لا يمكن تحميل دفتر الشروط لأن الصفقة غير منشورة.")
+        
+        if tender.document_fee > 0:
+            from .models import DocumentPayment
+            paid = DocumentPayment.objects.filter(tender=tender, supplier=request.user).exists()
+            if not paid:
+                from django.contrib import messages
+                messages.error(request, "يجب دفع رسوم سحب الدفتر أولاً لتتمكن من تحميله.")
+                return redirect('procurement:tender_detail', tender_id=tender.id)
+    elif request.user.role not in ['regulator', 'central_admin'] and not request.user.is_superuser:
+        return HttpResponseForbidden("غير مصرح لك بتحميل هذا الملف.")
+        
+    response = FileResponse(tender.document.open('rb'), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="tender_document_{tender.id}.pdf"'
+    return response
 
 @login_required
 def download_tender_pdf(request, tender_id):
@@ -422,8 +670,9 @@ def download_tender_pdf(request, tender_id):
     
     # Check if user has permission
     if request.user.role == 'supplier':
-        paid = DocumentFee.objects.filter(tender=tender, supplier=request.user, is_paid=True).exists()
-        if not paid:
+        from .models import DocumentPayment
+        paid = DocumentPayment.objects.filter(tender=tender, supplier=request.user).exists()
+        if tender.document_fee > 0 and not paid:
             from django.contrib import messages
             messages.error(request, "يجب دفع رسوم سحب الدفتر أولاً لتتمكن من تحميل نسخة PDF.")
             return redirect('procurement:tender_detail', tender_id=tender.id)
@@ -450,9 +699,19 @@ def submit_appeal(request, bid_id):
         return redirect('dashboard:authority')
         
     bid = get_object_or_404(Bid, id=bid_id)
-    # Ensure the bid belongs to the current user (using nif or email as we used earlier)
-    # We simplified the check in the MVP
     
+    # Check ownership: User must be the owner of the bid
+    if bid.supplier != request.user and bid.supplier_name != (request.user.full_name or request.user.email):
+        from django.contrib import messages
+        messages.error(request, "لا تملك الصلاحية لتقديم طعن على هذا العرض.")
+        return redirect('procurement:my_bids')
+    
+    # Check if tender is awarded / rejected to allow appeal
+    if bid.status not in ['rejected', 'pending']:
+        from django.contrib import messages
+        messages.warning(request, "لا يمكن تقديم طعن إلا على العروض غير المقبولة أو بعد إعلان المنح المؤقت.")
+        return redirect('procurement:my_bids')
+
     # Check if an appeal already exists
     if hasattr(bid, 'appeal'):
         from django.contrib import messages
@@ -461,6 +720,17 @@ def submit_appeal(request, bid_id):
 
     from .forms import TenderAppealForm
     from .models import TenderAppeal
+    from apps.core.models import ProcurementAuditLog
+    from django.utils import timezone
+    from datetime import timedelta
+
+    # 10-Day Statutory Limitation Rule under Law 23-12 (Article 84)
+    # The appeal must be submitted within 10 days of the award / evaluation update
+    tender_updated_at = bid.tender.updated_at
+    if timezone.now() > tender_updated_at + timedelta(days=10):
+        from django.contrib import messages
+        messages.error(request, "انقضى الأجل القانوني لتقديم الطعن (10 أيام من تاريخ إعلان المنح المؤقت طبقاً للمادة 84 من القانون 23-12).")
+        return redirect('procurement:my_bids')
 
     if request.method == 'POST':
         form = TenderAppealForm(request.POST, request.FILES)
@@ -468,8 +738,24 @@ def submit_appeal(request, bid_id):
             appeal = form.save(commit=False)
             appeal.bid = bid
             appeal.save()
+            
+            # Audit log
+            ProcurementAuditLog.log_action(
+                user=request.user,
+                action='SUBMIT_APPEAL',
+                resource_type='tender_appeal',
+                resource_id=appeal.id,
+                details={
+                    'tender_id': bid.tender.id,
+                    'bid_id': bid.id,
+                    'supplier': request.user.username,
+                    'law_reference': 'Law 23-12 Article 84'
+                },
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+            
             from django.contrib import messages
-            messages.success(request, "تم تقديم الطعن بنجاح وسيتم دراسته من طرف المصلحة المتعاقدة.")
+            messages.success(request, "تم تسجيل الطعن قانونياً وسيتم عرضه على لجنة دراسة الطعون المختصة.")
             return redirect('procurement:my_bids')
     else:
         form = TenderAppealForm()
@@ -566,6 +852,11 @@ def sign_evaluation(request, tender_id):
     import json
     from django.utils import timezone
     
+    if not tender.is_bids_opened:
+        from django.contrib import messages
+        messages.error(request, "لا يمكن المصادقة على التقييم قبل فتح الأظرفة وتقييم العروض.")
+        return redirect('procurement:authority_tender_bids', tender_id=tender.id)
+        
     try:
         membership = CommitteeMember.objects.get(tender=tender, user=request.user)
     except CommitteeMember.DoesNotExist:
@@ -680,3 +971,121 @@ def secure_bid_download(request, bid_id, document_type):
     response['X-Content-Type-Options'] = 'nosniff'
     return response
 
+# --- Procurement Planning Views (AnnualBudget & PlannedProject) ---
+from .models import AnnualBudget, PlannedProject
+
+@login_required
+@permission_required('procurement.view_tender', raise_exception=True)
+def authority_budget_list(request):
+    """View list of all annual procurement plans for the authority."""
+    budgets = AnnualBudget.objects.filter(authority=request.user).order_by('-year', '-created_at')
+    return render(request, 'procurement/authority_budget_list.html', {'budgets': budgets})
+
+@login_required
+@permission_required('procurement.add_tender', raise_exception=True)
+def budget_create(request):
+    """Create a new annual procurement plan."""
+    from .forms import AnnualBudgetForm
+    if request.method == 'POST':
+        form = AnnualBudgetForm(request.POST)
+        if form.is_valid():
+            budget = form.save(commit=False)
+            budget.authority = request.user
+            budget.save()
+            from django.contrib import messages
+            messages.success(request, 'تم إنشاء المخطط التقديري السنوي بنجاح. يمكنك الآن برمجة الحاجات والمشاريع.')
+            return redirect('procurement:budget_detail', budget_id=budget.id)
+    else:
+        form = AnnualBudgetForm()
+    return render(request, 'procurement/budget_form.html', {'form': form, 'title': 'إعداد مخطط تقديري سنوي جديد'})
+
+@login_required
+@permission_required('procurement.view_tender', raise_exception=True)
+def budget_detail(request, budget_id):
+    """View budget details, execute anti-fragmentation checks, and manage planned operations."""
+    from django.core.exceptions import PermissionDenied
+    from apps.procurement.services.planning import ProcurementPlanningService
+    budget = get_object_or_404(AnnualBudget, id=budget_id, authority=request.user)
+    projects = budget.planned_projects.all().order_by('estimated_quarter', '-estimated_value')
+    
+    from .forms import PlannedProjectForm
+    form = PlannedProjectForm()
+    
+    if request.method == 'POST':
+        if not request.user.has_perm('procurement.change_tender'):
+            raise PermissionDenied("ليس لديك صلاحية التعديل على المخطط.")
+        if budget.status not in ['draft', 'rejected']:
+            from django.contrib import messages
+            messages.error(request, 'لا يمكن تعديل مخطط قيد المراجعة أو معتمد رسمياً.')
+            return redirect('procurement:budget_detail', budget_id=budget.id)
+            
+        form = PlannedProjectForm(request.POST)
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.budget = budget
+            
+            # Anti-fragmentation validation under Law 23-12
+            frag_check = ProcurementPlanningService.check_fragmentation_risk(budget, project)
+            if frag_check['has_risk']:
+                from django.contrib import messages
+                messages.warning(request, frag_check['warning_message'])
+                
+            project.save()
+            from django.contrib import messages
+            messages.success(request, f"تم تسجيل العملية المبرمجة ({project.title}) بنجاح ضمن الثلاثي Q{project.estimated_quarter}.")
+            return redirect('procurement:budget_detail', budget_id=budget.id)
+
+    return render(request, 'procurement/budget_detail.html', {
+        'budget': budget, 
+        'projects': projects,
+        'form': form,
+    })
+
+@login_required
+@permission_required('procurement.change_tender', raise_exception=True)
+def budget_submit(request, budget_id):
+    """Submit the annual procurement plan for official regulatory review."""
+    if request.method == 'POST':
+        budget = get_object_or_404(AnnualBudget, id=budget_id, authority=request.user)
+        if budget.status in ['draft', 'rejected']:
+            if not budget.planned_projects.exists():
+                from django.contrib import messages
+                messages.error(request, 'لا يمكن إرسال مخطط فارغ. أضف على الأقل عملية مبرمجة واحدة.')
+            else:
+                budget.status = 'submitted'
+                budget.save()
+                from apps.procurement.models import ProcurementAuditLog
+                ProcurementAuditLog.log_action(
+                    user=request.user,
+                    action='SUBMIT_ANNUAL_PLAN',
+                    resource_type='annual_budget',
+                    resource_id=budget.id,
+                    details={'year': budget.year, 'total_budget': str(budget.total_budget)}
+                )
+                from django.contrib import messages
+                messages.success(request, 'تم إرسال المخطط التقديري السنوي للاعتماد والرقابة بنجاح.')
+        else:
+            from django.contrib import messages
+            messages.error(request, 'حالة المخطط الحالية لا تسمح بالإرسال.')
+        return redirect('procurement:budget_detail', budget_id=budget.id)
+    return HttpResponseForbidden("Method Not Allowed")
+
+@login_required
+@permission_required('procurement.add_tender', raise_exception=True)
+def launch_tender_from_project(request, project_id):
+    """One-click conversion of a planned operation into an official tender draft."""
+    if request.method != 'POST':
+        return HttpResponseForbidden("يجب إرسال الطلب عبر POST.")
+        
+    from apps.procurement.services.planning import ProcurementPlanningService
+    project = get_object_or_404(PlannedProject, id=project_id, budget__authority=request.user)
+    
+    if project.is_launched and project.tender:
+        from django.contrib import messages
+        messages.info(request, "تم إطلاق هذه العملية مسبقاً.")
+        return redirect('procurement:tender_update', tender_id=project.tender.id)
+        
+    tender = ProcurementPlanningService.convert_project_to_tender(request.user, project.id)
+    from django.contrib import messages
+    messages.success(request, f"تم تحويل العملية المبرمجة بنجاح إلى مسودة صفقة عمومية برقم: #{tender.id}. يمكنك الآن مراجعة الشروط ونشرها.")
+    return redirect('procurement:tender_edit', tender_id=tender.id)

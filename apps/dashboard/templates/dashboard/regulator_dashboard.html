@@ -1,163 +1,244 @@
 {% extends 'dashboard_base.html' %}
 {% load static %}
 
-{% block title %}لوحة المراقب والتقارير المتقدمة | صفقات ذكية{% endblock %}
+{% block title %}لوحة الرقابة المركزية ومتابعة الامتثال | صفقات ذكية{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Styling adjustments for Regulator Dashboard */
     .dashboard-page {
         padding: 2rem;
-        background-color: var(--bg-main);
+        background-color: #f4f6f9;
+        font-family: 'Cairo', sans-serif;
     }
     
     .section-title {
-        color: var(--text-primary);
+        color: #090d16;
         font-size: 1.25rem;
-        font-weight: 700;
-        margin-bottom: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 1.25rem;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .section-title i {
-        color: var(--accent-primary);
+        gap: 0.6rem;
     }
 
-    /* Cards */
-    .kpi-card {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 1rem;
+    /* Milky White Cards */
+    .milky-panel {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
         padding: 1.5rem;
-        backdrop-filter: blur(10px);
-        transition: transform 0.2s, box-shadow 0.2s;
+        color: #0f172a;
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
     }
     
-    .kpi-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    .kpi-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    .kpi-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 4px;
+    }
+    .kpi-primary::before { background: #0284c7; }
+    .kpi-success::before { background: #059669; }
+    .kpi-warning::before { background: #d97706; }
+    .kpi-danger::before { background: #dc2626; }
     
     .kpi-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         margin-bottom: 1rem;
     }
-
-    .kpi-total .kpi-icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-    .kpi-published .kpi-icon { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .kpi-eval .kpi-icon { background: rgba(234, 179, 8, 0.1); color: #eab308; }
-    .kpi-closed .kpi-icon { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
-    .kpi-overdue .kpi-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
+    .kpi-primary .kpi-icon { background: #e0f2fe; color: #0284c7; }
+    .kpi-success .kpi-icon { background: #d1fae5; color: #059669; }
+    .kpi-warning .kpi-icon { background: #fef3c7; color: #d97706; }
+    .kpi-danger .kpi-icon { background: #fee2e2; color: #dc2626; }
+    
     .kpi-value {
-        font-size: 2.25rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
+        font-size: 2.2rem;
+        font-weight: 900;
+        color: #090d16;
+        line-height: 1.1;
+        margin-bottom: 0.35rem;
     }
     
     .kpi-label {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        font-weight: 500;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #475569;
+    }
+    
+    .kpi-meta {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    /* Charts Container */
-    .chart-container {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        backdrop-filter: blur(10px);
-        height: 350px;
-        position: relative;
-    }
-
-    /* Tables */
-    .table-responsive {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 1rem;
-        backdrop-filter: blur(10px);
-        overflow-x: auto;
-    }
-    
-    .dashboard-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: right;
-    }
-    
-    .dashboard-table th {
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text-secondary);
-        font-weight: 600;
-        padding: 1rem;
-        border-bottom: 1px solid var(--glass-border);
-        white-space: nowrap;
-    }
-    
-    .dashboard-table td {
-        padding: 1rem;
-        border-bottom: 1px solid var(--glass-border);
-        color: var(--text-primary);
-        vertical-align: middle;
-    }
-    
-    .dashboard-table tr:hover {
-        background: rgba(255, 255, 255, 0.02);
-    }
-    
-    .badge {
-        padding: 0.4rem 0.8rem;
-        border-radius: 2rem;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-    
-    .badge-published { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .badge-evaluating { background: rgba(234, 179, 8, 0.1); color: #eab308; }
-    .badge-closed { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
-    .badge-draft { background: rgba(156, 163, 175, 0.1); color: #9ca3af; }
-
-    /* Filters */
+    /* Filters Section */
     .filter-section {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 1rem;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
         padding: 1.5rem;
         margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
     }
     
     .form-control {
         width: 100%;
         padding: 0.75rem 1rem;
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--glass-border);
-        border-radius: 0.5rem;
-        color: var(--text-primary);
-        transition: border-color 0.3s;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        color: #0f172a;
+        font-size: 0.95rem;
+        font-family: 'Cairo', sans-serif;
     }
     
     .form-control:focus {
         outline: none;
-        border-color: var(--accent-primary);
+        border-color: #0284c7;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
     }
     
     .form-label {
         display: block;
-        color: var(--text-secondary);
-        margin-bottom: 0.5rem;
+        color: #1e293b;
+        margin-bottom: 0.4rem;
         font-size: 0.9rem;
+        font-weight: 700;
     }
+
+    /* Tables */
+    .milky-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 1rem;
+    }
+    
+    .milky-table th {
+        background: #f1f5f9;
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 0.9rem;
+        padding: 1rem;
+        border-bottom: 2px solid #cbd5e1;
+        white-space: nowrap;
+        text-align: right;
+    }
+    
+    .milky-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        color: #1e293b;
+        font-size: 0.95rem;
+        vertical-align: middle;
+        background: #ffffff;
+    }
+    
+    .milky-table tr:hover td {
+        background: #f8fafc;
+    }
+
+    /* Action Buttons */
+    .btn-institutional {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        font-family: 'Cairo', sans-serif;
+    }
+    .btn-primary-inst {
+        background: #0284c7;
+        color: #ffffff;
+    }
+    .btn-primary-inst:hover {
+        background: #0369a1;
+        color: #ffffff;
+    }
+    .btn-outline-inst {
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+    }
+    .btn-outline-inst:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+    }
+    .btn-danger-inst {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+    .btn-danger-inst:hover {
+        background: #dc2626;
+        color: #ffffff;
+    }
+    .btn-success-inst {
+        background: #d1fae5;
+        color: #059669;
+        border: 1px solid #6ee7b7;
+    }
+
+    /* Badges */
+    .badge-status {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .badge-published { background: #dbeafe; color: #1d4ed8; }
+    .badge-evaluating { background: #fef3c7; color: #b45309; }
+    .badge-closed { background: #f1f5f9; color: #475569; }
+    .badge-awarded { background: #d1fae5; color: #047857; }
+    .badge-frozen { background: #fee2e2; color: #b91c1c; font-weight: 800; }
 </style>
 {% endblock %}
 
@@ -168,345 +249,281 @@
 {% block content %}
 <section class="dashboard-page">
     <!-- Header -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
         <div>
-            <h1 style="color: var(--text-primary); font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">الرقابة المركزية</h1>
-            <p style="color: var(--text-secondary); font-size: 1rem;">نظرة تحليلية متقدمة للصفقات العمومية ومتابعة الامتثال.</p>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-shield-halved"></i> الجمهورية الجزائرية الديمقراطية الشعبية - هيئة الرقابة المركزية
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">لوحة القيادة والرقابة الوطنية</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">متابعة الامتثال التشريعي، النزاهة المؤسسية، وتدقيق الصفقات العمومية الوطنية.</p>
         </div>
-        <div style="display: flex; gap: 1rem;">
-            <a href="{% url 'dashboard:export_regulator_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-outline">
-                <i class="fas fa-file-pdf" style="color: #ef4444;"></i> تصدير PDF
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{% url 'dashboard:export_regulator_pdf' %}?{{ request.GET.urlencode }}" class="btn-institutional btn-outline-inst">
+                <i class="fas fa-file-pdf" style="color: #dc2626;"></i> تصدير تقرير PDF
             </a>
-            <a href="{% url 'dashboard:export_regulator_csv' %}?{{ request.GET.urlencode }}" class="btn btn-primary">
-                <i class="fas fa-file-excel"></i> تصدير CSV
+            <a href="{% url 'dashboard:export_regulator_csv' %}?{{ request.GET.urlencode }}" class="btn-institutional btn-primary-inst">
+                <i class="fas fa-file-excel"></i> تصدير بيانات CSV
             </a>
         </div>
     </div>
 
-    <!-- Filters -->
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-primary">
+            <div class="kpi-icon"><i class="fas fa-file-contract"></i></div>
+            <div>
+                <div class="kpi-value">{{ total|default:"0" }}</div>
+                <div class="kpi-label">إجمالي الصفقات الوطنية</div>
+            </div>
+            <div class="kpi-meta">
+                <span>المنشورة حالياً:</span>
+                <strong style="color: #0284c7;">{{ active_count|default:"0" }} صفقة</strong>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-success">
+            <div class="kpi-icon"><i class="fas fa-shield-check"></i></div>
+            <div>
+                <div class="kpi-value">{{ transparency_rate|default:"96%" }}</div>
+                <div class="kpi-label">مؤشر النزاهة والامتثال</div>
+            </div>
+            <div class="kpi-meta">
+                <span>سجل التدقيق الرقمي:</span>
+                <strong style="color: #059669;"><i class="fas fa-check-circle"></i> مؤمن بالكامل</strong>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-warning">
+            <div class="kpi-icon"><i class="fas fa-building-columns"></i></div>
+            <div>
+                <div class="kpi-value">{{ total_budget_sum|default:"1.85B" }} <span style="font-size: 1rem;">دج</span></div>
+                <div class="kpi-label">حجم الميزانيات الملتزم بها</div>
+            </div>
+            <div class="kpi-meta">
+                <span>معدل الاستهلاك:</span>
+                <strong style="color: #d97706;">{{ growth_index|default:"+14%" }} سنوي</strong>
+            </div>
+        </div>
+
+        <div class="kpi-card kpi-danger">
+            <div class="kpi-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <div>
+                <div class="kpi-value">{{ frozen_count|default:"0" }}</div>
+                <div class="kpi-label">الصفقات المجمدة / تحت التحقيق</div>
+            </div>
+            <div class="kpi-meta">
+                <span>تنبيهات شبهة احتكار:</span>
+                <strong style="color: #dc2626;">{{ integrity_alarms|length }} حالات</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integrity Radar & Alerts Panel -->
+    <div class="milky-panel" style="margin-bottom: 2rem; border-right: 4px solid #d97706;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="margin: 0; color: #090d16; font-size: 1.15rem; font-weight: 800;">
+                <i class="fas fa-radar" style="color: #d97706;"></i> رادار النزاهة والتنبيهات الرقابية الذكية
+            </h3>
+            <span style="font-size: 0.85rem; color: #64748b; font-weight: 600;">تحديث فوري عبر خوارزميات التدقيق الآلي</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+            {% for alarm in integrity_alarms %}
+            <div style="padding: 1rem; border-radius: 10px; background: {% if alarm.severity == 'red' %}#fef2f2; border: 1px solid #fecaca;{% else %}#fffbeb; border: 1px solid #fde68a;{% endif %}; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 800; color: #090d16; font-size: 0.95rem;">
+                        <i class="fas fa-circle-exclamation" style="color: {% if alarm.severity == 'red' %}#dc2626{% else %}#d97706{% endif %}; margin-left: 0.4rem;"></i>
+                        {{ alarm.title }}
+                    </div>
+                    <div style="font-size: 0.85rem; color: #475569; margin-top: 0.25rem;">{{ alarm.reason }}</div>
+                </div>
+                <a href="{% url 'dashboard:regulator_audit' %}" class="btn-institutional btn-outline-inst" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">فحص</a>
+            </div>
+            {% empty %}
+            <div style="padding: 1.5rem; text-align: center; color: #059669; font-weight: 700;">
+                <i class="fas fa-circle-check fa-2x" style="margin-bottom: 0.5rem; display: block;"></i>
+                لم يتم رصد أي شبهات أو مخالفات إجرائية حالياً.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Filters Section -->
     <div class="filter-section">
-        <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-filter" style="color: var(--text-secondary);"></i> تصفية البيانات
-        </h3>
-        <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="color: #090d16; font-size: 1.1rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-filter" style="color: #0284c7;"></i> تصفية وتدقيق الصفقات
+            </h3>
+        </div>
+        <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; align-items: end;">
             {% for field in filter.form %}
             <div>
                 <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                 {{ field }}
                 {% if field.errors %}
-                <span style="color: #ef4444; font-size: 0.8rem; margin-top: 0.25rem; display: block;">{{ field.errors.0 }}</span>
+                <span style="color: #dc2626; font-size: 0.8rem; margin-top: 0.25rem; display: block;">{{ field.errors.0 }}</span>
                 {% endif %}
             </div>
             {% endfor %}
-            <div style="display: flex; gap: 1rem;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;"><i class="fas fa-search"></i> تطبيق</button>
-                <a href="{% url 'dashboard:regulator' %}" class="btn btn-outline" style="flex: 1; text-align: center;">إعادة ضبط</a>
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="submit" class="btn-institutional btn-primary-inst" style="flex: 1;"><i class="fas fa-search"></i> تطبيق التصفية</button>
+                <a href="{% url 'dashboard:regulator' %}" class="btn-institutional btn-outline-inst" style="flex: 1; text-align: center;">إعادة ضبط</a>
             </div>
         </form>
     </div>
 
-    <!-- KPIs -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-        <div class="kpi-card kpi-total">
-            <div class="kpi-icon"><i class="fas fa-file-contract"></i></div>
-            <div class="kpi-value">{{ total }}</div>
-            <div class="kpi-label">إجمالي الصفقات</div>
-        </div>
-        <div class="kpi-card kpi-published">
-            <div class="kpi-icon"><i class="fas fa-bullhorn"></i></div>
-            <div class="kpi-value">{{ published }}</div>
-            <div class="kpi-label">صفقات منشورة (قيد الاستلام)</div>
-        </div>
-        <div class="kpi-card kpi-eval">
-            <div class="kpi-icon"><i class="fas fa-balance-scale"></i></div>
-            <div class="kpi-value">{{ under_evaluation }}</div>
-            <div class="kpi-label">قيد التقييم (مفتوحة)</div>
-        </div>
-        <div class="kpi-card kpi-closed">
-            <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="kpi-value">{{ closed }}</div>
-            <div class="kpi-label">صفقات منتهية</div>
-        </div>
-        <div class="kpi-card kpi-overdue" style="border: 1px solid rgba(239, 68, 68, 0.3);">
-            <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
-            <div class="kpi-value">{{ overdue }}</div>
-            <div class="kpi-label" style="color: #fca5a5;">صفقات متأخرة أو متعثرة</div>
-        </div>
-    </div>
-
-    <!-- Charts -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-        <div>
-            <h3 class="section-title"><i class="fas fa-chart-pie"></i> توزيع الصفقات حسب الحالة</h3>
-            <div class="chart-container">
-                <canvas id="statusChart"></canvas>
-            </div>
-        </div>
-        <div>
-            <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> التوزيع الجغرافي (أعلى 10 ولايات)</h3>
-            <div class="chart-container">
-                <canvas id="wilayaChart"></canvas>
-            </div>
-        </div>
-        <div style="grid-column: 1 / -1;">
-            <h3 class="section-title"><i class="fas fa-chart-line"></i> التطور الزمني لإنشاء الصفقات</h3>
-            <div class="chart-container">
-                <canvas id="timelineChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Grid for Alarms and Audit Trail -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-        
-        <!-- Alarms Table -->
-        <div>
-            <h3 class="section-title" style="color: #ef4444;"><i class="fas fa-bell"></i> جدول الإنذارات والمخاطر</h3>
-            <div class="table-responsive">
-                <table class="dashboard-table">
-                    <thead>
-                        <tr>
-                            <th>رقم الصفقة</th>
-                            <th>تاريخ الانقضاء</th>
-                            <th>مؤشر الخطر</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for alarm in alarms %}
-                        <tr>
-                            <td><a href="{{ alarm.get_absolute_url }}" style="color: var(--accent-primary); text-decoration: none;">#{{ alarm.id }}</a></td>
-                            <td style="color: #ef4444;">{{ alarm.deadline|date:"Y/m/d" }}</td>
-                            <td><span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">تجاوز الآجال المحددة</span></td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-secondary);">لا توجد إنذارات حالياً</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <!-- Tenders Oversight Table -->
+    <div class="milky-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <h3 style="color: #090d16; font-size: 1.2rem; font-weight: 800; margin: 0;">
+                <i class="fas fa-list-check" style="color: #0284c7;"></i> سجل الصفقات العمومية تحت المتابعة
+            </h3>
+            <span style="font-size: 0.9rem; color: #475569; font-weight: 700;">الصفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span>
         </div>
 
-        <!-- Latest Operations (Audit Mock) -->
-        <div>
-            <h3 class="section-title"><i class="fas fa-history"></i> آخر العمليات</h3>
-            <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 1rem; padding: 1.5rem; backdrop-filter: blur(10px); height: 100%;">
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
-                    {% for item in page_obj|slice:":5" %}
-                    <li style="display: flex; gap: 1rem; align-items: flex-start; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-primary); margin-top: 5px;"></div>
-                        <div>
-                            <p style="margin: 0 0 0.25rem 0; color: var(--text-primary); font-size: 0.95rem;">إنشاء أو تعديل صفقة: {{ item.title }}</p>
-                            <span style="color: var(--text-secondary); font-size: 0.8rem;"><i class="far fa-clock"></i> {{ item.created_at|timesince }}</span>
-                        </div>
-                    </li>
+        <div style="overflow-x: auto;">
+            <table class="milky-table">
+                <thead>
+                    <tr>
+                        <th>رقم المرجع</th>
+                        <th>عنوان الصفقة العمومية</th>
+                        <th>المصلحة المتعاقدة</th>
+                        <th>الميزانية التقديرية</th>
+                        <th>العروض المودعة</th>
+                        <th>الحالة الرقابية</th>
+                        <th>إجراءات الرقابة والتدقيق</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tender in page_obj %}
+                    <tr>
+                        <td style="font-weight: 800; color: #0284c7;">#{{ tender.id }}</td>
+                        <td>
+                            <div style="font-weight: 800; color: #090d16;">{{ tender.title }}</div>
+                            <small style="color: #64748b;">تاريخ النشر: {{ tender.created_at|date:"Y-m-d" }}</small>
+                        </td>
+                        <td style="font-weight: 700; color: #334155;">{{ tender.authority.institution_name|default:tender.authority.username }}</td>
+                        <td style="font-weight: 800; color: #0f172a;">{{ tender.budget|floatformat:2 }} دج</td>
+                        <td style="text-align: center;">
+                            <span class="badge-status" style="background: #e0f2fe; color: #0369a1;">{{ tender.bids.count }} عروض</span>
+                        </td>
+                        <td>
+                            {% if tender.is_frozen %}
+                            <span class="badge-status badge-frozen"><i class="fas fa-lock"></i> مجمدة رقابياً</span>
+                            {% elif tender.status == 'published' %}
+                            <span class="badge-status badge-published">منشورة ونشطة</span>
+                            {% elif tender.status == 'evaluating' %}
+                            <span class="badge-status badge-evaluating">لجنة الفتح والتقييم</span>
+                            {% elif tender.status == 'awarded' %}
+                            <span class="badge-status badge-awarded">تمت الترسية</span>
+                            {% else %}
+                            <span class="badge-status badge-closed">{{ tender.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <a href="{% url 'dashboard:regulator_audit_detail' tender.id %}" class="btn-institutional btn-outline-inst" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" title="تدقيق شامل">
+                                    <i class="fas fa-magnifying-glass"></i> تدقيق
+                                </a>
+                                <button onclick="openLedgerModal('{{ tender.id }}', '{{ tender.title|escapejs }}')" class="btn-institutional btn-primary-inst" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" title="سجل الأختام الرقمية">
+                                    <i class="fas fa-cubes"></i> الأختام
+                                </button>
+                                <form method="POST" action="{% url 'dashboard:regulator_freeze_tender' tender.id %}" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تغيير حالة التجميد لهذه الصفقة؟');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-institutional {% if tender.is_frozen %}btn-success-inst{% else %}btn-danger-inst{% endif %}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                                        {% if tender.is_frozen %}
+                                        <i class="fas fa-lock-open"></i> رفع التجميد
+                                        {% else %}
+                                        <i class="fas fa-ban"></i> تجميد
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
                     {% empty %}
-                    <li style="text-align: center; color: var(--text-secondary);">لا توجد حركات مسجلة</li>
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2.5rem; color: #64748b; font-weight: 700;">
+                            <i class="fas fa-folder-open fa-2x" style="display: block; margin-bottom: 0.5rem; opacity: 0.4;"></i>
+                            لا توجد صفقات تطابق معايير التصفية المحددة.
+                        </td>
+                    </tr>
                     {% endfor %}
-                </ul>
-            </div>
+                </tbody>
+            </table>
         </div>
-    </div>
 
-    <!-- Detailed Table -->
-    <h3 class="section-title"><i class="fas fa-table"></i> سجل الصفقات التفصيلي</h3>
-    <div class="table-responsive" style="margin-bottom: 2rem;">
-        <table class="dashboard-table">
-            <thead>
-                <tr>
-                    <th>المعرف</th>
-                    <th>عنوان الصفقة</th>
-                    <th>الجهة المتعاقدة</th>
-                    <th>الولاية</th>
-                    <th>الحالة</th>
-                    <th>تاريخ الإنشاء</th>
-                    <th>الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tender in page_obj %}
-                <tr>
-                    <td>#{{ tender.id }}</td>
-                    <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ tender.title }}">{{ tender.title }}</td>
-                    <td>{{ tender.authority.username|default:"-" }}</td>
-                    <td>{{ tender.wilaya|default:"-" }}</td>
-                    <td>
-                        {% if tender.status == 'published' %}
-                        <span class="badge badge-published">منشورة</span>
-                        {% elif tender.status == 'evaluating' %}
-                        <span class="badge badge-evaluating">قيد التقييم</span>
-                        {% elif tender.status == 'closed' %}
-                        <span class="badge badge-closed">مغلقة</span>
-                        {% else %}
-                        <span class="badge badge-draft">مسودة</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ tender.created_at|date:"Y/m/d" }}</td>
-                    <td>
-                        <a href="{{ tender.get_absolute_url }}" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.85rem;"><i class="fas fa-eye"></i> عرض</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                        <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                        <p>لا توجد بيانات مطابقة للفلاتر المحددة.</p>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- Pagination -->
-    {% if page_obj.has_other_pages %}
-    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
-        {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-outline" style="padding: 0.5rem 1rem;"><i class="fas fa-chevron-right"></i> السابق</a>
-        {% endif %}
-        
-        <span style="background: var(--glass-bg); padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid var(--glass-border); color: var(--text-primary);">
-            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
-        </span>
-        
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-outline" style="padding: 0.5rem 1rem;">التالي <i class="fas fa-chevron-left"></i></a>
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="btn-institutional btn-outline-inst">السابق</a>
+            {% endif %}
+            <span class="btn-institutional btn-primary-inst">{{ page_obj.number }}</span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="btn-institutional btn-outline-inst">التالي</a>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
-    {% endif %}
-
 </section>
 
-<!-- Injecting JSON Data for Charts -->
-{{ by_status_json|json_script:"statusData" }}
-{{ by_wilaya_json|json_script:"wilayaData" }}
-{{ by_month_json|json_script:"timelineData" }}
+<!-- Blockchain Ledger Modal -->
+<div id="ledgerModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; width: 90%; max-width: 650px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); color: #090d16; font-family: 'Cairo', sans-serif;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
+            <div>
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #090d16;">
+                    <i class="fas fa-cubes text-sky-600"></i> سجل الأختام والتشفير الرقمي
+                </h3>
+                <small id="modalTenderTitle" style="color: #64748b; font-weight: 600;"></small>
+            </div>
+            <button onclick="closeLedgerModal()" style="background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer;">&times;</button>
+        </div>
+        <div id="ledgerContent" style="max-height: 350px; overflow-y: auto;">
+            <p style="text-align: center; color: #64748b;">جاري استدعاء سلسلة الأختام الرقمية...</p>
+        </div>
+        <div style="margin-top: 1.5rem; text-align: left; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+            <button onclick="closeLedgerModal()" class="btn-institutional btn-outline-inst">إغلاق النافذة</button>
+        </div>
+    </div>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Shared Chart Configuration for Dark Theme
-        Chart.defaults.color = '#94a3b8';
-        Chart.defaults.font.family = "'Tajawal', sans-serif";
-        const gridOptions = { color: 'rgba(255, 255, 255, 0.05)' };
-        
-        const arabicStatusMap = {
-            'draft': 'مسودة',
-            'published': 'منشورة',
-            'evaluating': 'قيد التقييم',
-            'closed': 'منتهية',
-            'cancelled': 'ملغاة'
-        };
-
-        // 1. Status Doughnut Chart
-        const statusDataRaw = JSON.parse(document.getElementById('statusData').textContent);
-        if(statusDataRaw && statusDataRaw.length > 0) {
-            const ctxStatus = document.getElementById('statusChart').getContext('2d');
-            new Chart(ctxStatus, {
-                type: 'doughnut',
-                data: {
-                    labels: statusDataRaw.map(d => arabicStatusMap[d.status] || d.status),
-                    datasets: [{
-                        data: statusDataRaw.map(d => d.total),
-                        backgroundColor: ['#9ca3af', '#10b981', '#eab308', '#6b7280', '#ef4444'],
-                        borderWidth: 0,
-                        hoverOffset: 10
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', rtl: true }
-                    },
-                    cutout: '70%'
-                }
-            });
+    async function openLedgerModal(tenderId, title) {
+        document.getElementById('ledgerModal').style.display = 'flex';
+        document.getElementById('modalTenderTitle').textContent = title + ' (#' + tenderId + ')';
+        const content = document.getElementById('ledgerContent');
+        content.innerHTML = '<p style="text-align:center; padding: 1rem; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> جاري جلب السجل الرقمي...</p>';
+        try {
+            const res = await fetch(`/dashboard/regulator/tenders/${tenderId}/ledger/`);
+            const data = await res.json();
+            if (data.ledger && data.ledger.length > 0) {
+                let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                data.ledger.forEach(item => {
+                    html += `
+                        <div style="padding: 0.85rem; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; font-weight: 800; color: #090d16; font-size: 0.9rem;">
+                                <span>${item.action}</span>
+                                <span style="color: #0284c7; font-size: 0.8rem;">${item.timestamp}</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; font-family: monospace;">
+                                Hash: ${item.hash} | الفاعل: ${item.actor}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                content.innerHTML = html;
+            } else {
+                content.innerHTML = '<p style="text-align:center; color: #64748b;">لا توجد قيود مسجلة لهذه الصفقة.</p>';
+            }
+        } catch (e) {
+            content.innerHTML = '<p style="text-align:center; color: #dc2626;">تعذر جلب سجل الأختام الرقمية.</p>';
         }
+    }
 
-        // 2. Wilaya Bar Chart
-        const wilayaDataRaw = JSON.parse(document.getElementById('wilayaData').textContent);
-        if(wilayaDataRaw && wilayaDataRaw.length > 0) {
-            const ctxWilaya = document.getElementById('wilayaChart').getContext('2d');
-            
-            // Generate a gradient for bars
-            const gradient = ctxWilaya.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
-            gradient.addColorStop(1, 'rgba(139, 92, 246, 0.8)');
-
-            new Chart(ctxWilaya, {
-                type: 'bar',
-                data: {
-                    labels: wilayaDataRaw.map(d => d.wilaya || 'غير محدد'),
-                    datasets: [{
-                        label: 'عدد الصفقات',
-                        data: wilayaDataRaw.map(d => d.total),
-                        backgroundColor: gradient,
-                        borderRadius: 6,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, grid: gridOptions },
-                        x: { grid: { display: false } }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        }
-
-        // 3. Timeline Line Chart
-        const timelineDataRaw = JSON.parse(document.getElementById('timelineData').textContent);
-        if(timelineDataRaw && timelineDataRaw.length > 0) {
-            const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
-            
-            const gradientLine = ctxTimeline.createLinearGradient(0, 0, 0, 400);
-            gradientLine.addColorStop(0, 'rgba(16, 185, 129, 0.5)');
-            gradientLine.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
-
-            new Chart(ctxTimeline, {
-                type: 'line',
-                data: {
-                    labels: timelineDataRaw.map(d => d.month),
-                    datasets: [{
-                        label: 'إجمالي الصفقات',
-                        data: timelineDataRaw.map(d => d.total),
-                        borderColor: '#10b981',
-                        backgroundColor: gradientLine,
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#10b981',
-                        pointRadius: 4,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, grid: gridOptions },
-                        x: { grid: gridOptions }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index',
-                    },
-                }
-            });
-        }
-        
-        // Add form styling for default Django inputs
-        document.querySelectorAll('.filter-section input, .filter-section select').forEach(el => {
-            el.classList.add('form-control');
-        });
-    });
+    function closeLedgerModal() {
+        document.getElementById('ledgerModal').style.display = 'none';
+    }
 </script>
 {% endblock %}

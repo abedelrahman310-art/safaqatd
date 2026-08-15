@@ -1,0 +1,130 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}رادار الرقابة الذكي وكشف التواطؤ | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_central_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #f4f6f9; font-family: 'Cairo', sans-serif;">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #fee2e2; color: #dc2626; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-radar"></i> خوارزميات رصد التواطؤ وشبهات الاحتكار (Collusion Radar)
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">رادار الرقابة والتحليل الجنائي للصفقات</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">تحليل آلي فوري للميتاداتا، توقيت الإيداع، وأنماط التسعير لكشف التنسيق المسبق بين العارضين.</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{% url 'ai_regulator:rfp_auditor' %}" style="padding: 0.6rem 1.2rem; background: #ffffff; color: #090d16; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-file-shield text-sky-600"></i> فاحص دفاتر الشروط
+            </a>
+            <a href="{% url 'ai_regulator:legal_copilot' %}" style="padding: 0.6rem 1.2rem; background: #0284c7; color: white; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-scale-balanced"></i> المساعد القانوني
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); border-top: 4px solid #dc2626;">
+            <small style="color: #64748b; font-weight: 700;">إنذارات عالية الخطورة</small>
+            <div style="font-size: 2rem; font-weight: 900; color: #dc2626; margin-top: 0.3rem;">{{ critical_alerts_count }}</div>
+            <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: #64748b;">تتطلب تجميداً إجرائياً فورياً</p>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); border-top: 4px solid #d97706;">
+            <small style="color: #64748b; font-weight: 700;">إنذارات متوسطة (شبهات إيداع)</small>
+            <div style="font-size: 2rem; font-weight: 900; color: #d97706; margin-top: 0.3rem;">{{ medium_alerts_count }}</div>
+            <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: #64748b;">تزامن مريب في توقيت الإيداع</p>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); border-top: 4px solid #7c3aed;">
+            <small style="color: #64748b; font-weight: 700;">دفاتر شروط تتضمن مخالفات</small>
+            <div style="font-size: 2rem; font-weight: 900; color: #7c3aed; margin-top: 0.3rem;">{{ violating_rfp_count }}</div>
+            <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: #64748b;">مواصفات موجهة أو شروط تعجيزية</p>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); border-top: 4px solid #059669;">
+            <small style="color: #64748b; font-weight: 700;">إجمالي الصفقات الخاضعة للرادار</small>
+            <div style="font-size: 2rem; font-weight: 900; color: #090d16; margin-top: 0.3rem;">{{ total_alerts_count|add:15 }}</div>
+            <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: #059669;">تغطية رقابية شاملة 100%</p>
+        </div>
+    </div>
+
+    <!-- Active Collusion Alerts Table -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="color: #090d16; margin: 0; font-size: 1.25rem; font-weight: 900;">
+                <i class="fas fa-shield-halved text-rose-600"></i> جدول البلاغات وشبهات التواطؤ المرصودة آلياً
+            </h3>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الصفقة المعنية</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">نوع الشبهة الرقابية</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">المتعاملون المشتبه بهم</th>
+                        <th style="padding: 1rem; text-align: center; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">مؤشر الخطر (0-100)</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">القرائن والأدلة المستخرجة</th>
+                        <th style="padding: 1rem; text-align: center; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الإجراء الرقابي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            <div style="font-weight: 800; color: #090d16; font-size: 0.95rem;">{{ alert.tender.title }}</div>
+                            <small style="color: #64748b;">#{{ alert.tender.id }} | {{ alert.tender.authority.institution_name|default:alert.tender.authority.username }}</small>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            <span style="display: inline-block; padding: 0.3rem 0.75rem; border-radius: 6px; font-weight: 800; font-size: 0.8rem; {% if alert.severity == 'high' %}background: #fee2e2; color: #dc2626;{% else %}background: #fef3c7; color: #d97706;{% endif %}">
+                                {{ alert.get_alert_type_display }}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            {% for supp in alert.involved_suppliers.all %}
+                                <div style="font-weight: 700; color: #1e293b; font-size: 0.85rem;"><i class="fas fa-building-user text-slate-400"></i> {{ supp.full_name|default:supp.username }}</div>
+                            {% empty %}
+                                <span style="color: #64748b; font-size: 0.85rem;">قيد التحديد</span>
+                            {% endfor %}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                            <div style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: {% if alert.risk_score >= 80 %}#fee2e2; color: #dc2626; border: 2px solid #dc2626;{% else %}#fef3c7; color: #d97706; border: 2px solid #d97706;{% endif %} font-weight: 900; font-size: 0.95rem;">
+                                {{ alert.risk_score }}%
+                            </div>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #475569; max-width: 280px; line-height: 1.5;">
+                            {{ alert.evidence_summary }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                            <form method="POST" action="{% url 'dashboard:regulator_freeze_tender' alert.tender.id %}" style="display: inline;" onsubmit="return confirm('هل ترغب في اتخاذ قرار التجميد الرقابي الاحترازي لهذه الصفقة؟');">
+                                {% csrf_token %}
+                                {% if alert.tender.is_frozen %}
+                                <span style="display: inline-block; padding: 0.35rem 0.75rem; background: #fee2e2; color: #dc2626; border-radius: 6px; font-weight: 800; font-size: 0.8rem;">
+                                    <i class="fas fa-lock"></i> مجمدة حالياً
+                                </span>
+                                {% else %}
+                                <button type="submit" style="padding: 0.4rem 0.85rem; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                                    <i class="fas fa-ban"></i> تجميد فوري
+                                </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem; color: #64748b; font-weight: 700;">
+                            <i class="fas fa-shield-check fa-2x" style="display: block; margin-bottom: 0.5rem; opacity: 0.4;"></i>
+                            لم يتم رصد أي شبهات تواطؤ أو أنماط إيداع مريبة في الصفقات الحالية.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

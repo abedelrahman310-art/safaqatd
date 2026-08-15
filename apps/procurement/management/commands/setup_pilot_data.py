@@ -35,8 +35,8 @@ class Command(BaseCommand):
                 'description': 'Tender for pilot testing.',
                 'budget': 500000.0,
                 'authority': authority_user,
-                'deadline': timezone.now().date() - timedelta(days=1), # Expired so it can be opened
-                'status': 'active'
+                'deadline': timezone.now() - timedelta(days=1), # Expired so it can be opened
+                'status': 'published'
             }
         )
         

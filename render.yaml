@@ -1,38 +1,21 @@
-databases:
-  - name: safakat-db
-    databaseName: safakat
-    user: safakat_user
-    plan: free
-
 services:
   - type: web
-    name: safakat-web
+    name: safaqat-smart
     env: python
-    buildCommand: "./build.sh"
-    startCommand: "./start.sh"
+    region: frankfurt # فرانكفورت (أقرب سيرفر للجزائر وشمال إفريقيا)
     plan: free
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput && python seed_pilot_simulation.py"
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4"
     envVars:
       - key: PYTHON_VERSION
-        value: "3.12.0"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: safakat-db
-          property: connectionString
+        value: 3.12.0
+      - key: DJANGO_ENV
+        value: production
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
       - key: SECRET_KEY
         generateValue: true
-      - key: DJANGO_SETTINGS_MODULE
-        value: "config.settings"
-      - key: WEB_CONCURRENCY
-        value: "3"
-      - key: ALLOWED_HOSTS
-        value: ".onrender.com"
       - key: DEBUG
         value: "False"
-      - key: CSRF_TRUSTED_ORIGINS
-        value: "https://safakat-web.onrender.com"
-      - key: USE_S3
-        value: "False"
-      - key: ENCRYPTION_KEY
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false

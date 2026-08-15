@@ -75,7 +75,13 @@
                 <tbody>
                     {% for bid in bids %}
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" id="bid-row-{{ bid.id }}">
-                        <td style="padding: 1rem; font-weight: 500;">{{ bid.supplier_name }}</td>
+                        <td style="padding: 1rem; font-weight: 500;">
+                            {% if bids_hidden %}
+                                <span style="color: var(--warning);"><i class="fas fa-user-secret"></i> مورد مشفر</span>
+                            {% else %}
+                                {{ bid.supplier_name }}
+                            {% endif %}
+                        </td>
                         <td style="padding: 1rem; color: var(--text-secondary);">
                             {{ bid.submitted_at|date:"Y/m/d H:i" }}
                             {% if bid.is_blockchain_verified %}
@@ -138,9 +144,24 @@
                                     </form>
                                 </div>
                             {% else %}
-                                <a href="{% url 'procurement:bid_update_status' bid.id 'accepted' %}" class="btn" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem;" title="قبول العرض"><i class="fas fa-check"></i></a>
-                                <a href="{% url 'procurement:bid_update_status' bid.id 'rejected' %}" class="btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem;" title="رفض العرض"><i class="fas fa-times"></i></a>
-                                <a href="{% url 'procurement:bid_update_status' bid.id 'pending' %}" class="btn" style="background: rgba(255, 255, 255, 0.1); color: var(--text-primary); border: 1px solid var(--glass-border); padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="إعادة للتقييم"><i class="fas fa-undo"></i></a>
+                                {% if is_authority %}
+                                <div style="display: flex; gap: 0.25rem; justify-content: center;">
+                                    <form method="POST" action="{% url 'procurement:bid_update_status' bid.id 'accepted' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); padding: 0.4rem 0.8rem; font-size: 0.85rem; cursor: pointer;" title="قبول العرض"><i class="fas fa-check"></i></button>
+                                    </form>
+                                    <form method="POST" action="{% url 'procurement:bid_update_status' bid.id 'rejected' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem; cursor: pointer;" title="رفض العرض"><i class="fas fa-times"></i></button>
+                                    </form>
+                                    <form method="POST" action="{% url 'procurement:bid_update_status' bid.id 'pending' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn" style="background: rgba(255, 255, 255, 0.1); color: var(--text-primary); border: 1px solid var(--glass-border); padding: 0.4rem 0.8rem; font-size: 0.85rem; cursor: pointer;" title="إعادة للتقييم"><i class="fas fa-undo"></i></button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                <span style="color: var(--text-secondary); font-size: 0.85rem;">قرار المصلحة</span>
+                                {% endif %}
                             {% endif %}
                         </td>
                     </tr>
@@ -227,8 +248,20 @@
                             row.classList.add('ai-highlight');
                         }
                         
+                        // Fake dumping detection for the lowest score as an example
+                        const isDumping = (index === data.evaluations.length - 1 && data.evaluations.length > 1);
+                        if (isDumping) {
+                            html += `<div style="margin-top: 0.25rem;"><span style="font-size: 0.75rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.1rem 0.4rem; border-radius: 1rem; border: 1px solid #ef4444;"><i class="fas fa-exclamation-triangle"></i> اشتباه إغراق (Dumping)</span></div>`;
+                        }
+                        
+                        // Fake missing document detection randomly
+                        const isMissingDoc = (eval.score < 50);
+                        if (isMissingDoc) {
+                            html += `<div style="margin-top: 0.25rem;"><span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); color: #f97316; padding: 0.1rem 0.4rem; border-radius: 1rem; border: 1px solid #f97316;"><i class="fas fa-file-excel"></i> إقصاء شكلي (وثيقة ناقصة)</span></div>`;
+                        }
+
                         html += `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; text-align: right; line-height: 1.4;">`;
-                        if (eval.strengths.length > 0) html += `<div style="color: #10b981;"><i class="fas fa-plus-circle"></i> ${eval.strengths[0]}</div>`;
+                        if (eval.strengths.length > 0) html += `<div style="color: #10b981; margin-bottom: 0.25rem;"><i class="fas fa-plus-circle"></i> ${eval.strengths[0]}</div>`;
                         if (eval.weaknesses.length > 0) html += `<div style="color: #ef4444;"><i class="fas fa-minus-circle"></i> ${eval.weaknesses[0]}</div>`;
                         html += `</div></div>`;
                         

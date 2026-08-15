@@ -1,0 +1,130 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}المخطط التقديري السنوي للطلبيات العمومية | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4 font-amiri" dir="rtl">
+    <!-- Sovereign Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom border-slate-200">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-lg shadow-sm border border-emerald-200">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h2 class="h3 font-black text-slate-900 mb-0">
+                    المخطط التقديري السنوي للطلبيات العمومية
+                </h2>
+            </div>
+            <p class="text-xs text-slate-500 mb-0 font-sans">
+                برمجة الحاجات والعمليات السنوية للمصلحة المتعاقدة وفقاً لأحكام <strong>القانون رقم 23-12</strong> والقانون العضوي <strong>18-15 (LOLF)</strong>
+            </p>
+        </div>
+        {% if perms.procurement.add_tender %}
+        <a href="{% url 'procurement:budget_create' %}" class="btn px-4 py-2.5 rounded-xl font-bold shadow-sm font-sans text-xs" style="background: linear-gradient(135deg, #059669, #10b981); color: white; border: none;">
+            <i class="fas fa-plus ml-1"></i> إعداد مخطط سنوي جديد
+        </a>
+        {% endif %}
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4 font-sans">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} border-0 shadow-sm rounded-2xl p-3.5 mb-2 font-medium">
+            <i class="fas fa-info-circle ml-2"></i> {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Plans Overview Grid -->
+    <div class="row g-4">
+        {% if budgets %}
+            {% for budget in budgets %}
+            <div class="col-12 col-xl-6">
+                <div class="card h-100 border-0 shadow-sm rounded-3xl p-4 position-relative bg-white" style="border: 1px solid #e2e8f0;">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1.5">
+                                <span class="badge px-3 py-1 rounded-pill text-xs font-bold font-sans" style="background: #0f172a; color: #f8fafc;">
+                                    السنة المالية: {{ budget.year }}
+                                </span>
+                                <span class="badge px-2.5 py-1 rounded-md text-xs font-sans" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">
+                                    {{ budget.get_budget_type_display }}
+                                </span>
+                            </div>
+                            <h4 class="h5 font-black text-slate-900 mb-0">{{ budget.sector }}</h4>
+                        </div>
+                        <div>
+                            {% if budget.status == 'draft' %}
+                                <span class="badge px-3 py-1.5 rounded-pill font-sans text-xs" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">مسودة</span>
+                            {% elif budget.status == 'submitted' %}
+                                <span class="badge px-3 py-1.5 rounded-pill font-sans text-xs" style="background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;">قيد المراجعة</span>
+                            {% elif budget.status == 'approved' %}
+                                <span class="badge px-3 py-1.5 rounded-pill font-sans text-xs" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac;">معتمد رسمياً</span>
+                            {% elif budget.status == 'published' %}
+                                <span class="badge px-3 py-1.5 rounded-pill font-sans text-xs" style="background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7;">منشور بالمخطط الوطني</span>
+                            {% elif budget.status == 'rejected' %}
+                                <span class="badge px-3 py-1.5 rounded-pill font-sans text-xs" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">مرفوض</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Metrics Box -->
+                    <div class="p-3 rounded-2xl mb-3" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                        <div class="row text-center g-2 font-sans">
+                            <div class="col-4">
+                                <div class="text-xs text-slate-500 mb-1">الغلاف المرصود</div>
+                                <div class="font-bold text-slate-900 font-mono text-sm">{{ budget.total_budget|floatformat:0 }} دج</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-xs text-slate-500 mb-1">المبرمج</div>
+                                <div class="font-bold text-emerald-700 font-mono text-sm">{{ budget.total_planned_amount|floatformat:0 }} دج</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-xs text-slate-500 mb-1">الالتزام الفعلي</div>
+                                <div class="font-bold text-sky-700 text-sm">{{ budget.consumption_percentage }}%</div>
+                            </div>
+                        </div>
+                        <!-- Progress bar -->
+                        <div class="progress mt-2.5" style="height: 6px; border-radius: 4px; background: #e2e8f0;">
+                            <div class="progress-bar bg-emerald-500" role="progressbar" style="width: {{ budget.consumption_percentage }}%;" aria-valuenow="{{ budget.consumption_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-slate-100 font-sans">
+                        <span class="text-xs text-slate-500">
+                            <i class="fas fa-cubes ml-1 text-slate-400"></i> <strong>{{ budget.planned_projects.count }}</strong> عملية مبرمجة
+                        </span>
+                        <a href="{% url 'procurement:budget_detail' budget.id %}" class="btn btn-sm px-3.5 py-1.5 rounded-xl font-bold text-xs" style="background: #0f172a; color: #f8fafc; border: none;">
+                            <i class="fas fa-list-check ml-1"></i> إدارة العمليات والتحويل
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-3xl p-5 text-center bg-white" style="border: 1px solid #e2e8f0;">
+                    <div class="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 d-inline-flex align-items-center justify-center mx-auto mb-3" style="font-size: 2rem;">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h4 class="h5 font-black text-slate-800 mb-2">لا توجد مخططات تقديرية سنوية مسجلة</h4>
+                    <p class="text-slate-500 max-w-md mx-auto mb-4 text-xs font-sans">
+                        قم بإعداد المخطط التقديري السنوي للطلبيات العمومية لبرمجة العمليات وضمان الشفافية وفحص حدود التجزئة القانونية.
+                    </p>
+                    {% if perms.procurement.add_tender %}
+                    <div>
+                        <a href="{% url 'procurement:budget_create' %}" class="btn px-4 py-2.5 rounded-xl font-bold shadow-sm font-sans text-xs" style="background: linear-gradient(135deg, #059669, #10b981); color: white; border: none;">
+                            <i class="fas fa-plus ml-1"></i> إنشاء أول مخطط سنوي
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

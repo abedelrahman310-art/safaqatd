@@ -1,0 +1,154 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}سجل التدقيق المؤسسي والعمليات | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_central_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #f4f6f9; font-family: 'Cairo', sans-serif;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-history"></i> سجل التدقيق المؤسسي غير القابل للتعديل
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">سجل العمليات والأحداث الرقابية</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">توثيق زمني دقيق لكافة العمليات، تعديلات الصفقات، قرارات اللجان، ومحاولات الدخول.</p>
+        </div>
+        <div>
+            <button onclick="window.print()" style="padding: 0.6rem 1.2rem; background: #ffffff; color: #090d16; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                <i class="fas fa-print"></i> طباعة السجل
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+        <form method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 250px;">
+                <input type="text" name="q" value="{{ q }}" placeholder="بحث بالعملية، المستخدم، الدور، أو الكيان..." style="width: 100%; padding: 0.75rem 1rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a; font-family: 'Cairo', sans-serif;">
+            </div>
+            <div style="min-width: 200px;">
+                <select name="action" style="width: 100%; padding: 0.75rem 1rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a; font-family: 'Cairo', sans-serif;">
+                    <option value="">-- كافة أنواع العمليات --</option>
+                    <option value="create" {% if action_type == 'create' %}selected{% endif %}>إنشاء صفقة / مشروع</option>
+                    <option value="bid" {% if action_type == 'bid' %}selected{% endif %}>إيداع وتشفير العروض</option>
+                    <option value="open" {% if action_type == 'open' %}selected{% endif %}>جلسات فتح الأظرفة</option>
+                    <option value="freeze" {% if action_type == 'freeze' %}selected{% endif %}>قرارات التجميد والرقابة</option>
+                </select>
+            </div>
+            <button type="submit" style="padding: 0.75rem 1.5rem; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                <i class="fas fa-search"></i> تصفية السجل
+            </button>
+            {% if q or action_type %}
+            <a href="{% url 'dashboard:regulator_audit_log' %}" style="padding: 0.75rem 1rem; background: #ffffff; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; text-decoration: none;">إلغاء</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Procurement Audit Table -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <h3 style="color: #090d16; margin: 0 0 1rem 0; font-size: 1.2rem; font-weight: 800;">
+            <i class="fas fa-list-check" style="color: #0284c7;"></i> سجل العمليات الإجرائية للصفقات (Procurement Events)
+        </h3>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">المستخدم الفاعل</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الدور الإداري</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">العملية الإجرائية</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الكيان المستهدف</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">النتيجة</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">التوقيت الدقيق</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in page_obj %}
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 800; color: #090d16;">
+                            {{ log.actor.get_full_name|default:log.actor.username|default:"النظام" }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            <span style="display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px; background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.8rem;">
+                                {{ log.actor_role|default:"مستخدم" }}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #1e293b;">
+                            {{ log.action }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; color: #475569; font-family: monospace; font-size: 0.85rem;">
+                            {{ log.entity_type }} #{{ log.entity_id }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            {% if 'fail' in log.result|lower or 'error' in log.result|lower %}
+                            <span style="color: #dc2626; font-weight: 800;"><i class="fas fa-circle-xmark"></i> {{ log.result }}</span>
+                            {% else %}
+                            <span style="color: #059669; font-weight: 800;"><i class="fas fa-circle-check"></i> {{ log.result|default:"ناجح" }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 0.85rem;" dir="ltr">
+                            {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem; color: #64748b; font-weight: 700;">
+                            <i class="fas fa-shield-alt fa-2x" style="display: block; margin-bottom: 0.5rem; opacity: 0.4;"></i>
+                            لا توجد قيود تدقيق مطابقة.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&action={{ action_type }}" style="padding: 0.5rem 1rem; border: 1px solid #cbd5e1; background: #ffffff; color: #090d16; border-radius: 6px; text-decoration: none; font-weight: 700;">السابق</a>
+            {% endif %}
+            <span style="padding: 0.5rem 1rem; background: #0284c7; color: #ffffff; border-radius: 6px; font-weight: 800;">{{ page_obj.number }}</span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&action={{ action_type }}" style="padding: 0.5rem 1rem; border: 1px solid #cbd5e1; background: #ffffff; color: #090d16; border-radius: 6px; text-decoration: none; font-weight: 700;">التالي</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Security Access Log (Axes) -->
+    {% if security_logs %}
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <h3 style="color: #090d16; margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 800;">
+            <i class="fas fa-user-shield" style="color: #d97706;"></i> سجل محاولات الوصول الأمني وعناوين IP
+        </h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th style="padding: 0.75rem 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">اسم الحساب</th>
+                        <th style="padding: 0.75rem 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">عنوان IP</th>
+                        <th style="padding: 0.75rem 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">المسار المطلوب</th>
+                        <th style="padding: 0.75rem 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">التوقيت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sec in security_logs %}
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 0.75rem 1rem; font-weight: 800; color: #090d16;">{{ sec.username|default:"مجهول" }}</td>
+                        <td style="padding: 0.75rem 1rem; font-family: monospace; color: #0284c7;">{{ sec.ip_address }}</td>
+                        <td style="padding: 0.75rem 1rem; color: #475569; font-size: 0.85rem;">{{ sec.path_info }}</td>
+                        <td style="padding: 0.75rem 1rem; color: #64748b; font-size: 0.85rem;" dir="ltr">{{ sec.attempt_time|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

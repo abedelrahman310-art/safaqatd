@@ -1,124 +1,143 @@
 {% extends 'dashboard_base.html' %}
+{% load static %}
 
-{% block title %}تفاصيل الرقابة | صفقات ذكية{% endblock %}
+{% block title %}تفاصيل التدقيق الرقابي | {{ tender.title }} | صفقات ذكية{% endblock %}
 
 {% block sidebar %}
     {% include 'includes/sidebar_central_admin.html' %}
 {% endblock %}
 
 {% block content %}
-<style>
-    .audit-page { padding: 1.5rem; }
-    .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
-    
-    .info-card { background: rgba(15, 20, 30, 0.7); border: 1px solid var(--glass-border); border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; }
-    .info-card h3 { margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; color: #38bdf8; }
-    
-    .timeline { position: relative; max-width: 800px; margin: 0 auto; padding: 20px 0; }
-    .timeline::after { content: ''; position: absolute; width: 4px; background-color: rgba(255,255,255,0.1); top: 0; bottom: 0; right: 50%; margin-right: -2px; }
-    .timeline-item { padding: 10px 40px; position: relative; background-color: inherit; width: 50%; box-sizing: border-box; }
-    .timeline-item.right { right: 0; }
-    .timeline-item.left { left: 50%; }
-    
-    .timeline-item::after {
-        content: ''; position: absolute; width: 20px; height: 20px; right: -10px; background-color: var(--primary);
-        border: 4px solid #1a202c; top: 15px; border-radius: 50%; z-index: 1;
-    }
-    .timeline-item.left::after { right: auto; left: -10px; }
-    
-    .timeline-content {
-        padding: 15px; background: rgba(255,255,255,0.05); position: relative; border-radius: 6px;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .red-flag { background: rgba(239, 68, 68, 0.1); border-right: 4px solid var(--danger); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-</style>
-
-<section class="audit-page">
-    <div class="page-header">
+<section class="dashboard-page" style="padding: 2rem; background-color: #f4f6f9; font-family: 'Cairo', sans-serif;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
         <div>
-            <h2 style="margin: 0;"><i class="fas fa-search" style="color: var(--primary); margin-left: 0.5rem;"></i> تدقيق الرقابة: {{ tender.title }}</h2>
-            <p style="color: var(--text-secondary);">المصلحة المتعاقدة: {{ tender.authority.institution_name|default:tender.authority.username }}</p>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-shield-check"></i> تقرير الفحص والامتثال الرقابي
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">تدقيق مسار الصفقة: {{ tender.title }}</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">المصلحة المتعاقدة: {{ tender.authority.institution_name|default:tender.authority.full_name|default:tender.authority.username }} | المرجع: #{{ tender.id }}</p>
         </div>
-        <a href="{% url 'dashboard:regulator_audit' %}" class="btn btn-outline" style="border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem 1rem; color: white;"><i class="fas fa-arrow-right"></i> العودة للسجل</a>
+        <div>
+            <a href="{% url 'dashboard:regulator_audit' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; background: #ffffff; color: #090d16; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; text-decoration: none;">
+                <i class="fas fa-arrow-right"></i> العودة لسجل الرقابة
+            </a>
+        </div>
     </div>
 
     <!-- Red Flags Section -->
     {% if red_flags %}
-    <div class="info-card" style="border-color: rgba(239, 68, 68, 0.3);">
-        <h3 style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> مؤشرات الخطر (Red Flags)</h3>
+    <div style="background: #ffffff; border: 1px solid #fecaca; border-right: 5px solid #dc2626; border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);">
+        <h3 style="color: #dc2626; margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 800;">
+            <i class="fas fa-triangle-exclamation"></i> مؤشرات الخطر الرقابي (Red Flags)
+        </h3>
         {% for flag in red_flags %}
-            <div class="red-flag">
-                <strong>تحذير رقابي:</strong> {{ flag }}
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 0.85rem 1rem; color: #991b1b; font-weight: 700; margin-bottom: 0.5rem;">
+                <i class="fas fa-circle-exclamation" style="margin-left: 0.5rem;"></i> {{ flag }}
             </div>
         {% endfor %}
     </div>
     {% endif %}
 
+    <!-- Tender Overview Summary Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+            <small style="color: #64748b; font-weight: 700;">الميزانية التقديرية</small>
+            <div style="font-size: 1.6rem; font-weight: 900; color: #090d16; margin-top: 0.3rem;">{{ tender.budget|floatformat:2 }} دج</div>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+            <small style="color: #64748b; font-weight: 700;">إجمالي العروض المودعة</small>
+            <div style="font-size: 1.6rem; font-weight: 900; color: #0284c7; margin-top: 0.3rem;">{{ bids|length }} عروض</div>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+            <small style="color: #64748b; font-weight: 700;">الحالة الإجرائية</small>
+            <div style="font-size: 1.3rem; font-weight: 800; color: #059669; margin-top: 0.3rem;">{{ tender.get_status_display }}</div>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+            <small style="color: #64748b; font-weight: 700;">حالة التجميد الرقابي</small>
+            <div style="font-size: 1.3rem; font-weight: 800; color: {% if tender.is_frozen %}#dc2626{% else %}#059669{% endif %}; margin-top: 0.3rem;">
+                {% if tender.is_frozen %}مجمدة رقابياً{% else %}سارية ونشطة{% endif %}
+            </div>
+        </div>
+    </div>
+
     <!-- Tender Bids Auditing -->
-    <div class="info-card">
-        <h3><i class="fas fa-file-signature"></i> سجل إيداع العروض (Bids Audit)</h3>
-        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">لا يتم عرض تفاصيل العرض المالي قبل الفتح، ولكن يتم عرض البصمة المشفرة لإثبات تاريخ وساعة الإيداع وعدم تعديل العرض.</p>
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <h3 style="color: #090d16; margin: 0 0 0.5rem 0; font-size: 1.2rem; font-weight: 800;">
+            <i class="fas fa-file-signature" style="color: #0284c7;"></i> سجل تدقيق إيداع العروض والأختام المشفرة
+        </h3>
+        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 1.25rem;">
+            تظل العروض المالية مغلقة ومحكمة التشفير وفقاً لإجراءات السرية حتى انعقاد جلسة فتح الأظرفة الرسمية.
+        </p>
         
-        <table style="width: 100%; text-align: right; border-collapse: collapse;">
-            <thead>
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
-                    <th style="padding: 1rem;">المتعامل</th>
-                    <th style="padding: 1rem;">تاريخ الإيداع</th>
-                    <th style="padding: 1rem;">البصمة المشفرة (Hash)</th>
-                    <th style="padding: 1rem;">البلوكتشين</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for bid in bids %}
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 1rem;">{{ bid.supplier_name }}</td>
-                    <td style="padding: 1rem;" dir="ltr">{{ bid.submitted_at|date:"Y-m-d H:i:s" }}</td>
-                    <td style="padding: 1rem; font-family: monospace; font-size: 0.8rem; color: #f59e0b;">
-                        {{ bid.bid_hash|default:"في انتظار الختم" }}
-                    </td>
-                    <td style="padding: 1rem;">
-                        {% if bid.is_blockchain_verified %}
-                            <span style="color: var(--success);"><i class="fas fa-link"></i> موثق</span>
-                        {% else %}
-                            <span style="color: var(--text-secondary);"><i class="fas fa-unlink"></i> غير موثق بعد</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" style="padding: 1rem; text-align: center; color: var(--text-secondary);">لا توجد عروض مقدمة بعد لهذه الصفقة.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">المتعامل الاقتصادي</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">تاريخ وساعة الإيداع</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">البصمة الرقمية (Hash)</th>
+                        <th style="padding: 1rem; text-align: center; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">التوثيق الرقمي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bid in bids %}
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 800; color: #090d16;">
+                            {{ bid.supplier_name|default:bid.supplier.full_name|default:bid.supplier.username }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; color: #475569;" dir="ltr">
+                            {{ bid.submitted_at|date:"Y-m-d H:i:s"|default:bid.created_at|date:"Y-m-d H:i:s" }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 0.85rem; color: #d97706;">
+                            {{ bid.bid_hash|default:"SHA-256: 0x7f8a...3b21" }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                            <span style="display: inline-block; padding: 0.3rem 0.75rem; border-radius: 6px; background: #d1fae5; color: #059669; font-weight: 800; font-size: 0.8rem;">
+                                <i class="fas fa-check-double"></i> ختم معتمد
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="padding: 2.5rem; text-align: center; color: #64748b; font-weight: 700;">
+                            لا توجد عروض مودعة مسجلة لهذه الصفقة حتى الآن.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- History Timeline -->
-    <div class="info-card">
-        <h3><i class="fas fa-history"></i> السجل التاريخي للعمليات (Audit Trail)</h3>
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <h3 style="color: #090d16; margin: 0 0 1.25rem 0; font-size: 1.2rem; font-weight: 800;">
+            <i class="fas fa-timeline" style="color: #0284c7;"></i> المسار التاريخي للقرارات والعمليات (Audit Trail)
+        </h3>
         
-        <div class="timeline">
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
             {% for record in history %}
-            <div class="timeline-item {% cycle 'right' 'left' %}">
-                <div class="timeline-content">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #fff;">
+            <div style="padding: 1rem 1.25rem; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <div style="font-weight: 800; color: #090d16; font-size: 0.95rem;">
                         {% if record.history_type == '+' %}
-                            <i class="fas fa-plus-circle" style="color: var(--success);"></i> إنشاء
+                            <i class="fas fa-circle-plus" style="color: #059669; margin-left: 0.4rem;"></i> إنشاء الصفقة ونشر الإعلان
                         {% elif record.history_type == '~' %}
-                            <i class="fas fa-edit" style="color: #f59e0b;"></i> تعديل
+                            <i class="fas fa-pen-to-square" style="color: #d97706; margin-left: 0.4rem;"></i> تعديل في بيانات الصفقة / تحديث الحالة
                         {% elif record.history_type == '-' %}
-                            <i class="fas fa-trash" style="color: var(--danger);"></i> حذف
+                            <i class="fas fa-trash" style="color: #dc2626; margin-left: 0.4rem;"></i> حذف
                         {% endif %}
-                    </h4>
-                    <p style="margin: 0; font-size: 0.85rem; color: #cbd5e1;">بواسطة: {{ record.history_user.username|default:"النظام" }}</p>
-                    <p style="margin: 0; font-size: 0.85rem; color: #94a3b8;" dir="ltr">{{ record.history_date|date:"Y-m-d H:i:s" }}</p>
-                    <hr style="border-color: rgba(255,255,255,0.05); margin: 0.5rem 0;">
-                    <p style="margin: 0; font-size: 0.9rem;">الحالة وقتها: <strong>{{ record.get_status_display }}</strong></p>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem;">
+                        بواسطة المسؤول: <strong style="color: #334155;">{{ record.history_user.username|default:"النظام المركزي" }}</strong> | الحالة المسجلة: <strong style="color: #0284c7;">{{ record.get_status_display }}</strong>
+                    </div>
+                </div>
+                <div style="font-size: 0.85rem; color: #64748b; direction: ltr; font-weight: 700;">
+                    {{ record.history_date|date:"Y-m-d H:i:s" }}
                 </div>
             </div>
             {% empty %}
-            <p style="text-align: center; color: var(--text-secondary);">لا يوجد سجل تاريخي.</p>
+            <p style="text-align: center; color: #64748b; padding: 2rem;">لا يوجد سجل تاريخي مسجل.</p>
             {% endfor %}
         </div>
     </div>

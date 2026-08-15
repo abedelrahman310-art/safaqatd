@@ -10,8 +10,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Create Group
         group, created = Group.objects.get_or_create(name='Central Admins')
-        status = 'تم إنشاء' if created else 'موجودة مسبقاً'
-        self.stdout.write(f'مجموعة Central Admins: {status}')
+        status = 'Created' if created else 'Already exists'
+        self.stdout.write(f'Group Central Admins: {status}')
 
         # Get the content type for User model where custom permissions are defined
         user_ct = ContentType.objects.get_for_model(User)
@@ -30,15 +30,15 @@ class Command(BaseCommand):
 
         if not permissions.exists():
             self.stdout.write(self.style.WARNING(
-                'تحذير: لم يتم العثور على الصلاحيات المخصصة. '
-                'تأكد من تشغيل migrate أولاً.'
+                'Warning: Custom permissions not found. '
+                'Make sure to run migrate first.'
             ))
             return
 
         # Assign permissions to the group
         group.permissions.set(permissions)
         self.stdout.write(self.style.SUCCESS(
-            'تم إعداد مجموعة Central Admins بنجاح مع الصلاحيات التالية:'
+            'Central Admins group configured successfully with permissions:'
         ))
         for p in permissions:
-            self.stdout.write(f'  ✓ {p.codename}')
+            self.stdout.write(f'  - {p.codename}')

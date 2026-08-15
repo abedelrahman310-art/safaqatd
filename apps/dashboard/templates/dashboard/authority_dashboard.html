@@ -17,19 +17,37 @@
             }
         };
 
-        // Tenders Chart
-        const tendersCtx = document.getElementById('tendersChart').getContext('2d');
-        new Chart(tendersCtx, {
-            type: 'doughnut',
+        // Efficiency Chart (AI Savings vs Estimated)
+        const effCtx = document.getElementById('efficiencyChart').getContext('2d');
+        new Chart(effCtx, {
+            type: 'bar',
             data: {
-                labels: ['مسودة', 'منشورة', 'مغلقة', 'قيد التقييم'],
-                datasets: [{
-                    data: {{ tenders_chart_data|safe }},
-                    backgroundColor: ['#64748b', '#3b82f6', '#ef4444', '#d4af37'],
-                    borderWidth: 0
-                }]
+                labels: ['مشروع المستشفى', 'تجهيز المدارس', 'طريق المطار'],
+                datasets: [
+                    {
+                        label: 'الميزانية التقديرية (مليون دج)',
+                        data: [120, 45, 80],
+                        backgroundColor: 'rgba(100, 116, 139, 0.5)',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'الوفر المحقق بالذكاء الاصطناعي',
+                        data: [98, 38, 72],
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }
+                ]
             },
-            options: commonOptions
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top', labels: { color: '#e2e8f0', font: { family: 'Tajawal' } }, rtl: true }
+                },
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
         });
 
         // Bids Chart
@@ -54,11 +72,36 @@
 <section class="dashboard-page">
     <div class="dashboard-header">
         <div>
-            <h2>مرحباً بك في لوحة القيادة</h2>
+            <h2>لوحة القيادة</h2>
             <p style="color: var(--text-secondary);">نظرة عامة على نشاطاتك والصفقات الحالية</p>
         </div>
         <a href="{% url 'procurement:tender_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> إنشاء صفقة جديدة</a>
     </div>
+
+    <!-- Onboarding Card (MVP) -->
+    {% if not total_tenders or total_tenders == 0 %}
+    <div class="auth-card" style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(59, 130, 246, 0.05); border-right: 4px solid var(--accent-primary); position: relative;">
+        <button onclick="this.parentElement.style.display='none'" style="position: absolute; top: 1rem; left: 1rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">&times;</button>
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-building"></i> مرحباً بك في بوابة المصلحة المتعاقدة!
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.6;">بصفتك مصلحة متعاقدة، يمكنك إدارة دورة حياة الصفقات العمومية بالكامل بشكل رقمي، آمن، وشفاف.</p>
+        
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+                <h4 style="margin-bottom: 0.5rem; color: var(--text-primary); font-size: 0.95rem;">للبدء في الاستخدام:</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8;">
+                    <li><i class="far fa-circle" style="color: var(--text-muted); margin-left: 0.5rem;"></i> قم بإنشاء أول مشروع صفقة وحدد دفتر الشروط.</li>
+                    <li><i class="far fa-circle" style="color: var(--text-muted); margin-left: 0.5rem;"></i> انشر الصفقة للمتعاملين الاقتصاديين.</li>
+                    <li><i class="far fa-circle" style="color: var(--text-muted); margin-left: 0.5rem;"></i> استقبل العروض المشفرة حتى انتهاء الأجل، ثم افتحها عبر اللجان المختصة.</li>
+                </ul>
+            </div>
+        </div>
+        <div style="margin-top: 1.5rem;">
+            <a href="{% url 'procurement:tender_create' %}" class="btn btn-primary" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">إنشاء صفقة جديدة</a>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Statistics Cards -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
@@ -102,8 +145,8 @@
         <!-- Charts Section -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
             <div class="auth-card" style="padding: 1.5rem;">
-                <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">حالة الصفقات المفتوحة</h3>
-                <canvas id="tendersChart" height="200"></canvas>
+                <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);"><i class="fas fa-magic text-accent"></i> مؤشر الكفاءة والوفر المالي (AI Savings)</h3>
+                <canvas id="efficiencyChart" height="200"></canvas>
             </div>
             <div class="auth-card" style="padding: 1.5rem;">
                 <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">حالة العروض المستلمة</h3>
@@ -115,57 +158,81 @@
     <!-- Charts & Tables Section -->
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
         <div class="auth-card" style="padding: 1.5rem;">
-            <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;"><i class="fas fa-chart-line text-accent"></i> إحصائيات تقديم العروض (شهرياً)</h3>
-            <div style="height: 250px; display: flex; align-items: flex-end; gap: 1rem; padding-top: 2rem; border-bottom: 1px solid var(--glass-border); position: relative;">
-                <!-- Simulated Bar Chart -->
-                <div style="flex: 1; background: var(--accent-primary); height: 40%; border-radius: 4px 4px 0 0; position: relative;" title="جانفي: 15 عرض"></div>
-                <div style="flex: 1; background: var(--success); height: 65%; border-radius: 4px 4px 0 0; position: relative;" title="فيفري: 25 عرض"></div>
-                <div style="flex: 1; background: var(--accent-primary); height: 30%; border-radius: 4px 4px 0 0; position: relative;" title="مارس: 12 عرض"></div>
-                <div style="flex: 1; background: #d4af37; height: 85%; border-radius: 4px 4px 0 0; position: relative;" title="أفريل: 32 عرض"></div>
-                <div style="flex: 1; background: var(--accent-primary); height: 50%; border-radius: 4px 4px 0 0; position: relative;" title="ماي: 18 عرض"></div>
-                <div style="flex: 1; background: var(--success); height: 95%; border-radius: 4px 4px 0 0; position: relative;" title="جوان: 35 عرض"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;">
+                <h3 style="margin: 0;"><i class="fas fa-list text-accent"></i> أحدث الصفقات</h3>
+                <a href="{% url 'procurement:tender_list' %}" style="color: var(--accent-primary); font-size: 0.9rem; text-decoration: none;">عرض الكل</a>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.8rem;">
-                <span>جانفي</span>
-                <span>فيفري</span>
-                <span>مارس</span>
-                <span>أفريل</span>
-                <span>ماي</span>
-                <span>جوان</span>
+            
+            {% if recent_tenders %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: right;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--glass-border); color: var(--text-secondary); font-size: 0.9rem;">
+                            <th style="padding: 0.8rem 0;">عنوان الصفقة</th>
+                            <th style="padding: 0.8rem 0;">الحالة</th>
+                            <th style="padding: 0.8rem 0;">تاريخ النشر</th>
+                            <th style="padding: 0.8rem 0;">آخر أجل</th>
+                            <th style="padding: 0.8rem 0; text-align: center;">إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tender in recent_tenders %}
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+                            <td style="padding: 1rem 0; color: var(--text-primary); font-weight: 500;">
+                                <a href="{% url 'procurement:tender_detail' tender.id %}" style="color: inherit; text-decoration: none;">{{ tender.title|truncatechars:40 }}</a>
+                            </td>
+                            <td style="padding: 1rem 0;">
+                                {% if tender.status == 'published' %}
+                                    <span style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">منشورة</span>
+                                {% elif tender.status == 'closed' %}
+                                    <span style="background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">مغلقة</span>
+                                {% elif tender.status == 'evaluating' %}
+                                    <span style="background: rgba(212, 175, 55, 0.1); color: #d4af37; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">قيد التقييم</span>
+                                {% else %}
+                                    <span style="background: rgba(100, 116, 139, 0.1); color: #94a3b8; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">{{ tender.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem 0; color: var(--text-secondary); font-size: 0.9rem;">{{ tender.created_at|date:"Y-m-d" }}</td>
+                            <td style="padding: 1rem 0; color: var(--text-secondary); font-size: 0.9rem;">{{ tender.deadline|date:"Y-m-d"|default:"-" }}</td>
+                            <td style="padding: 1rem 0; text-align: center;">
+                                <a href="{% url 'procurement:tender_detail' tender.id %}" class="btn btn-sm btn-outline"><i class="fas fa-eye"></i> التفاصيل</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+                <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>لا توجد صفقات حتى الآن.</p>
+                <a href="{% url 'procurement:tender_create' %}" class="btn btn-primary" style="margin-top: 1rem;">أضف صفقتك الأولى</a>
+            </div>
+            {% endif %}
         </div>
 
         <div class="auth-card" style="padding: 1.5rem;">
-            <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;"><i class="fas fa-bell text-accent"></i> أحدث النشاطات</h3>
+            <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;"><i class="fas fa-bell text-accent"></i> تنبيهات وإجراءات مطلوبة</h3>
+            {% if alerts %}
             <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
+                {% for alert in alerts %}
                 <li style="display: flex; gap: 1rem; align-items: flex-start; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div style="background: rgba(16, 185, 129, 0.1); color: var(--success); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div>
-                        <p style="margin: 0; font-size: 0.9rem;">تم قبول العرض التقني لشركة التقنية.</p>
-                        <small style="color: var(--text-secondary);">منذ ساعتين</small>
-                    </div>
-                </li>
-                <li style="display: flex; gap: 1rem; align-items: flex-start; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div style="background: rgba(59, 130, 246, 0.1); color: var(--accent-primary); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <div>
-                        <p style="margin: 0; font-size: 0.9rem;">تم استلام عرض جديد لصفقة الحواسيب.</p>
-                        <small style="color: var(--text-secondary);">منذ 5 ساعات</small>
-                    </div>
-                </li>
-                <li style="display: flex; gap: 1rem; align-items: flex-start;">
                     <div style="background: rgba(212, 175, 55, 0.1); color: #d4af37; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <div>
-                        <p style="margin: 0; font-size: 0.9rem;">اقتراب موعد غلق صفقة التجهيزات المكتبية.</p>
-                        <small style="color: var(--text-secondary);">أمس</small>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-primary);">{{ alert.message }}</p>
+                        <small style="color: var(--text-secondary);">التاريخ: {{ alert.date|date:"Y-m-d" }}</small>
                     </div>
                 </li>
+                {% endfor %}
             </ul>
+            {% else %}
+            <div style="text-align: center; padding: 2rem 1rem; color: var(--text-secondary);">
+                <i class="fas fa-check-circle" style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--success); opacity: 0.5;"></i>
+                <p>لا توجد مهام أو تنبيهات تتطلب انتباهك.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </section>

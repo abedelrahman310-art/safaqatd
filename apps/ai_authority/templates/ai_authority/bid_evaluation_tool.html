@@ -1,0 +1,129 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}المساعد الآلي لتقييم العروض وجدول المفاضلة | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #064e3b; font-family: 'Cairo', sans-serif; min-height: 100vh;">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-calculator"></i> أداة مساندة لجنة تقييم العروض (Smart Bid Evaluator)
+            </div>
+            <h1 style="color: #38bdf8; font-size: 2.2rem; font-weight: 900; margin: 0;">المساعد الآلي لتقييم العروض وجدول المفاضلة</h1>
+            <p style="color: #a7f3d0; font-size: 1rem; margin-top: 0.3rem;">تفريغ آلي للعروض، فحص الأخطاء الحسابية، واقتراح الترتيب والترسية الأنسب قانونياً.</p>
+        </div>
+    </div>
+
+    <!-- Select Tender for Evaluation -->
+    <div style="background: #022c22; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);">
+        <h3 style="color: #38bdf8; margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 900;">
+            <i class="fas fa-list-check"></i> اختر صفقة لإجراء التقييم الآلي لعروضها المودعة
+        </h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            {% for t in tenders %}
+            <a href="{% url 'ai_authority:bid_evaluator_detail' t.id %}" style="padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 800; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; {% if selected_tender.id == t.id %}background: #38bdf8; color: #022c22; font-weight: 900;{% else %}background: #064e3b; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);{% endif %}">
+                <i class="fas fa-file-contract"></i> {{ t.title|truncatechars:35 }} (#{{ t.id }})
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if selected_tender and evaluation_session %}
+    <!-- Evaluation Results Card -->
+    <div style="background: #022c22; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 2rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span style="font-size: 0.85rem; color: #a7f3d0; font-weight: 700;">محضر التقييم الآلي المقارن للصفقة:</span>
+                <h2 style="color: #38bdf8; margin: 0.2rem 0 0 0; font-size: 1.6rem; font-weight: 900;">{{ selected_tender.title }}</h2>
+                <small style="color: #a7f3d0;">إجمالي العروض المودعة: {{ evaluation_session.evaluation_summary.total_bids }} | العروض المستوفية للشروط: {{ evaluation_session.evaluation_summary.compliant_bids_count }}</small>
+            </div>
+            <div>
+                <button onclick="window.print()" style="padding: 0.6rem 1.2rem; background: #064e3b; color: #38bdf8; border: 1px solid #38bdf8; border-radius: 8px; font-weight: 800; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                    <i class="fas fa-print"></i> طباعة محضر التقييم للجنة
+                </button>
+            </div>
+        </div>
+
+        <!-- Comparative Ranking Table -->
+        <h4 style="color: #38bdf8; font-size: 1.15rem; font-weight: 900; margin-bottom: 1rem;">
+            <i class="fas fa-trophy"></i> جدول الترتيب التفاضلي والمفاضلة بين العارضين
+        </h4>
+
+        <div style="overflow-x: auto; margin-bottom: 1.5rem;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr style="background: #064e3b;">
+                        <th style="padding: 1rem; text-align: right; color: #38bdf8; font-weight: 900; border-bottom: 2px solid #38bdf8;">الترتيب</th>
+                        <th style="padding: 1rem; text-align: right; color: #38bdf8; font-weight: 900; border-bottom: 2px solid #38bdf8;">المتعامل الاقتصادي</th>
+                        <th style="padding: 1rem; text-align: center; color: #38bdf8; font-weight: 900; border-bottom: 2px solid #38bdf8;">النقطة التقنية (100)</th>
+                        <th style="padding: 1rem; text-align: right; color: #38bdf8; font-weight: 900; border-bottom: 2px solid #38bdf8;">العرض المالي (دج)</th>
+                        <th style="padding: 1rem; text-align: center; color: #38bdf8; font-weight: 900; border-bottom: 2px solid #38bdf8;">المطابقة الحسابية</th>
+                        <th style="padding: 1rem; text-align: center; color: #38bdf8; font-weight: 900; border-bottom: 2px solid #38bdf8;">القرار والوضعية</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in evaluation_session.evaluation_summary.results %}
+                    <tr style="border-bottom: 1px solid rgba(56, 189, 248, 0.15); background: {% if item.rank == 1 %}rgba(56, 189, 248, 0.1){% else %}transparent{% endif %};">
+                        <td style="padding: 1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.15); font-weight: 900; color: {% if item.rank == 1 %}#38bdf8; font-size: 1.2rem;{% else %}#f0fdf4{% endif %};">
+                            {% if item.rank == 1 %}
+                                <i class="fas fa-crown text-amber-400"></i> المرتبة 1 (موصى بالترسية)
+                            {% elif item.rank == 2 or item.rank == 3 %}
+                                المرتبة {{ item.rank }}
+                            {% else %}
+                                {{ item.rank }}
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.15); font-weight: 800; color: #f0fdf4;">
+                            {{ item.supplier_name }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.15); text-align: center;">
+                            <span style="display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px; font-weight: 900; {% if item.tech_score >= 70 %}background: #064e3b; color: #38bdf8; border: 1px solid #38bdf8;{% else %}background: #450a0a; color: #f87171; border: 1px solid #f87171;{% endif %}">
+                                {{ item.tech_score }} / 100
+                            </span>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.15); font-weight: 900; color: #38bdf8; font-family: monospace; font-size: 1.05rem;">
+                            {{ item.financial_price|floatformat:2 }} دج
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.15); text-align: center;">
+                            <span style="color: #34d399; font-weight: 800;"><i class="fas fa-check-circle"></i> مطابقة تامة</span>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.15); text-align: center;">
+                            {% if item.rank == 1 %}
+                                <span style="display: inline-block; padding: 0.35rem 0.85rem; border-radius: 6px; background: #0284c7; color: white; font-weight: 900; font-size: 0.85rem;">
+                                    مؤهل للترسية المؤقتة
+                                </span>
+                            {% elif item.is_tech_compliant %}
+                                <span style="color: #a7f3d0; font-weight: 700; font-size: 0.85rem;">مقبول ومؤهل</span>
+                            {% else %}
+                                <span style="color: #f87171; font-weight: 700; font-size: 0.85rem;">مقصى لعدم كفاية النقاط</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem; color: #a7f3d0;">لا توجد بيانات عروض مسجلة.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Notes and Conclusion -->
+        <div style="background: #064e3b; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 1.25rem;">
+            <strong style="color: #38bdf8; font-size: 0.95rem; display: block; margin-bottom: 0.4rem;">
+                <i class="fas fa-clipboard-check"></i> ملخص وخلاصة اللجنة المقترحة:
+            </strong>
+            <p style="color: #f0fdf4; font-size: 0.95rem; margin: 0; line-height: 1.6;">
+                {{ evaluation_session.notes }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

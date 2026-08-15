@@ -47,3 +47,4 @@ django-filter==26.1
 
 # ===== QR Code =====
 qrcode==8.2
+gunicorn==21.2.0

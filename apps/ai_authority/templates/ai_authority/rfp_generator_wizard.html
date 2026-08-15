@@ -1,0 +1,160 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}صانع ومحرر دفاتر الشروط الذكي | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #064e3b; font-family: 'Cairo', sans-serif; min-height: 100vh;">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-wand-magic-sparkles"></i> محرك الصياغة المعيارية الذكي (Smart RFP Drafter)
+            </div>
+            <h1 style="color: #38bdf8; font-size: 2.2rem; font-weight: 900; margin: 0;">صانع دفاتر الشروط والمواصفات القياسية</h1>
+            <p style="color: #a7f3d0; font-size: 1rem; margin-top: 0.3rem;">توليد دفاتر شروط متوافقة قانونياً مع المرسوم 23-12، مع إعداد سلم التنقيط والشروط التقنية آلياً.</p>
+        </div>
+        <div>
+            <a href="{% url 'ai_authority:price_estimator' %}" style="padding: 0.6rem 1.2rem; background: #022c22; color: #38bdf8; border: 1px solid #38bdf8; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-coins"></i> فحص الأسعار المرجعية
+            </a>
+        </div>
+    </div>
+
+    <!-- Generator Wizard Form -->
+    <div style="background: #022c22; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);">
+        <h3 style="color: #38bdf8; margin: 0 0 1.25rem 0; font-size: 1.25rem; font-weight: 900;">
+            <i class="fas fa-feather-pointed" style="color: #38bdf8;"></i> إدخال محددات المشروع لصياغة دفتر الشروط
+        </h3>
+
+        <form method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+            {% csrf_token %}
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; color: #38bdf8; font-weight: 800; margin-bottom: 0.4rem; font-size: 0.95rem;">عنوان وموضوع الصفقة أو المشروع العمومي</label>
+                <input type="text" name="project_title" required placeholder="مثال: أشغال تهيئة وتعبيد الطرقات والإنارة العمومية بالقطب الحضري الجديد" style="width: 100%; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #065f46; background: #064e3b; color: #38bdf8; font-size: 1rem; font-family: 'Cairo', sans-serif; font-weight: 700;">
+            </div>
+
+            <div>
+                <label style="display: block; color: #38bdf8; font-weight: 800; margin-bottom: 0.4rem; font-size: 0.95rem;">قطاع وطبيعة الصفقة</label>
+                <select name="sector" style="width: 100%; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #065f46; background: #064e3b; color: #38bdf8; font-size: 1rem; font-family: 'Cairo', sans-serif; font-weight: 700;">
+                    <option value="works">أشغال وبناء وبنية تحتية (Travaux)</option>
+                    <option value="supplies">اقتناء لوازم ومعدات وتجهيزات (Fournitures)</option>
+                    <option value="studies">دراسات واستشارات هندسية (Études)</option>
+                    <option value="services">خدمات وصيانة وحراسة (Services)</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; color: #38bdf8; font-weight: 800; margin-bottom: 0.4rem; font-size: 0.95rem;">طبيعة الإجراء الإداري</label>
+                <select name="procedure_type" style="width: 100%; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #065f46; background: #064e3b; color: #38bdf8; font-size: 1rem; font-family: 'Cairo', sans-serif; font-weight: 700;">
+                    <option value="open_tender">طلب عروض مفتوح مع اشتراط قدرات دنيا</option>
+                    <option value="restricted_tender">طلب عروض محدود</option>
+                    <option value="consultation">استشارة بسيطة (أقل من العتبة المالية)</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; color: #38bdf8; font-weight: 800; margin-bottom: 0.4rem; font-size: 0.95rem;">الميزانية التقديرية المرصودة (دج)</label>
+                <input type="number" name="budget" placeholder="مثال: 35000000" style="width: 100%; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #065f46; background: #064e3b; color: #38bdf8; font-size: 1rem; font-family: 'Cairo', sans-serif; font-weight: 700;">
+            </div>
+
+            <div>
+                <label style="display: block; color: #38bdf8; font-weight: 800; margin-bottom: 0.4rem; font-size: 0.95rem;">المدة التعاقدية المقترحة للإنجاز (بالأشهر)</label>
+                <input type="number" name="duration" value="6" style="width: 100%; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid #065f46; background: #064e3b; color: #38bdf8; font-size: 1rem; font-family: 'Cairo', sans-serif; font-weight: 700;">
+            </div>
+
+            <div style="grid-column: 1 / -1; text-align: left; margin-top: 0.5rem;">
+                <button type="submit" style="padding: 0.85rem 2.5rem; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 1.05rem; cursor: pointer; font-family: 'Cairo', sans-serif; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+                    <i class="fas fa-magic"></i> توليد وصياغة دفتر الشروط الفوري
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Generated RFP Detail Card -->
+    {% if selected_rfp %}
+    <div style="background: #022c22; border: 1px solid #38bdf8; border-radius: 14px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span style="font-size: 0.85rem; color: #a7f3d0; font-weight: 700;">مسودة دفتر الشروط المعتمدة رقم #{{ selected_rfp.id }}</span>
+                <h2 style="color: #38bdf8; margin: 0.2rem 0 0 0; font-size: 1.6rem; font-weight: 900;">{{ selected_rfp.project_title }}</h2>
+                <small style="color: #a7f3d0;">القطاع: {{ selected_rfp.get_sector_display }} | الإجراء: {{ selected_rfp.get_procedure_type_display }}</small>
+            </div>
+            <div>
+                <button onclick="window.print()" style="padding: 0.6rem 1.2rem; background: #064e3b; color: #38bdf8; border: 1px solid #38bdf8; border-radius: 8px; font-weight: 800; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                    <i class="fas fa-file-pdf"></i> تصدير وطباعة دفتر الشروط
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 1: Admin Conditions -->
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="color: #38bdf8; font-size: 1.1rem; font-weight: 900; margin-bottom: 0.5rem;">
+                <i class="fas fa-gavel"></i> الشروط الإدارية ومعايير القبول والتأهيل
+            </h4>
+            <div style="background: #064e3b; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.2rem; color: #f0fdf4; line-height: 1.8; font-weight: 600;">
+                {{ selected_rfp.administrative_conditions }}
+            </div>
+        </div>
+
+        <!-- Section 2: Technical Specifications -->
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="color: #38bdf8; font-size: 1.1rem; font-weight: 900; margin-bottom: 0.5rem;">
+                <i class="fas fa-cogs"></i> المواصفات الفنية والتقنية القياسية
+            </h4>
+            <div style="background: #064e3b; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.2rem; color: #f0fdf4; line-height: 1.8; font-weight: 600;">
+                {{ selected_rfp.technical_specs }}
+            </div>
+        </div>
+
+        <!-- Section 3: Scoring Grid (100 Points) -->
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="color: #38bdf8; font-size: 1.1rem; font-weight: 900; margin-bottom: 0.5rem;">
+                <i class="fas fa-list-ol"></i> سلم التنقيط والتقييم التقني الإلزامي (100 نقطة)
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+                {% for key, val in selected_rfp.scoring_criteria.items %}
+                <div style="background: #064e3b; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #f0fdf4; font-weight: 700; font-size: 0.9rem;">{{ val.title }}</span>
+                    <strong style="color: #38bdf8; font-size: 1.2rem; font-weight: 900;">{{ val.points }} نقطة</strong>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 4: Required Documents -->
+        <div>
+            <h4 style="color: #38bdf8; font-size: 1.1rem; font-weight: 900; margin-bottom: 0.5rem;">
+                <i class="fas fa-folder-closed"></i> الوثائق الإلزامية المطلوبة في ملف الترشح والعرض
+            </h4>
+            <ul style="background: #064e3b; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.2rem 2rem; color: #f0fdf4; margin: 0; line-height: 1.8; font-weight: 600;">
+                {% for doc in selected_rfp.required_documents %}
+                <li>{{ doc }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- History of Generated RFPs -->
+    {% if my_rfps %}
+    <div style="background: #022c22; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
+        <h3 style="color: #38bdf8; margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 900;">
+            <i class="fas fa-clock-rotate-left"></i> دفاتر الشروط المولدة مسبقاً لمصلحتكم
+        </h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            {% for r in my_rfps %}
+            <a href="{% url 'ai_authority:rfp_detail' r.id %}" style="padding: 0.75rem 1.25rem; background: #064e3b; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; text-decoration: none; display: flex; flex-direction: column; gap: 0.3rem;">
+                <strong style="color: #38bdf8; font-size: 0.95rem;">{{ r.project_title|truncatechars:35 }}</strong>
+                <small style="color: #a7f3d0;">{{ r.get_sector_display }} | {{ r.created_at|date:"Y-m-d" }}</small>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

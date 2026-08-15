@@ -1,0 +1,111 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}المستودع الرقمي للوثائق والنماذج المعيارية | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_central_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #f4f6f9; font-family: 'Cairo', sans-serif;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-folder-open"></i> المستودع القانوني والوثائقي المركزي
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">إدارة الوثائق والنماذج المعيارية</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">التشريعات، دفاتر الشروط النموذجية، والمراسيم المنظمة لقطاع الصفقات العمومية.</p>
+        </div>
+        <div>
+            <button onclick="document.getElementById('uploadDocModal').style.display='flex'" style="padding: 0.75rem 1.5rem; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'Cairo', sans-serif;">
+                <i class="fas fa-file-arrow-up"></i> إيداع وثيقة / تعليمة جديدة
+            </button>
+        </div>
+    </div>
+
+    <!-- Documents Grid / Table -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">المرجع والوثيقة</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">التصنيف</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">تاريخ النفاذ</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الحجم</th>
+                        <th style="padding: 1rem; text-align: center; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الصفة القانونية</th>
+                        <th style="padding: 1rem; text-align: center; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">التحميل</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 42px; height: 42px; border-radius: 10px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                                    <i class="fas fa-file-lines"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 800; color: #090d16; font-size: 1rem;">{{ doc.title }}</div>
+                                    <small style="color: #64748b; font-family: monospace;">المرجع: {{ doc.id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #334155;">
+                            {{ doc.category }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; color: #64748b;" dir="ltr">
+                            {{ doc.date }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; color: #475569; font-weight: 700;">
+                            {{ doc.size }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                            <span style="display: inline-block; padding: 0.3rem 0.75rem; border-radius: 6px; background: #d1fae5; color: {{ doc.badge_color|default:'#059669' }}; font-weight: 800; font-size: 0.8rem;">
+                                {{ doc.status }}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                            <a href="#" onclick="alert('جاري تحميل الوثيقة الرسمية المعتمدة...'); return false;" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; background: #f8fafc; color: #090d16; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
+                                <i class="fas fa-download text-sky-600"></i> تحميل النسخة
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Upload Document Modal -->
+<div id="uploadDocModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; width: 100%; max-width: 520px; padding: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2); font-family: 'Cairo', sans-serif;">
+        <h3 style="margin-top: 0; color: #090d16; font-size: 1.25rem; font-weight: 900; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">إيداع وثيقة تنظيمية أو نموذج معتمد</h3>
+        <form onsubmit="event.preventDefault(); alert('تم إيداع الوثيقة في المستودع بنجاح!'); this.reset(); document.getElementById('uploadDocModal').style.display='none';">
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; color: #1e293b; font-weight: 700; margin-bottom: 0.4rem; font-size: 0.9rem;">عنوان الوثيقة أو التعليمة</label>
+                <input type="text" required placeholder="مثال: دفتر الشروط النموذجي للأشغال 2026" style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #0f172a; font-family: 'Cairo', sans-serif;">
+            </div>
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; color: #1e293b; font-weight: 700; margin-bottom: 0.4rem; font-size: 0.9rem;">تصنيف الوثيقة</label>
+                <select style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #0f172a; font-family: 'Cairo', sans-serif;">
+                    <option>نماذج معيارية ودفاتر شروط</option>
+                    <option>مراسيم وقوانين</option>
+                    <option>تعليمات وزارية ومذكرات توجيهية</option>
+                    <option>وثائق النزاهة والتصريحات</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; color: #1e293b; font-weight: 700; margin-bottom: 0.4rem; font-size: 0.9rem;">الملف الرقمي (PDF / DOCX)</label>
+                <input type="file" required style="width: 100%; padding: 0.5rem; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc;">
+            </div>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button type="button" style="padding: 0.6rem 1.2rem; background: #ffffff; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif;" onclick="document.getElementById('uploadDocModal').style.display='none'">إلغاء</button>
+                <button type="submit" style="padding: 0.6rem 1.4rem; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; font-family: 'Cairo', sans-serif;">حفظ الوثيقة</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

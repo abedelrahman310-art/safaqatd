@@ -1,81 +1,115 @@
 {% extends 'dashboard_base.html' %}
+{% load static %}
 
-{% block title %}سجل الرقابة | صفقات ذكية{% endblock %}
+{% block title %}الرقابة والتنبيهات المتقدمة | صفقات ذكية{% endblock %}
 
 {% block sidebar %}
     {% include 'includes/sidebar_central_admin.html' %}
 {% endblock %}
 
 {% block content %}
-<section class="dashboard-page">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h2 style="margin: 0;"><i class="fas fa-search" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> سجل رقابة الصفقات الوطنية</h2>
-        <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة التقرير</button>
+<section class="dashboard-page" style="padding: 2rem; background-color: #f4f6f9; font-family: 'Cairo', sans-serif;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-bell"></i> منظومة الإنذار المبكر والتنبيهات الرقابية
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">لوحة الرقابة وتتبع المخاطر الإجرائية</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">رصد فوري للصفقات المتأخرة، العروض غير المكتملة، وتنبيهات شبهات الاحتكار والمنافسة.</p>
+        </div>
+        <div>
+            <button onclick="window.print()" style="padding: 0.6rem 1.2rem; background: #ffffff; color: #090d16; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                <i class="fas fa-print"></i> طباعة التقرير الرقابي
+            </button>
+        </div>
     </div>
 
-    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem;">
-        <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">
-            <i class="fas fa-info-circle"></i> يتيح هذا السجل لسلطة الضبط معاينة جميع الصفقات العمومية المطروحة في المنصة من طرف جميع المصالح لضمان النزاهة والشفافية.
+    <!-- Alert Cards Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <!-- Late Tenders Card -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); border-top: 4px solid #dc2626;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="color: #dc2626; margin: 0; font-size: 1.1rem; font-weight: 800;"><i class="fas fa-clock"></i> صفقات تجاوزت أجل الإيداع</h3>
+                <span style="font-size: 0.8rem; font-weight: 800; background: #fee2e2; color: #dc2626; padding: 0.2rem 0.6rem; border-radius: 6px;">تتطلب الفتح</span>
+            </div>
+            <ul style="list-style: none; padding: 0; margin: 0; max-height: 280px; overflow-y: auto;">
+                {% for tender in tenders %}
+                    {% if tender.is_deadline_passed and tender.status == 'published' %}
+                        <li style="padding: 0.85rem 0; border-bottom: 1px solid #f1f5f9;">
+                            <div style="font-weight: 800; font-size: 0.95rem;">
+                                <a href="{% url 'dashboard:regulator_audit_detail' tender.id %}" style="color: #090d16; text-decoration: none;">{{ tender.title|truncatechars:45 }}</a>
+                            </div>
+                            <div style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem;">
+                                المصلحة: {{ tender.authority.institution_name|default:tender.authority.username }}
+                            </div>
+                        </li>
+                    {% endif %}
+                {% empty %}
+                <li style="padding: 1.5rem; text-align: center; color: #64748b;">لا توجد صفقات متأخرة</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <!-- Tenders with Low Competition Card -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); border-top: 4px solid #d97706;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="color: #d97706; margin: 0; font-size: 1.1rem; font-weight: 800;"><i class="fas fa-triangle-exclamation"></i> عروض منخفضة (أقل من 3)</h3>
+                <span style="font-size: 0.8rem; font-weight: 800; background: #fef3c7; color: #d97706; padding: 0.2rem 0.6rem; border-radius: 6px;">شبهة منافسة</span>
+            </div>
+            <ul style="list-style: none; padding: 0; margin: 0; max-height: 280px; overflow-y: auto;">
+                {% for tender in tenders %}
+                    {% if tender.bids.count < 3 and tender.status != 'draft' %}
+                        <li style="padding: 0.85rem 0; border-bottom: 1px solid #f1f5f9;">
+                            <div style="font-weight: 800; font-size: 0.95rem;">
+                                <a href="{% url 'dashboard:regulator_audit_detail' tender.id %}" style="color: #090d16; text-decoration: none;">{{ tender.title|truncatechars:45 }}</a>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; color: #64748b; font-size: 0.85rem; margin-top: 0.25rem;">
+                                <span>الميزانية: {{ tender.budget|floatformat:0 }} دج</span>
+                                <strong style="color: #d97706;">{{ tender.bids.count }} عروض فقط</strong>
+                            </div>
+                        </li>
+                    {% endif %}
+                {% empty %}
+                <li style="padding: 1.5rem; text-align: center; color: #64748b;">لا توجد تنبيهات</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Incomplete Bids Card -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); border-top: 4px solid #059669;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="color: #059669; margin: 0; font-size: 1.1rem; font-weight: 800;"><i class="fas fa-file-shield"></i> تدقيق تصاريح النزاهة</h3>
+                <span style="font-size: 0.8rem; font-weight: 800; background: #d1fae5; color: #059669; padding: 0.2rem 0.6rem; border-radius: 6px;">مطابقة قانونية</span>
+            </div>
+            <ul style="list-style: none; padding: 0; margin: 0; max-height: 280px; overflow-y: auto;">
+                {% for tender in tenders %}
+                    {% for bid in tender.bids.all %}
+                        {% if not bid.integrity_declaration %}
+                            <li style="padding: 0.85rem 0; border-bottom: 1px solid #f1f5f9;">
+                                <div style="font-weight: 800; font-size: 0.95rem; color: #090d16;">المتعامل: {{ bid.supplier_name|default:bid.supplier.full_name|default:bid.supplier.username }}</div>
+                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem;">
+                                    الصفقة: <a href="{% url 'dashboard:regulator_audit_detail' tender.id %}" style="color: #0284c7; text-decoration: none; font-weight: 700;">{{ tender.title|truncatechars:40 }}</a>
+                                </div>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                {% empty %}
+                <li style="padding: 1.5rem; text-align: center; color: #64748b;">جميع التصاريح مستوفاة ومطابقة</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+    </div>
+
+    <!-- Institutional Regulatory Notice -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-right: 4px solid #0284c7; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+        <h4 style="color: #090d16; margin-top: 0; margin-bottom: 0.4rem; font-size: 1rem; font-weight: 800;">
+            <i class="fas fa-scale-balanced" style="color: #0284c7;"></i> توجيهات الرقابة والمطابقة القانونية
+        </h4>
+        <p style="color: #475569; font-size: 0.95rem; margin: 0; line-height: 1.6;">
+            وفقاً للمرسوم الرئاسي رقم 23-12، فإن أي صفقة تتلقى أقل من 3 عروض مؤهلة تقنياً تخضع لتقرير معلل من المصلحة المتعاقدة للتأكد من جدوى المنافسة وعدم وجود شروط مقيدة غير مبررة في دفتر الشروط.
         </p>
     </div>
-
-    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse; text-align: right;">
-            <thead>
-                <tr style="background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <th style="padding: 1rem; color: var(--text-secondary);">رقم الصفقة (المرجع)</th>
-                    <th style="padding: 1rem; color: var(--text-secondary);">المصلحة المتعاقدة</th>
-                    <th style="padding: 1rem; color: var(--text-secondary);">الموضوع</th>
-                    <th style="padding: 1rem; color: var(--text-secondary);">الميزانية (دج)</th>
-                    <th style="padding: 1rem; color: var(--text-secondary);">الحالة</th>
-                    <th style="padding: 1rem; color: var(--text-secondary); text-align: left;">تفاصيل</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tender in tenders %}
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-                    <td style="padding: 1rem; font-weight: bold;">{{ tender.id }}</td>
-                    <td style="padding: 1rem;">
-                        {{ tender.authority.institution_name|default:tender.authority.username }}
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">نشرت في: {{ tender.created_at|date:"Y/m/d" }}</div>
-                    </td>
-                    <td style="padding: 1rem; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ tender.title }}">
-                        {{ tender.title }}
-                    </td>
-                    <td style="padding: 1rem; color: var(--warning);">{{ tender.budget }}</td>
-                    <td style="padding: 1rem;">
-                        {% if tender.status == 'published' %}
-                            <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem;">مفتوحة</span>
-                        {% elif tender.status == 'evaluating' %}
-                            <span style="background: rgba(245, 158, 11, 0.2); color: var(--warning); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem;">في التقييم</span>
-                        {% elif tender.status == 'closed' %}
-                            <span style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem;">مغلقة</span>
-                        {% else %}
-                            <span style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem;">مسودة</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 1rem; text-align: left;">
-                        <a href="{% url 'dashboard:regulator_audit_detail' tender.id %}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;"><i class="fas fa-search"></i> تدقيق</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">لا توجد صفقات في قاعدة البيانات حالياً.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
 </section>
-
-<style>
-    @media print {
-        .sidebar, .btn, .top-navbar { display: none !important; }
-        body { background: white !important; color: black !important; padding: 0; }
-        .dashboard-page { margin: 0; }
-        table { border: 1px solid #ccc; }
-        th, td { border: 1px solid #eee; color: black !important; }
-        span { background: none !important; color: black !important; font-weight: bold; }
-    }
-</style>
 {% endblock %}

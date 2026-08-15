@@ -22,6 +22,8 @@ class User(AbstractUser):
     # Supplier fields
     national_id = models.CharField(max_length=100, blank=True, null=True, verbose_name="بطاقة التعريف الوطني")
     commercial_register = models.CharField(max_length=100, blank=True, null=True, verbose_name="رقم السجل التجاري")
+    nif_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="رقم التعريف الجبائي (NIF)")
+    nis_number = models.CharField(max_length=50, blank=True, null=True, verbose_name="رقم التعريف الإحصائي (NIS)")
     company_type = models.CharField(max_length=50, blank=True, null=True, verbose_name="نوع الشركة")
     commercial_register_doc = models.FileField(upload_to='suppliers/rc/', null=True, blank=True, verbose_name="نسخة السجل التجاري (PDF)")
     tax_card_doc = models.FileField(upload_to='suppliers/tax/', null=True, blank=True, verbose_name="نسخة البطاقة الجبائية (PDF)")
@@ -34,6 +36,10 @@ class User(AbstractUser):
     is_blacklisted = models.BooleanField(default=False, verbose_name="مدرج في القائمة السوداء")
     blacklist_reason = models.TextField(blank=True, null=True, verbose_name="سبب الإدراج في القائمة السوداء")
     blacklist_until = models.DateTimeField(blank=True, null=True, verbose_name="تاريخ انتهاء الحظر")
+
+    # AI Profiling Fields (Step 1)
+    capabilities = models.JSONField(blank=True, null=True, verbose_name="القدرات المستخرجة آلياً (AI)")
+    ai_confidence_score = models.FloatField(blank=True, null=True, verbose_name="نسبة ثقة الذكاء الاصطناعي")
 
     @property
     def display_name(self):

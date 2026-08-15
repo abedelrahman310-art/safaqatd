@@ -1,29 +1,39 @@
-FROM python:3.12-slim
+# syntax = docker/dockerfile:1
 
-# Set environment variables
+ARG PYTHON_VERSION=3.12-slim
+FROM python:${PYTHON_VERSION} as base
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
-# Set work directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
+# Install system dependencies including PDF rendering requirements
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     libpq-dev \
+    libpango-1.0-0 \
+    libharfbuzz0b \
+    libpangoft2-1.0-0 \
+    libffi-dev \
+    fonts-liberation \
+    fonts-noto-cjk \
+    fonts-freefont-ttf \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies
-COPY requirements.txt /app/
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-RUN pip install psycopg2-binary  # Required for PostgreSQL
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
-COPY . /app/
+# Copy project files
+COPY . .
 
-# Expose port
-EXPOSE 8000
+# Run collectstatic during build
+RUN python manage.py collectstatic --noinput || true
 
-# Run development server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+EXPOSE 8080
+
+# Production startup entrypoint with migrations and gunicorn
+CMD ["sh", "-c", "python manage.py migrate --noinput && python seed_pilot_simulation.py && gunicorn config.wsgi:application --bind 0.0.0.0:8080 --workers 2 --threads 4 --timeout 120"]

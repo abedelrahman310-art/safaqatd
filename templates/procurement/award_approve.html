@@ -1,0 +1,62 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 text-gray-800">إسناد الصفقة: {{ tender.title }}</h2>
+        <a href="{% url 'procurement:tender_detail' tender.pk %}" class="btn btn-outline-secondary">إلغاء والعودة</a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-primary">
+                    <h6 class="m-0 font-weight-bold text-white">تفاصيل الإسناد المالي</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        أنت على وشك إسناد الصفقة للعرض المقدم من <strong>{{ bid.supplier.full_name }}</strong>.
+                        المبلغ المقترح في العرض هو <strong>{{ bid.financial_offer }} د.ج</strong>.
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                يرجى تصحيح الأخطاء أدناه.
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">المبلغ النهائي للإسناد (د.ج)</label>
+                            {{ form.awarded_amount }}
+                            {{ form.awarded_amount.errors }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رقم مرجع القرار</label>
+                            {{ form.decision_reference }}
+                            {{ form.decision_reference.errors }}
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">وثيقة القرار الرسمية (PDF)</label>
+                            {{ form.decision_document }}
+                            {{ form.decision_document.errors }}
+                        </div>
+
+                        <hr>
+                        <div class="text-center">
+                            <p class="text-danger small">تنبيه: هذه العملية ستؤدي لإنشاء مسودة العقد ولا يمكن التراجع عنها لاحقاً إلا بقرار رسمي.</p>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-check-circle"></i> اعتماد الإسناد وإنشاء مسودة العقد
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 text-gray-800">تفاصيل العقد: {{ contract.contract_number|default:"(مسودة)" }}</h2>
+        <a href="{% url 'procurement:contract_list' %}" class="btn btn-outline-secondary">العودة</a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">المعلومات الأساسية للعقد</h6>
+                    {% if contract.status == 'draft' and user.role == 'authority' %}
+                    <a href="{% url 'procurement:contract_update' contract.pk %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i> تعديل البيانات
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr><th style="width: 30%">عنوان العقد</th><td>{{ contract.title }}</td></tr>
+                            <tr><th>المورد</th><td>{{ contract.supplier.full_name }} ({{ contract.supplier.commercial_register }})</td></tr>
+                            <tr><th>المصلحة المتعاقدة</th><td>{{ contract.authority.full_name }}</td></tr>
+                            <tr><th>القيمة الإجمالية</th><td>{{ contract.total_value }} د.ج</td></tr>
+                            <tr><th>تاريخ البداية</th><td>{{ contract.start_date|date:"Y/m/d"|default:"-" }}</td></tr>
+                            <tr><th>تاريخ النهاية</th><td>{{ contract.end_date|date:"Y/m/d"|default:"-" }}</td></tr>
+                            <tr><th>الحالة</th>
+                                <td>
+                                    {% if contract.status == 'active' %}<span class="badge bg-success">ساري المفعول</span>
+                                    {% elif contract.status == 'draft' %}<span class="badge bg-secondary">مسودة قيد التحضير</span>
+                                    {% else %}<span class="badge bg-info">{{ contract.get_status_display }}</span>{% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Amendments Section -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-info">الملاحق المسجلة على العقد</h6>
+                    {% if contract.status == 'active' and user.role == 'authority' %}
+                    <a href="{% url 'procurement:contract_amendment_create' contract.pk %}" class="btn btn-sm btn-info text-white">
+                        <i class="fas fa-plus"></i> إضافة ملحق
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if contract.amendments.all %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الملحق</th>
+                                        <th>النوع</th>
+                                        <th>السبب</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for am in contract.amendments.all %}
+                                    <tr>
+                                        <td>{{ am.amendment_number }}</td>
+                                        <td>{{ am.get_amendment_type_display }}</td>
+                                        <td>{{ am.reason|truncatechars:30 }}</td>
+                                        <td>
+                                            {% if am.status == 'approved' %}<span class="badge bg-success">معتمد</span>
+                                            {% else %}<span class="badge bg-warning">{{ am.get_status_display }}</span>{% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">لا توجد ملاحق لهذا العقد.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4 border-left-warning">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">الإجراءات والاعتمادات</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if contract.status == 'draft' %}
+                        <div class="alert alert-secondary text-sm">العقد في طور الصياغة ولا يمتلك أثراً قانونياً بعد.</div>
+                        {% if perms.procurement.approve_contract %}
+                        <a href="{% url 'procurement:contract_approve' contract.pk %}" class="btn btn-success w-100">
+                            <i class="fas fa-signature"></i> اعتماد وتفعيل العقد
+                        </a>
+                        {% else %}
+                        <button class="btn btn-secondary w-100" disabled>لا تملك صلاحية التفعيل</button>
+                        {% endif %}
+                    {% elif contract.status == 'active' %}
+                        <div class="alert alert-success text-sm">هذا العقد ساري المفعول معتمد من طرف {{ contract.approved_by.full_name }}.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

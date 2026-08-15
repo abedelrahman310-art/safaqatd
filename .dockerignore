@@ -1,0 +1,12 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.env
+*.sqlite3
+.pytest_cache
+staticfiles
+media/bids
+media/suppliers
+tests

@@ -1,30 +1,48 @@
-<div class="sidebar-menu">
-    <a href="{% url 'dashboard:authority' %}" class="sidebar-item active">
-        <i class="fas fa-tachometer-alt"></i> لوحة القيادة
+<div class="sidebar-menu" style="font-family: 'Cairo', sans-serif;">
+    <div style="font-size: 0.75rem; color: #38bdf8; padding: 10px 15px 5px; font-weight: 800; text-transform: uppercase;">بوابة المشاريع والصفقات</div>
+    <a href="{% url 'dashboard:authority' %}" class="sidebar-item {% if request.resolver_match.url_name == 'authority' %}active{% endif %}">
+        <i class="fas fa-chart-pie"></i> لوحة القيادة
     </a>
-    <a href="{% url 'procurement:authority_tender_list' %}" class="sidebar-item">
+    <a href="{% url 'procurement:authority_budget_list' %}" class="sidebar-item {% if 'budget' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-calendar-check"></i> البرمجة والمخطط السنوي
+    </a>
+    <a href="{% url 'procurement:authority_tender_list' %}" class="sidebar-item {% if request.resolver_match.url_name == 'authority_tender_list' %}active{% endif %}">
         <i class="fas fa-folder-open"></i> إدارة الصفقات
     </a>
-    <a href="{% url 'procurement:tender_evaluation_list' %}" class="sidebar-item">
+    <a href="{% url 'procurement:tender_evaluation_list' %}" class="sidebar-item {% if request.resolver_match.url_name == 'tender_evaluation_list' %}active{% endif %}">
         <i class="fas fa-balance-scale"></i> تقييم العروض
     </a>
-    <a href="{% url 'procurement:authority_appeals' %}" class="sidebar-item">
+    <a href="{% url 'procurement:authority_appeals' %}" class="sidebar-item {% if request.resolver_match.url_name == 'authority_appeals' %}active{% endif %}">
         <i class="fas fa-gavel"></i> الطعون والشكاوى
     </a>
-    <a href="{% url 'accounts:manage_blacklist' %}" class="sidebar-item">
-        <i class="fas fa-ban"></i> القائمة السوداء
+
+    <!-- الذكاء الاصطناعي للمصلحة المتعاقدة -->
+    <div style="font-size: 0.75rem; color: #38bdf8; padding: 10px 15px 5px; font-weight: 800; text-transform: uppercase; margin-top: 10px;">أدوات الذكاء الاصطناعي</div>
+    <a href="{% url 'ai_authority:rfp_generator' %}" class="sidebar-item {% if request.resolver_match.app_name == 'ai_authority' and request.resolver_match.url_name == 'rfp_generator' %}active{% endif %}">
+        <i class="fas fa-wand-magic-sparkles"></i> صانع دفاتر الشروط الذكي
+    </a>
+    <a href="{% url 'ai_authority:bid_evaluator' %}" class="sidebar-item {% if request.resolver_match.app_name == 'ai_authority' and request.resolver_match.url_name == 'bid_evaluator' %}active{% endif %}">
+        <i class="fas fa-calculator"></i> المساعد الآلي لتقييم العروض
+    </a>
+    <a href="{% url 'ai_authority:price_estimator' %}" class="sidebar-item {% if request.resolver_match.app_name == 'ai_authority' and request.resolver_match.url_name == 'price_estimator' %}active{% endif %}">
+        <i class="fas fa-coins"></i> مقدر الأسعار المرجعية
     </a>
 
-    <a href="{% url 'dashboard:authority_reports' %}" class="sidebar-item">
-        <i class="fas fa-chart-bar"></i> التقارير
+    <!-- السجلات والإعدادات -->
+    <div style="font-size: 0.75rem; color: #38bdf8; padding: 10px 15px 5px; font-weight: 800; text-transform: uppercase; margin-top: 10px;">السجلات والنظام</div>
+    <a href="{% url 'accounts:manage_blacklist' %}" class="sidebar-item {% if request.resolver_match.url_name == 'manage_blacklist' %}active{% endif %}">
+        <i class="fas fa-ban"></i> القائمة السوداء
     </a>
-    <a href="{% url 'accounts:settings' %}" class="sidebar-item">
+    <a href="{% url 'dashboard:authority_reports' %}" class="sidebar-item {% if request.resolver_match.url_name == 'authority_reports' %}active{% endif %}">
+        <i class="fas fa-chart-bar"></i> التقارير والإحصائيات
+    </a>
+    <a href="{% url 'accounts:settings' %}" class="sidebar-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
         <i class="fas fa-cog"></i> الإعدادات
     </a>
-    <a href="{% url 'dashboard:archive' %}" class="sidebar-item">
+    <a href="{% url 'dashboard:archive' %}" class="sidebar-item {% if request.resolver_match.url_name == 'archive' %}active{% endif %}">
         <i class="fas fa-archive"></i> الأرشيف
     </a>
-    <a href="{% url 'accounts:logout' %}" class="sidebar-item logout" style="margin-top: auto; color: var(--danger);">
+    <a href="{% url 'accounts:logout' %}" class="sidebar-item logout" style="margin-top: auto; color: #ef4444;">
         <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
     </a>
 </div>

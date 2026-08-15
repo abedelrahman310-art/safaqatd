@@ -1,9 +1,14 @@
 {% extends 'dashboard_base.html' %}
+{% load static %}
 
 {% block title %}لوحة القيادة - المتعامل الاقتصادي{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/supplier_sidebar.css' %}">
+{% endblock %}
+
 {% block sidebar %}
-    {% include 'includes/sidebar_supplier.html' %}
+    {% include 'includes/supplier_sidebar.html' %}
 {% endblock %}
 
 {% block extra_js %}
@@ -36,7 +41,7 @@
 <section class="dashboard-page">
     <div class="dashboard-header">
         <div>
-            <h2>مرحباً بك في لوحة القيادة</h2>
+            <h2>لوحة القيادة</h2>
             <p style="color: var(--text-secondary);">تابع حالة عروضك والصفقات المتاحة</p>
         </div>
         <div style="display: flex; gap: 1rem;">
@@ -46,6 +51,31 @@
             </button>
         </div>
     </div>
+
+    <!-- Onboarding Card (MVP) -->
+    {% if not supplier_bids or supplier_bids == 0 %}
+    <div class="auth-card" style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(16, 185, 129, 0.05); border-right: 4px solid var(--accent-green); position: relative;">
+        <button onclick="this.parentElement.style.display='none'" style="position: absolute; top: 1rem; left: 1rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">&times;</button>
+        <h3 style="color: var(--accent-green); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-flag-checkered"></i> مرحباً بك في صفقات ذكية! 
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.6;">بصفتك متعاملاً اقتصادياً، يمكنك الآن البدء في تصفح الصفقات العمومية المتاحة وتقديم عروضك بشكل آمن ومشفر.</p>
+        
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+                <h4 style="margin-bottom: 0.5rem; color: var(--text-primary); font-size: 0.95rem;">خطواتك الأولى:</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8;">
+                    <li><i class="far fa-circle" style="color: var(--text-muted); margin-left: 0.5rem;"></i> أكمل بيانات ملفك التجاري في الإعدادات.</li>
+                    <li><i class="far fa-circle" style="color: var(--text-muted); margin-left: 0.5rem;"></i> ابحث عن الصفقات في قسم "استكشاف الصفقات".</li>
+                    <li><i class="far fa-circle" style="color: var(--text-muted); margin-left: 0.5rem;"></i> أودع عرضك التقني والمالي قبل انتهاء الأجل.</li>
+                </ul>
+            </div>
+        </div>
+        <div style="margin-top: 1.5rem;">
+            <a href="{% url 'procurement:tender_list' %}" class="btn btn-primary" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">ابدأ تصفح الصفقات</a>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Statistics Cards -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
@@ -109,10 +139,14 @@
             {% endfor %}
         </div>
     </div>
-    {% elif not user_sector %}
+    {% elif not user_sector or not user.capabilities %}
     <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--glass-border); border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 2rem;">
-        <i class="fas fa-info-circle fa-2x" style="color: var(--accent-primary); margin-bottom: 1rem; opacity: 0.7;"></i>
-        <p style="color: var(--text-secondary); margin: 0;">قم بتحديث ملفك الشخصي وتحديد قطاع نشاطك لتفعيل ميزة الترشيح الذكي للصفقات.</p>
+        <i class="fas fa-robot fa-2x" style="color: var(--accent-primary); margin-bottom: 1rem;"></i>
+        <h4 style="color: var(--text-primary);">أكمل بناء بصمتك المهنية!</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">النظام بانتظار رفع سجلك التجاري لاستخراج قدراتك عبر الذكاء الاصطناعي وترشيح أفضل الصفقات لك.</p>
+        <a href="{% url 'accounts:onboarding' %}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
+            <i class="fas fa-magic me-2"></i> بدء التهيئة الذكية
+        </a>
     </div>
     {% endif %}
 

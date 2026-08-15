@@ -45,17 +45,41 @@ def login_view(request):
 
 def register_supplier_view(request):
     if request.method == 'POST':
-        full_name = request.POST.get('full_name')
-        email = request.POST.get('email')
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip()
         password = request.POST.get('password')
         password_confirm = request.POST.get('confirm_password')
         
+        commercial_register = request.POST.get('commercial_register', '').strip()
+        nif_number = request.POST.get('nif_number', '').strip()
+        nis_number = request.POST.get('nis_number', '').strip()
+        national_id = request.POST.get('national_id', '').strip()
+        company_type = request.POST.get('company_type')
+        sector = request.POST.get('sector')
+        
+        # Mandatory Institutional Identifiers Validation
+        if not commercial_register:
+            messages.error(request, 'رقم السجل التجاري إلزامي لتسجيل المتعامل الاقتصادي.')
+            return render(request, 'accounts/register_supplier.html')
+            
+        if not nif_number:
+            messages.error(request, 'رقم التعريف الجبائي (NIF) إلزامي للمطابقة الضريبية والتسجيل في المنظومة.')
+            return render(request, 'accounts/register_supplier.html')
+        
         if password != password_confirm:
-            messages.error(request, 'كلمات المرور غير متطابقة')
+            messages.error(request, 'كلمات المرور غير متطابقة.')
             return render(request, 'accounts/register_supplier.html')
             
         if User.objects.filter(email=email).exists():
-            messages.error(request, 'هذا البريد الإلكتروني مسجل مسبقاً')
+            messages.error(request, 'هذا البريد الإلكتروني مسجل مسبقاً.')
+            return render(request, 'accounts/register_supplier.html')
+
+        if User.objects.filter(commercial_register=commercial_register).exists():
+            messages.error(request, 'رقم السجل التجاري هذا مسجل بالفعل لشركة أخرى.')
+            return render(request, 'accounts/register_supplier.html')
+
+        if User.objects.filter(nif_number=nif_number).exists():
+            messages.error(request, 'رقم التعريف الجبائي (NIF) هذا مسجل بالفعل في المنظومة.')
             return render(request, 'accounts/register_supplier.html')
             
         user = User.objects.create_user(
@@ -66,10 +90,12 @@ def register_supplier_view(request):
             full_name=full_name,
         )
         
-        user.national_id = request.POST.get('national_id')
-        user.commercial_register = request.POST.get('commercial_register')
-        user.company_type = request.POST.get('company_type')
-        user.sector = request.POST.get('sector')
+        user.national_id = national_id
+        user.commercial_register = commercial_register
+        user.nif_number = nif_number
+        user.nis_number = nis_number
+        user.company_type = company_type
+        user.sector = sector
         user.save()
         
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
@@ -109,6 +135,47 @@ def register_authority_view(request):
         return redirect('dashboard:authority')
 
     return render(request, 'accounts/register_authority.html')
+
+def register_central_admin_view(request):
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        password_confirm = request.POST.get('confirm_password')
+        
+        if password != password_confirm:
+            messages.error(request, 'كلمات المرور غير متطابقة')
+            return render(request, 'accounts/register_central_admin.html')
+            
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'هذا البريد الإلكتروني مسجل مسبقاً')
+            return render(request, 'accounts/register_central_admin.html')
+            
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password,
+            role='central_admin',
+            full_name=full_name,
+        )
+        
+        user.institution_name = request.POST.get('institution_name')
+        user.national_id = request.POST.get('national_id')
+        user.sector = request.POST.get('sector')
+        user.wilaya = request.POST.get('wilaya')
+        user.save()
+        
+        from django.contrib.auth.models import Group
+        try:
+            group = Group.objects.get(name='Central Admins')
+            user.groups.add(group)
+        except Group.DoesNotExist:
+            pass
+        
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        return redirect('dashboard:regulator')
+
+    return render(request, 'accounts/register_central_admin.html')
 
 def logout_view(request):
     logout(request)
@@ -170,3 +237,39 @@ def settings_view(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'accounts/settings.html', {'form': form})
+
+@login_required
+def onboarding_view(request):
+    if request.user.role != 'supplier':
+        return redirect('core:index')
+
+    import json
+    if request.method == 'POST':
+        if 'commercial_register_doc' in request.FILES:
+            request.user.commercial_register_doc = request.FILES['commercial_register_doc']
+            
+            # محاكاة الذكاء الاصطناعي (Mock AI - OCR & NLP)
+            # نفترض أنه استخرج هذه القدرات من السجل التجاري المرفوع
+            mock_capabilities = {
+                "sector": "تكنولوجيا المعلومات والبرمجيات",
+                "specialties": ["تطوير الويب", "الذكاء الاصطناعي", "أنظمة السحابة"],
+                "company_size": "متوسطة",
+                "extracted_nif": "000111222333444",
+                "extracted_nis": "999888777666555"
+            }
+            
+            request.user.capabilities = mock_capabilities
+            request.user.ai_confidence_score = 94.5
+            
+            # تحديث الحقول الأساسية
+            request.user.sector = mock_capabilities['sector']
+            request.user.national_id = mock_capabilities['extracted_nif']
+            
+            request.user.save()
+            
+            messages.success(request, "تم قراءة السجل التجاري وبناء بصمتك المهنية بنجاح عبر الذكاء الاصطناعي!")
+            return redirect('dashboard:supplier')
+        else:
+            messages.error(request, 'يرجى رفع ملف السجل التجاري.')
+            
+    return render(request, 'accounts/onboarding.html')

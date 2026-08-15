@@ -1,46 +1,119 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from .validators import validate_file_mimetype, validate_file_size
 from simple_history.models import HistoricalRecords
 
 class AnnualBudget(models.Model):
+    BUDGET_TYPE_CHOICES = (
+        ('state', 'ميزانية الدولة (Budget de l’État)'),
+        ('wilaya', 'ميزانية الولاية (Budget de Wilaya)'),
+        ('commune', 'ميزانية البلدية (Budget Communal)'),
+        ('epic_epa', 'ميزانية المؤسسة العمومية (EPIC / EPA)'),
+    )
+    STATUS_CHOICES = (
+        ('draft', 'مسودة'),
+        ('submitted', 'قيد المراجعة والاعتماد'),
+        ('approved', 'معتمدة رسمياً'),
+        ('published', 'منشورة بالمخطط الوطني'),
+        ('rejected', 'مرفوضة'),
+    )
+
     year = models.PositiveIntegerField(verbose_name="السنة المالية")
-    sector = models.CharField(max_length=255, verbose_name="القطاع")
+    sector = models.CharField(max_length=255, verbose_name="القطاع الوصي")
+    budget_type = models.CharField(max_length=50, choices=BUDGET_TYPE_CHOICES, default='state', verbose_name="نوع الميزانية")
     total_budget = models.DecimalField(
         max_digits=15, decimal_places=2, 
         validators=[MinValueValidator(0.01)],
-        verbose_name="الميزانية الإجمالية (دج)"
+        verbose_name="الغلاف المالي المخصص (دج)"
     )
     authority = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='budgets', verbose_name="المصلحة المتعاقدة", null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', verbose_name="حالة المخطط")
+    notes = models.TextField(blank=True, null=True, verbose_name="ملاحظات وتوجيهات الميزانية")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "ميزانية سنوية"
-        verbose_name_plural = "الميزانيات السنوية"
+        verbose_name = "مخطط تقديري سنوي"
+        verbose_name_plural = "المخططات التقديرية السنوية"
         unique_together = ('year', 'sector', 'authority')
 
     def __str__(self):
-        return f"ميزانية {self.sector} - {self.year}"
+        return f"المخطط التقديري لـ {self.sector} - {self.year} ({self.get_status_display()})"
+
+    @property
+    def total_planned_amount(self):
+        """Total estimated value of all projects in this plan."""
+        from django.db.models import Sum
+        total = self.planned_projects.aggregate(Sum('estimated_value'))['estimated_value__sum']
+        return total or 0
+
+    @property
+    def total_committed_amount(self):
+        """Total value of projects converted to actual tenders."""
+        from django.db.models import Sum
+        committed = self.planned_projects.filter(is_launched=True).aggregate(Sum('estimated_value'))['estimated_value__sum']
+        return committed or 0
+
+    @property
+    def remaining_budget(self):
+        """Remaining unallocated budget."""
+        return float(self.total_budget) - float(self.total_planned_amount)
+
+    @property
+    def consumption_percentage(self):
+        """Budget consumption percentage."""
+        if not self.total_budget or self.total_budget <= 0:
+            return 0
+        return round((float(self.total_committed_amount) / float(self.total_budget)) * 100, 1)
 
 class PlannedProject(models.Model):
-    title = models.CharField(max_length=255, verbose_name="اسم المشروع المبرمج")
-    budget = models.ForeignKey(AnnualBudget, on_delete=models.CASCADE, related_name='planned_projects', verbose_name="الميزانية المرتبطة")
-    estimated_value = models.DecimalField(
-        max_digits=12, decimal_places=2, 
-        validators=[MinValueValidator(0.01)],
-        verbose_name="القيمة التقديرية (دج)"
+    NATURE_CHOICES = (
+        ('works', 'أشغال (Travaux)'),
+        ('supplies', 'لوازم وتجهيزات (Fournitures)'),
+        ('services', 'خدمات (Services)'),
+        ('studies', 'دراسات واستشارات (Études)'),
     )
-    expected_launch_date = models.DateField(verbose_name="تاريخ الإطلاق المتوقع", null=True, blank=True)
-    is_launched = models.BooleanField(default=False, verbose_name="تم الإطلاق (تحول إلى صفقة)")
+    PROCEDURE_CHOICES = (
+        ('open', 'طلب العروض المفتوح (Appel d\'offres ouvert)'),
+        ('minimum_capacity', 'طلب العروض مع اشتراط قدرات دنيا (Capacités minimales)'),
+        ('restricted', 'طلب العروض المحدود (Appel d\'offres restreint)'),
+        ('contest', 'المسابقة (Concours)'),
+        ('negotiation', 'التفاوض / التراضي (Procédure négociée / Gré à gré)'),
+        ('consultation', 'استشارة بسيطة (Consultation)'),
+    )
+    QUARTER_CHOICES = (
+        (1, 'الثلاثي الأول (Q1 - جانفي/مارس)'),
+        (2, 'الثلاثي الثاني (Q2 - أفريل/جوان)'),
+        (3, 'الثلاثي الثالث (Q3 - جويلية/سبتمبر)'),
+        (4, 'الثلاثي الرابع (Q4 - أكتوبر/ديسمبر)'),
+    )
+
+    budget = models.ForeignKey(AnnualBudget, on_delete=models.CASCADE, related_name='planned_projects', verbose_name="المخطط السنوي المرتبط")
+    operation_code = models.CharField(max_length=100, blank=True, null=True, verbose_name="رقم العملية الميزانياتية (Code Opération)")
+    ap_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="رقم رخصة البرنامج (Numéro AP)")
+    title = models.CharField(max_length=255, verbose_name="موضوع الحاجة / المشروع المبرمج")
+    procurement_nature = models.CharField(max_length=50, choices=NATURE_CHOICES, default='works', verbose_name="طبيعة الحاجة")
+    planned_procedure = models.CharField(max_length=50, choices=PROCEDURE_CHOICES, default='open', verbose_name="الإجراء التقديري المزمع")
+    estimated_value = models.DecimalField(
+        max_digits=15, decimal_places=2, 
+        validators=[MinValueValidator(0.01)],
+        verbose_name="القيمة التقديرية للحاجة (دج)"
+    )
+    estimated_quarter = models.PositiveSmallIntegerField(choices=QUARTER_CHOICES, default=1, verbose_name="الثلاثي التقديري للإطلاق")
+    expected_launch_date = models.DateField(verbose_name="تاريخ الإطلاق التقديري", null=True, blank=True)
+    is_launched = models.BooleanField(default=False, verbose_name="تم التحويل إلى صفقة فعلية")
     tender = models.ForeignKey('Tender', on_delete=models.SET_NULL, null=True, blank=True, related_name='from_planned_project', verbose_name="الصفقة الفعلية المرتبطة")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "مشروع مبرمج"
-        verbose_name_plural = "المشاريع المبرمجة"
+        verbose_name = "عملية / مشروع مبرمج"
+        verbose_name_plural = "العمليات والمشاريع المبرمجة"
+        ordering = ['estimated_quarter', '-estimated_value']
 
     def __str__(self):
-        return self.title
+        return f"{self.operation_code or 'PROJ'} - {self.title} ({self.estimated_value} دج)"
 
 class ActiveManager(models.Manager):
     def get_queryset(self):
@@ -89,13 +162,15 @@ class Tender(models.Model):
     )
     wilaya = models.CharField(max_length=100, blank=True, null=True, verbose_name="الولاية")
     sector = models.CharField(max_length=255, blank=True, null=True, verbose_name="قطاع النشاط")
-    deadline = models.DateField(verbose_name="آخر أجل للتقديم")
-    document = models.FileField(upload_to='tenders/documents/', null=True, blank=True, verbose_name="دفتر الشروط")
+    deadline = models.DateTimeField(verbose_name="آخر أجل للتقديم")
+    document = models.FileField(upload_to='tenders/documents/', null=True, blank=True, verbose_name="دفتر الشروط", validators=[validate_file_mimetype, validate_file_size])
     document_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="رسوم سحب دفتر الشروط (دج)")
     tender_type = models.CharField(max_length=50, choices=TENDER_TYPES, default='open', verbose_name="نوع الصفقة")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', verbose_name="الحالة")
     is_bids_opened = models.BooleanField(default=False, verbose_name="تم فتح العروض")
     ai_cahier_result = models.JSONField(null=True, blank=True, verbose_name="نتيجة دفتر الشروط AI")
+    ai_executive_summary = models.TextField(null=True, blank=True, verbose_name="ملخص تنفيذي (AI)")
+    is_frozen = models.BooleanField(default=False, verbose_name="مجمدة (توقيف احترازي)")
     is_deleted = models.BooleanField(default=False, verbose_name="محذوف؟")
     deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -109,6 +184,10 @@ class Tender(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('procurement:tender_detail', args=[str(self.id)])
+
     def soft_delete(self):
         from django.utils import timezone
         self.is_deleted = True
@@ -118,7 +197,7 @@ class Tender(models.Model):
     @property
     def is_deadline_passed(self):
         from django.utils import timezone
-        return timezone.now().date() > self.deadline
+        return timezone.now() > self.deadline
 
     class Meta:
         verbose_name = "صفقة"
@@ -134,9 +213,11 @@ from apps.procurement.validators import validate_file_mimetype
 import uuid
 import os
 
+from .validators import validate_file_mimetype, validate_file_size
+
 def secure_upload_path(instance, filename):
-    ext = filename.split('.')[-1]
-    filename = f"{uuid.uuid4().hex}.{ext}"
+    ext = os.path.splitext(filename)[1]
+    filename = f"{uuid.uuid4().hex}{ext}"
     return os.path.join('bids', 'secure', filename)
 
 class Bid(models.Model):
@@ -274,14 +355,30 @@ class SupplierRating(models.Model):
         return f"تقييم {self.supplier_name} - {self.rating} نجوم"
 
 class DocumentPayment(models.Model):
+    PAYMENT_METHOD_CHOICES = (
+        ('cib', 'البطاقة البنكية CIB (SATIM)'),
+        ('edahabia', 'البطاقة الذهبية (بريد الجزائر)'),
+    )
+    STATUS_CHOICES = (
+        ('initialized', 'قيد التهيئة'),
+        ('pending', 'قيد المعالجة البنكية'),
+        ('completed', 'مدفوع ومؤكد بنجاح'),
+        ('failed', 'فشلت المعاملة'),
+        ('refunded', 'مسترجع'),
+    )
+
     tender = models.ForeignKey(Tender, on_delete=models.CASCADE, related_name='payments', verbose_name="الصفقة")
     supplier = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='document_payments', verbose_name="المتعامل")
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="المبلغ المدفوع (دج)")
-    transaction_id = models.CharField(max_length=100, unique=True, verbose_name="رقم العملية")
-    paid_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الدفع")
+    transaction_id = models.CharField(max_length=100, unique=True, verbose_name="رقم العملية البنكية (Order ID)")
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='edahabia', verbose_name="وسيلة الدفع")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='completed', verbose_name="حالة المعاملة")
+    approval_code = models.CharField(max_length=50, blank=True, null=True, verbose_name="رمز الموافقة البنكية (Approval Code)")
+    receipt_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="رقم الوصل المحاسبي الرسمي")
+    paid_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ وتوقيت الدفع")
 
     def __str__(self):
-        return f"دفع {self.supplier.full_name} للصفقة {self.tender.title}"
+        return f"دفع {self.supplier.full_name or self.supplier.email} للصفقة {self.tender.title} - ({self.get_status_display()})"
 
     class Meta:
         verbose_name = "دفع دفتر الشروط"
@@ -362,3 +459,198 @@ class BidOpeningCommittee(models.Model):
                 raise ValidationError("لا يمكن تعديل محضر الفتح بعد اعتماده نهائياً.")
         super().save(*args, **kwargs)
 
+
+class Award(models.Model):
+    AWARD_STATUS_CHOICES = (
+        ('draft', 'مسودة'),
+        ('proposed', 'مقترح'),
+        ('under_review', 'قيد المراجعة'),
+        ('approved', 'معتمد'),
+        ('rejected', 'مرفوض'),
+        ('cancelled', 'ملغى'),
+    )
+
+    tender = models.OneToOneField(Tender, on_delete=models.CASCADE, related_name='award', verbose_name="الصفقة")
+    winning_bid = models.OneToOneField(Bid, on_delete=models.CASCADE, related_name='award', verbose_name="العرض الفائز")
+    awarded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='awards_made', verbose_name="مسؤول الإسناد")
+    awarded_at = models.DateTimeField(null=True, blank=True, verbose_name="تاريخ الإسناد")
+    status = models.CharField(max_length=20, choices=AWARD_STATUS_CHOICES, default='pending', verbose_name="الحالة")
+    awarded_amount = models.DecimalField(max_digits=15, decimal_places=2, verbose_name="مبلغ الإسناد (دج)")
+    decision_reference = models.CharField(max_length=100, unique=True, verbose_name="رقم قرار المنح")
+    decision_document = models.FileField(upload_to='awards/decisions/', null=True, blank=True, verbose_name="وثيقة قرار المنح")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "إسناد"
+        verbose_name_plural = "الإسنادات"
+        ordering = ['-created_at']
+        permissions = [
+            ("create_award_recommendation", "Can create award recommendation"),
+            ("approve_award", "Can approve award"),
+            ("reject_award", "Can reject award"),
+            ("cancel_award", "Can cancel award"),
+        ]
+
+    def __str__(self):
+        return f"إسناد {self.decision_reference} للصفقة {self.tender.title}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        # 1. العرض الفائز يجب أن ينتمي إلى الصفقة نفسها
+        if self.winning_bid and self.tender and self.winning_bid.tender != self.tender:
+            raise ValidationError({'winning_bid': "العرض الفائز يجب أن يكون مقدماً ضمن نفس الصفقة المحددة."})
+        
+        # 2. لا يمكن إسناد صفقة ملغاة أو غير مؤهلة
+        if self.tender and self.tender.status in ['canceled', 'draft']:
+            raise ValidationError({'tender': "لا يمكن إسناد صفقة في حالة مسودة أو ملغاة."})
+        
+        super().clean()
+
+
+class Contract(models.Model):
+    CONTRACT_STATUS_CHOICES = (
+        ('draft', 'مسودة'),
+        ('pending_signature', 'قيد التوقيع'),
+        ('active', 'قيد التنفيذ'),
+        ('suspended', 'مُعلّق'),
+        ('completed', 'مكتمل'),
+        ('terminated', 'مفسوخ'),
+    )
+
+    award = models.OneToOneField(Award, on_delete=models.CASCADE, related_name='contract', verbose_name="الإسناد")
+    contract_number = models.CharField(max_length=100, unique=True, verbose_name="رقم العقد")
+    supplier = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='contracts_as_supplier', verbose_name="المورد (المتعامل)")
+    authority = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='contracts_as_authority', verbose_name="المصلحة المتعاقدة")
+    title = models.CharField(max_length=255, verbose_name="عنوان العقد")
+    status = models.CharField(max_length=20, choices=CONTRACT_STATUS_CHOICES, default='draft', verbose_name="الحالة")
+    
+    signed_at = models.DateTimeField(null=True, blank=True, verbose_name="تاريخ التوقيع")
+    start_date = models.DateField(null=True, blank=True, verbose_name="تاريخ البداية")
+    end_date = models.DateField(null=True, blank=True, verbose_name="تاريخ النهاية")
+    
+    total_value = models.DecimalField(max_digits=15, decimal_places=2, verbose_name="القيمة الإجمالية")
+    currency = models.CharField(max_length=10, default='DZD', verbose_name="العملة")
+    guarantee_amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name="مبلغ الضمان")
+    
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='contracts_created', verbose_name="مُنشئ العقد")
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='contracts_approved', verbose_name="مُعتمد العقد")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "عقد"
+        verbose_name_plural = "العقود"
+        ordering = ['-created_at']
+        permissions = [
+            ("approve_contract", "Can approve contract"),
+            ("terminate_contract", "Can terminate contract"),
+        ]
+
+    def __str__(self):
+        return f"عقد {self.contract_number} - {self.title}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            raise ValidationError({'end_date': "تاريخ النهاية لا يمكن أن يكون قبل تاريخ البداية."})
+            
+        if hasattr(self, 'award') and self.award:
+            if hasattr(self, 'supplier') and self.supplier != self.award.winning_bid.supplier:
+                raise ValidationError({'supplier': "المورد في العقد يجب أن يكون نفسه الفائز في الإسناد."})
+            if hasattr(self, 'authority') and self.authority != self.award.tender.authority:
+                raise ValidationError({'authority': "المصلحة المتعاقدة في العقد يجب أن تكون نفس المصلحة صاحبة الصفقة."})
+        super().clean()
+
+
+class ContractAmendment(models.Model):
+    AMENDMENT_TYPES = (
+        ('value', 'تعديل قيمة'),
+        ('duration', 'تمديد آجال'),
+        ('both', 'تعديل قيمة وتمديد آجال'),
+        ('other', 'أخرى'),
+    )
+    
+    AMENDMENT_STATUS = (
+        ('draft', 'مسودة'),
+        ('submitted', 'مُقدم'),
+        ('under_review', 'قيد المراجعة'),
+        ('approved', 'معتمد'),
+        ('rejected', 'مرفوض'),
+        ('cancelled', 'ملغى'),
+    )
+
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='amendments', verbose_name="العقد الأساسي")
+    amendment_number = models.CharField(max_length=50, verbose_name="رقم الملحق")
+    amendment_type = models.CharField(max_length=20, choices=AMENDMENT_TYPES, verbose_name="نوع الملحق")
+    reason = models.TextField(verbose_name="سبب التعديل")
+    
+    previous_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name="القيمة السابقة")
+    new_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name="القيمة الجديدة")
+    
+    previous_end_date = models.DateField(null=True, blank=True, verbose_name="تاريخ النهاية السابق")
+    new_end_date = models.DateField(null=True, blank=True, verbose_name="تاريخ النهاية الجديد")
+    
+    status = models.CharField(max_length=20, choices=AMENDMENT_STATUS, default='draft', verbose_name="الحالة")
+    
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='amendments_submitted', verbose_name="مُقدم الطلب")
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name='amendments_approved', verbose_name="المُعتمد")
+    approved_at = models.DateTimeField(null=True, blank=True, verbose_name="تاريخ الاعتماد")
+    
+    decision_document = models.FileField(upload_to='contracts/amendments/', null=True, blank=True, verbose_name="وثيقة الملحق")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "ملحق عقد"
+        verbose_name_plural = "ملاحق العقود"
+        ordering = ['-created_at']
+        unique_together = ('contract', 'amendment_number')
+        permissions = [
+            ("approve_contract_amendment", "Can approve contract amendment"),
+            ("reject_contract_amendment", "Can reject contract amendment"),
+        ]
+
+    def __str__(self):
+        return f"ملحق رقم {self.amendment_number} للعقد {self.contract.contract_number}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.amendment_type in ['value', 'both'] and not self.new_value:
+            raise ValidationError({'new_value': "يجب تحديد القيمة الجديدة."})
+        if self.amendment_type in ['duration', 'both'] and not self.new_end_date:
+            raise ValidationError({'new_end_date': "يجب تحديد تاريخ النهاية الجديد."})
+        super().clean()
+
+
+class ProcurementAuditLog(models.Model):
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    actor_role = models.CharField(max_length=50)
+    action = models.CharField(max_length=255)
+    entity_type = models.CharField(max_length=100)
+    entity_id = models.IntegerField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    result = models.CharField(max_length=50, default='SUCCESS')
+    safe_metadata = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.action} on {self.entity_type} {self.entity_id} by {self.actor}"
+
+    @classmethod
+    def log_action(cls, user, action, resource_type, resource_id, details=None, ip_address=None, result='SUCCESS'):
+        """Convenience method to log institutional audit events."""
+        role = getattr(user, 'role', 'anonymous') if user and user.is_authenticated else 'system'
+        return cls.objects.create(
+            actor=user if user and user.is_authenticated else None,
+            actor_role=role,
+            action=action,
+            entity_type=resource_type,
+            entity_id=resource_id or 0,
+            result=result,
+            safe_metadata={
+                'details': details or {},
+                'ip_address': ip_address or '127.0.0.1'
+            }
+        )

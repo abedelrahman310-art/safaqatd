@@ -1,0 +1,79 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}الدعم والمساعدة الإدارية والرقابية | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_central_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #f4f6f9; font-family: 'Cairo', sans-serif;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-headset"></i> قنوات الاتصال والمساندة الإجرائية
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">الدعم والمساعدة والمفتشية العامة</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">قنوات الاستفسارات القانونية، التبليغ عن النزاعات، والدعم التقني للأختام المشفرة.</p>
+        </div>
+    </div>
+
+    <!-- Channels Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        {% for channel in channels %}
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.75rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04); display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div style="width: 50px; height: 50px; border-radius: 12px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 1.25rem;">
+                    <i class="fas fa-landmark-flag"></i>
+                </div>
+                <h3 style="margin: 0 0 0.5rem 0; color: #090d16; font-size: 1.2rem; font-weight: 800;">{{ channel.name }}</h3>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.25rem;">{{ channel.desc }}</p>
+            </div>
+            <div style="border-top: 1px dashed #e2e8f0; padding-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="color: #64748b; font-size: 0.9rem;"><i class="fas fa-phone text-sky-600"></i> الهاتف:</span>
+                    <strong style="color: #090d16; direction: ltr;">{{ channel.phone }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #64748b; font-size: 0.9rem;"><i class="fas fa-envelope text-sky-600"></i> البريد:</span>
+                    <strong style="color: #0284c7; direction: ltr; font-size: 0.9rem;">{{ channel.email }}</strong>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Contact Form Card -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 2rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <h3 style="color: #090d16; margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 800;">
+            <i class="fas fa-paper-plane" style="color: #0284c7;"></i> رفع طلب توجيه أو استفسار رقابي
+        </h3>
+        <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem;">يتم توجيه الاستفسار مباشرة إلى الهيئة المختصة وتوثيقه في السجل الإداري.</p>
+
+        <form onsubmit="event.preventDefault(); alert('تم إرسال الطلب الرقابي وتسجيله بالمرجع الداخلي.'); this.reset();" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+            <div>
+                <label style="display: block; color: #1e293b; font-weight: 700; margin-bottom: 0.4rem; font-size: 0.9rem;">موضوع الاستفسار / الإبلاغ</label>
+                <input type="text" required placeholder="مثال: استفسار حول شرط تقييدي في صفقة #104" style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #0f172a; font-family: 'Cairo', sans-serif;">
+            </div>
+            <div>
+                <label style="display: block; color: #1e293b; font-weight: 700; margin-bottom: 0.4rem; font-size: 0.9rem;">درجة الأولوية الرقابية</label>
+                <select style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #0f172a; font-family: 'Cairo', sans-serif;">
+                    <option>استعجالي (شبهة عدم مطابقة قبل فتح الأظرفة)</option>
+                    <option>عادي (استفسار قانوني)</option>
+                    <option>متابعة طعن إداري</option>
+                </select>
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; color: #1e293b; font-weight: 700; margin-bottom: 0.4rem; font-size: 0.9rem;">تفاصيل الطلب أو الوقائع</label>
+                <textarea rows="4" required placeholder="اكتب التفاصيل والمراجع المعنية..." style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #0f172a; font-family: 'Cairo', sans-serif;"></textarea>
+            </div>
+            <div style="grid-column: 1 / -1; text-align: left;">
+                <button type="submit" style="padding: 0.75rem 2rem; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                    إرسال الطلب الرقابي <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

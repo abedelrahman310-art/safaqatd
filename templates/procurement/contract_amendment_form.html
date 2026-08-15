@@ -1,0 +1,75 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 text-gray-800">إضافة ملحق للعقد رقم: {{ contract.contract_number }}</h2>
+        <a href="{% url 'procurement:contract_detail' contract.pk %}" class="btn btn-outline-secondary">إلغاء</a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-info">
+                    <h6 class="m-0 font-weight-bold text-white">بيانات الملحق</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning small">
+                        <strong>تنبيه:</strong> سيتم إرسال هذا الملحق للمراجعة والاعتماد. يُرجى إرفاق الوثيقة القانونية المبررة (إن وجدت).
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% if form.errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">رقم الملحق</label>
+                                {{ form.amendment_number }}
+                                <div class="text-danger small">{{ form.amendment_number.errors }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">نوع الملحق</label>
+                                {{ form.amendment_type }}
+                                <div class="text-danger small">{{ form.amendment_type.errors }}</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">سبب التعديل</label>
+                            {{ form.reason }}
+                            <div class="text-danger small">{{ form.reason.errors }}</div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">القيمة الجديدة (إذا كان ملحقاً مالياً)</label>
+                                {{ form.new_value }}
+                                <div class="text-danger small">{{ form.new_value.errors }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">تاريخ النهاية الجديد (إذا كان تمديداً للأجل)</label>
+                                {{ form.new_end_date }}
+                                <div class="text-danger small">{{ form.new_end_date.errors }}</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">الوثيقة القانونية الداعمة للملحق</label>
+                            {{ form.decision_document }}
+                            <div class="text-danger small">{{ form.decision_document.errors }}</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-info text-white w-100">
+                            <i class="fas fa-paper-plane"></i> إرسال الملحق للاعتماد
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

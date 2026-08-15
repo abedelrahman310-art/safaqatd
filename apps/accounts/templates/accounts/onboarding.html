@@ -1,0 +1,178 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}التهيئة الذكية وبناء الملف{% endblock %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0 mt-5" style="border-radius: 12px; overflow: hidden;">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-robot text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="fw-bold" style="color: var(--dz-navy);">بناء بصمتك المهنية بالذكاء الاصطناعي</h4>
+                <p class="text-muted">ارفع سجلك التجاري، وسيقوم نظامنا باستخراج قدراتك ومؤهلاتك تلقائياً لترشيحك لأفضل الصفقات.</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data" id="onboardingForm">
+                    {% csrf_token %}
+                    
+                    <div class="upload-area mb-4" id="uploadArea">
+                        <input type="file" name="commercial_register_doc" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" required style="display: none;">
+                        <label for="fileInput" class="upload-label">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <h5 class="mt-2">اضغط لرفع السجل التجاري</h5>
+                            <span class="text-muted small">أو اسحب وأفلت الملف هنا (PDF, JPG)</span>
+                        </label>
+                        <div id="fileInfo" class="mt-3 text-center" style="display: none;">
+                            <span class="badge bg-success p-2">
+                                <i class="fas fa-check-circle me-1"></i> <span id="fileName"></span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- AI Simulation Loader -->
+                    <div id="aiLoader" class="text-center mb-4" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">جاري التحليل...</span>
+                        </div>
+                        <p class="mt-2 text-muted fw-bold ai-text-animation">جاري مسح المستند واستخراج البيانات عبر الذكاء الاصطناعي...</p>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="fas fa-magic me-2"></i> بدء التحليل الذكي
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .upload-area {
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 3rem 1.5rem;
+        text-align: center;
+        background-color: #f8fafc;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .upload-area:hover, .upload-area.dragover {
+        border-color: var(--dz-emerald);
+        background-color: #f0fdf4;
+    }
+    .upload-label {
+        cursor: pointer;
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    .upload-icon {
+        font-size: 2.5rem;
+        color: #94a3b8;
+        margin-bottom: 0.5rem;
+        transition: color 0.3s ease;
+    }
+    .upload-area:hover .upload-icon {
+        color: var(--dz-emerald);
+    }
+    .ai-text-animation {
+        background: linear-gradient(90deg, var(--dz-navy), var(--dz-emerald), var(--dz-navy));
+        background-size: 200% auto;
+        color: transparent;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shine 2s linear infinite;
+    }
+    @keyframes shine {
+        to {
+            background-position: 200% center;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const uploadArea = document.getElementById('uploadArea');
+        const onboardingForm = document.getElementById('onboardingForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const aiLoader = document.getElementById('aiLoader');
+
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                fileName.textContent = this.files[0].name;
+                fileInfo.style.display = 'block';
+                uploadArea.style.borderColor = 'var(--dz-emerald)';
+            }
+        });
+
+        // Drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            uploadArea.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            uploadArea.classList.remove('dragover');
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if(files.length > 0) {
+                fileInput.files = files;
+                fileName.textContent = files[0].name;
+                fileInfo.style.display = 'block';
+                uploadArea.style.borderColor = 'var(--dz-emerald)';
+            }
+        }
+
+        // Form submit animation simulation
+        onboardingForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Stop immediate submission
+            
+            if(!fileInput.files || fileInput.files.length === 0) {
+                alert('الرجاء رفع الملف أولاً');
+                return;
+            }
+
+            // Show loader, hide upload area
+            uploadArea.style.display = 'none';
+            submitBtn.style.display = 'none';
+            aiLoader.style.display = 'block';
+
+            // Simulate AI processing delay (2 seconds) then submit actual form
+            setTimeout(() => {
+                onboardingForm.submit();
+            }, 2500);
+        });
+    });
+</script>
+{% endblock %}

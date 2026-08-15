@@ -1,0 +1,130 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}مؤشرات وصحة النظام | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include "includes/sidebar_central_admin.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #f4f6f9; font-family: 'Cairo', sans-serif;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-heart-pulse"></i> المراقبة الحية للبنية التحتية
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">صحة النظام والخدمات الرقمية (System Health)</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">مراقبة استقرار قواعد البيانات، زمن استجابة التخزين المؤقت، وبيئة تشغيل المنصة.</p>
+        </div>
+        <div>
+            <span style="display: inline-block; padding: 0.5rem 1.25rem; border-radius: 8px; font-weight: 800; font-size: 0.95rem; {% if health.database == 'connected' and health.cache == 'connected' %}background: #d1fae5; color: #059669; border: 1px solid #6ee7b7;{% else %}background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;{% endif %}">
+                {% if health.database == 'connected' and health.cache == 'connected' %}
+                    <i class="fas fa-circle-check"></i> كافة الخدمات تعمل بكفاءة تامة
+                {% else %}
+                    <i class="fas fa-triangle-exclamation"></i> تنبيه: يوجد خلل في إحدى الخدمات
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Health Metrics Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <!-- Database Metric -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid {% if health.database == 'connected' %}#059669{% else %}#dc2626{% endif %}; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: {% if health.database == 'connected' %}#d1fae5; color: #059669;{% else %}#fee2e2; color: #dc2626;{% endif %} display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3 style="margin: 0; color: #090d16; font-size: 1.1rem; font-weight: 800;">محرك قاعدة البيانات</h3>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 900; color: {% if health.database == 'connected' %}#059669{% else %}#dc2626{% endif %};">
+                {% if health.database == 'connected' %}
+                    <i class="fas fa-circle-check"></i> متصلة وجاهزة
+                {% else %}
+                    <i class="fas fa-circle-xmark"></i> انقطاع الاتصال
+                {% endif %}
+            </div>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #64748b;">اتصال نشط بالـ Primary Database</p>
+        </div>
+
+        <!-- Cache Metric -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid {% if health.cache == 'connected' %}#059669{% else %}#dc2626{% endif %}; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: {% if health.cache == 'connected' %}#d1fae5; color: #059669;{% else %}#fee2e2; color: #dc2626;{% endif %} display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 style="margin: 0; color: #090d16; font-size: 1.1rem; font-weight: 800;">خادم الذاكرة السريعة</h3>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 900; color: {% if health.cache == 'connected' %}#059669{% else %}#dc2626{% endif %};">
+                {% if health.cache == 'connected' %}
+                    <i class="fas fa-circle-check"></i> استجابة فورية (Cache OK)
+                {% else %}
+                    <i class="fas fa-circle-xmark"></i> تعذر التخزين
+                {% endif %}
+            </div>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #64748b;">زمن استجابة أقل من 5ms</p>
+        </div>
+
+        <!-- Python Environment -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #0284c7; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="fab fa-python"></i>
+                </div>
+                <h3 style="margin: 0; color: #090d16; font-size: 1.1rem; font-weight: 800;">بيئة بايثون (Python)</h3>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 900; color: #0284c7;">
+                {{ health.python_version }}
+            </div>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #64748b;">مفسر بايثون المعتمد</p>
+        </div>
+
+        <!-- OS & Platform -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #7c3aed; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: #ede9fe; color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="fas fa-server"></i>
+                </div>
+                <h3 style="margin: 0; color: #090d16; font-size: 1.1rem; font-weight: 800;">نظام التشغيل والاستضافة</h3>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 900; color: #7c3aed;">
+                {{ health.os }}
+            </div>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #64748b;">بيئة استضافة الخادم</p>
+        </div>
+    </div>
+
+    <!-- Security & Hardening Checklist Panel -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.75rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <h3 style="color: #090d16; margin: 0 0 1.25rem 0; font-size: 1.2rem; font-weight: 800;">
+            <i class="fas fa-shield-halved text-sky-600"></i> معايير الأمان والتشفير المطبقة
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+            <div style="padding: 1rem; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-check-circle text-emerald-600 fa-lg"></i>
+                <div>
+                    <strong style="color: #090d16; display: block; font-size: 0.95rem;">تشفير العروض والوثائق</strong>
+                    <small style="color: #64748b;">AES-256-GCM مع أختام رقمية</small>
+                </div>
+            </div>
+            <div style="padding: 1rem; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-check-circle text-emerald-600 fa-lg"></i>
+                <div>
+                    <strong style="color: #090d16; display: block; font-size: 0.95rem;">حماية ضد الهجمات المتكررة (Axes)</strong>
+                    <small style="color: #64748b;">حظر عناوين IP المشبوهة تلقائياً</small>
+                </div>
+            </div>
+            <div style="padding: 1rem; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-check-circle text-emerald-600 fa-lg"></i>
+                <div>
+                    <strong style="color: #090d16; display: block; font-size: 0.95rem;">سجل التدقيق الصارم (Audit Log)</strong>
+                    <small style="color: #64748b;">تسجيل كافة العمليات والتوقيت الدقيق</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

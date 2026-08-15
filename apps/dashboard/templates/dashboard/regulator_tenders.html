@@ -1,0 +1,162 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}سجل الصفقات العمومية الوطنية | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_central_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #f4f6f9; font-family: 'Cairo', sans-serif;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-file-contract"></i> الرقابة والتدقيق المركزي
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">السجل المركزي للصفقات العمومية</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">استعراض وتدقيق جميع الصفقات والاستشارات المطروحة وطنياً وضمان سلامة الإجراءات.</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 800; color: #090d16;">
+                إجمالي الصفقات: <span style="color: #0284c7;">{{ total_tenders_count }}</span>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 800; color: #090d16;">
+                المنشورة: <span style="color: #059669;">{{ active_count }}</span>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #fca5a5; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 800; color: #dc2626;">
+                المجمدة: <span>{{ frozen_count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
+        <form method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 250px;">
+                <input type="text" name="q" value="{{ q }}" placeholder="بحث بعنوان الصفقة، الرقم المرجعي، أو المصلحة المتعاقدة..." style="width: 100%; padding: 0.75rem 1rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a; font-family: 'Cairo', sans-serif;">
+            </div>
+            <div style="min-width: 200px;">
+                <select name="status" style="width: 100%; padding: 0.75rem 1rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a; font-family: 'Cairo', sans-serif;">
+                    <option value="">-- كافة الحالات الإجرائية --</option>
+                    <option value="published" {% if status == 'published' %}selected{% endif %}>منشورة وجارية</option>
+                    <option value="evaluating" {% if status == 'evaluating' %}selected{% endif %}>قيد فتح وتقييم العروض</option>
+                    <option value="awarded" {% if status == 'awarded' %}selected{% endif %}>تمت الترسية المؤقتة</option>
+                    <option value="closed" {% if status == 'closed' %}selected{% endif %}>مغلقة / منتهية</option>
+                </select>
+            </div>
+            <button type="submit" style="padding: 0.75rem 1.5rem; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                <i class="fas fa-search"></i> بحث وتصفية
+            </button>
+            {% if q or status %}
+            <a href="{% url 'dashboard:regulator_tenders' %}" style="padding: 0.75rem 1rem; background: #ffffff; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; text-decoration: none;">إلغاء</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Tenders Table -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الرقم المرجعي</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">موضوع وعنوان الصفقة العمومية</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">المصلحة المتعاقدة</th>
+                        <th style="padding: 1rem; text-align: right; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الميزانية التقديرية</th>
+                        <th style="padding: 1rem; text-align: center; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">العروض المودعة</th>
+                        <th style="padding: 1rem; text-align: center; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الحالة الرقابية</th>
+                        <th style="padding: 1rem; text-align: center; color: #090d16; font-weight: 800; border-bottom: 2px solid #cbd5e1;">الإجراءات الرقابية</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tender in page_obj %}
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 800; color: #0284c7; font-family: monospace;">
+                            #{{ tender.reference_number|default:tender.id }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            <div style="font-weight: 800; color: #090d16; font-size: 1rem;">{{ tender.title }}</div>
+                            <small style="color: #64748b;">تاريخ النشر: {{ tender.created_at|date:"Y-m-d" }} | الأجل: {{ tender.deadline|date:"Y-m-d H:i"|default:"غير محدد" }}</small>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #334155;">
+                            {{ tender.authority.institution_name|default:tender.authority.full_name|default:tender.authority.username }}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 800; color: #0f172a;">
+                            {{ tender.budget|floatformat:2 }} دج
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                            <span style="display: inline-block; padding: 0.3rem 0.7rem; border-radius: 6px; background: #e0f2fe; color: #0369a1; font-weight: 800; font-size: 0.85rem;">
+                                {{ tender.bids.count }} عروض
+                            </span>
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                            {% if tender.is_frozen %}
+                            <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 6px; background: #fee2e2; color: #dc2626; font-weight: 800; font-size: 0.8rem;">
+                                <i class="fas fa-lock"></i> مجمدة رقابياً
+                            </span>
+                            {% elif tender.status == 'published' %}
+                            <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 6px; background: #dbeafe; color: #1d4ed8; font-weight: 700; font-size: 0.8rem;">
+                                منشورة ونشطة
+                            </span>
+                            {% elif tender.status == 'evaluating' %}
+                            <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 6px; background: #fef3c7; color: #b45309; font-weight: 700; font-size: 0.8rem;">
+                                قيد فتح العروض
+                            </span>
+                            {% elif tender.status == 'awarded' %}
+                            <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 6px; background: #d1fae5; color: #047857; font-weight: 700; font-size: 0.8rem;">
+                                تمت الترسية
+                            </span>
+                            {% else %}
+                            <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 6px; background: #f1f5f9; color: #475569; font-weight: 700; font-size: 0.8rem;">
+                                {{ tender.get_status_display }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <a href="{% url 'dashboard:regulator_audit_detail' tender.id %}" style="padding: 0.4rem 0.8rem; background: #ffffff; color: #090d16; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; font-size: 0.8rem; text-decoration: none;" title="تدقيق مسار الصفقة">
+                                    <i class="fas fa-magnifying-glass"></i> تدقيق
+                                </a>
+                                <form method="POST" action="{% url 'dashboard:regulator_freeze_tender' tender.id %}" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من تغيير حالة تجميد هذه الصفقة العمومية؟');">
+                                    {% csrf_token %}
+                                    {% if tender.is_frozen %}
+                                    <button type="submit" style="padding: 0.4rem 0.8rem; background: #d1fae5; color: #059669; border: 1px solid #6ee7b7; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                                        <i class="fas fa-lock-open"></i> رفع التجميد
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" style="padding: 0.4rem 0.8rem; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; font-family: 'Cairo', sans-serif;">
+                                        <i class="fas fa-ban"></i> تجميد
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: #64748b; font-weight: 700;">
+                            <i class="fas fa-file-contract fa-2x" style="display: block; margin-bottom: 0.5rem; opacity: 0.4;"></i>
+                            لا توجد صفقات مطابقة في السجل المركزي.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status }}" style="padding: 0.5rem 1rem; border: 1px solid #cbd5e1; background: #ffffff; color: #090d16; border-radius: 6px; text-decoration: none; font-weight: 700;">السابق</a>
+            {% endif %}
+            <span style="padding: 0.5rem 1rem; background: #0284c7; color: #ffffff; border-radius: 6px; font-weight: 800;">{{ page_obj.number }}</span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status }}" style="padding: 0.5rem 1rem; border: 1px solid #cbd5e1; background: #ffffff; color: #090d16; border-radius: 6px; text-decoration: none; font-weight: 700;">التالي</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

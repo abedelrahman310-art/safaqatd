@@ -1,0 +1,77 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}المساعد الاستشاري القانوني السيادي | صفقات ذكية{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_central_admin.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page" style="padding: 2rem; background-color: #f4f6f9; font-family: 'Cairo', sans-serif;">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+        <div>
+            <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-bottom: 0.5rem;">
+                <i class="fas fa-scale-balanced"></i> المستشار القانوني الرقمي المعتمد (Legal AI Copilot)
+            </div>
+            <h1 style="color: #090d16; font-size: 2.2rem; font-weight: 900; margin: 0;">المساعد القانوني والاستشاري للرقابة المركزية</h1>
+            <p style="color: #475569; font-size: 1rem; margin-top: 0.3rem;">استشارات قانونية فورية مدعومة بالنصوص الصريحة للمرسوم الرئاسي 23-12 وقرارات لجان الصفقات.</p>
+        </div>
+    </div>
+
+    <!-- Search / Question Box -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.75rem; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);">
+        <form method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <input type="text" name="q" value="{{ query_text }}" placeholder="اطرح استفسارك القانوني (مثال: ما هو أجل البت في الطعن؟ أو هل جلسة فتح الأظرفة علنية؟)" style="width: 100%; padding: 0.85rem 1.2rem; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #0f172a; font-size: 1rem; font-family: 'Cairo', sans-serif;">
+            </div>
+            <button type="submit" style="padding: 0.85rem 2rem; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 1rem;">
+                <i class="fas fa-gavel"></i> استشارة قانونية فورية
+            </button>
+        </form>
+
+        <!-- Common Prompts -->
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 0.85rem; color: #64748b; font-weight: 700;">أسئلة شائعة:</span>
+            <a href="?q=ما هي الآجال القانونية لرفع الطعن والبت فيه؟" style="padding: 0.3rem 0.75rem; background: #f1f5f9; border-radius: 6px; font-size: 0.8rem; color: #334155; text-decoration: none; font-weight: 700;">آجال الطعون</a>
+            <a href="?q=هل جلسة فتح الأظرفة علنية أم سرية؟" style="padding: 0.3rem 0.75rem; background: #f1f5f9; border-radius: 6px; font-size: 0.8rem; color: #334155; text-decoration: none; font-weight: 700;">علنية فتح الأظرفة</a>
+            <a href="?q=ما هو الإجراء القانوني عند استلام أقل من 3 عروض؟" style="padding: 0.3rem 0.75rem; background: #f1f5f9; border-radius: 6px; font-size: 0.8rem; color: #334155; text-decoration: none; font-weight: 700;">استلام أقل من 3 عروض</a>
+            <a href="?q=ما هي سلطة الإدارة المركزية في تجميد أو إبطال إجراءات الصفقة؟" style="padding: 0.3rem 0.75rem; background: #f1f5f9; border-radius: 6px; font-size: 0.8rem; color: #334155; text-decoration: none; font-weight: 700;">صلاحيات التجميد الرقابي</a>
+        </div>
+    </div>
+
+    {% if result %}
+    <!-- Answer Output Card -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-right: 5px solid #0284c7; border-radius: 14px; padding: 2rem; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04); margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
+            <div style="font-weight: 800; color: #0284c7; font-size: 1rem;">
+                <i class="fas fa-file-circle-check"></i> السند التشريعي المعتمد: {{ result.reference }}
+            </div>
+            <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 6px; background: #d1fae5; color: #059669; font-weight: 800; font-size: 0.8rem;">
+                درجة الثقة: {{ result.confidence }}
+            </span>
+        </div>
+
+        <h3 style="color: #090d16; font-size: 1.25rem; font-weight: 900; margin: 0 0 1rem 0;">
+            {{ result.question }}
+        </h3>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem;">
+            <p style="margin: 0; color: #1e293b; font-size: 1.05rem; line-height: 1.8; font-weight: 600;">
+                {{ result.answer }}
+            </p>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <small style="color: #64748b; font-weight: 600;">
+                <i class="fas fa-shield"></i> استشارة نظامية مستخرجة آلياً من قاعدة تشريعات الصفقات العمومية.
+            </small>
+            <button onclick="window.print()" style="padding: 0.4rem 0.85rem; background: #ffffff; color: #090d16; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                <i class="fas fa-print"></i> طباعة الرأي القانوني
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

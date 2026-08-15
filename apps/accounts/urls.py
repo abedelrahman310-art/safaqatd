@@ -9,10 +9,13 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('register/supplier/', views.register_supplier_view, name='register_supplier'),
     path('register/authority/', views.register_authority_view, name='register_authority'),
+    path('register/central-admin/', views.register_central_admin_view, name='register_central_admin'),
+    path('register/central_admin/', views.register_central_admin_view, name='register_central_admin_alias'),
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name='profile'),
     path('settings/', views.settings_view, name='settings'),
     path('blacklist/', views.manage_blacklist, name='manage_blacklist'),
+    path('onboarding/', views.onboarding_view, name='onboarding'),
     
     # Password Reset URLs
     path('password_reset/', auth_views.PasswordResetView.as_view(

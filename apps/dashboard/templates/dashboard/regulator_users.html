@@ -1,88 +1,493 @@
 {% extends 'dashboard_base.html' %}
 
-{% block title %}إدارة المستخدمين | صفقات ذكية{% endblock %}
+{% block title %}إدارة المستخدمين وسجل الفاعلين | الإدارة المركزية{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        padding: 1.5rem 2rem;
+        background-color: #f4f6f9;
+        min-height: 100vh;
+        font-family: 'Cairo', sans-serif;
+        color: #090d16;
+    }
+    .inst-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        box-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.04);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.65rem;
+        font-weight: 800;
+        font-size: 0.85rem;
+        color: #64748b;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .tab-btn.active {
+        background: #0284c7;
+        color: #ffffff;
+        border-color: #0284c7;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+    }
+    .tab-btn:hover:not(.active) {
+        background: #f8fafc;
+        color: #090d16;
+        border-color: #cbd5e1;
+    }
+    .count-pill {
+        padding: 0.15rem 0.55rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 900;
+    }
+    .tab-btn.active .count-pill {
+        background: rgba(255, 255, 255, 0.25);
+        color: #ffffff;
+    }
+    .tab-btn:not(.active) .count-pill {
+        background: #f1f5f9;
+        color: #475569;
+    }
+    .search-input {
+        width: 100%;
+        padding: 0.6rem 2.5rem 0.6rem 1rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.65rem;
+        font-size: 0.85rem;
+        color: #090d16;
+        background-color: #ffffff;
+        font-family: 'Cairo', sans-serif;
+    }
+    .search-input:focus {
+        outline: none;
+        border-color: #0284c7;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+    .inst-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        text-align: right;
+        font-size: 0.82rem;
+    }
+    .inst-table th {
+        background-color: #f8fafc;
+        color: #475569;
+        font-weight: 800;
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+    .inst-table td {
+        padding: 0.95rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        color: #090d16;
+        vertical-align: middle;
+    }
+    .inst-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+    .badge-active {
+        background-color: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+    }
+    .badge-banned {
+        background-color: #fff1f2;
+        color: #e11d48;
+        border: 1px solid #fecdd3;
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+    }
+    .btn-action-ban {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 800;
+        border: 1px solid #fecdd3;
+        background: #fff1f2;
+        color: #e11d48;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-action-ban:hover {
+        background: #ffe4e6;
+        border-color: #fda4af;
+    }
+    .btn-action-unban {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 800;
+        border: 1px solid #a7f3d0;
+        background: #ecfdf5;
+        color: #059669;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-action-unban:hover {
+        background: #d1fae5;
+    }
+</style>
+{% endblock %}
 
 {% block sidebar %}
     {% include 'includes/sidebar_central_admin.html' %}
 {% endblock %}
 
 {% block content %}
-<section class="dashboard-page">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h2 style="margin: 0;"><i class="fas fa-users-cog" style="color: var(--accent-primary); margin-left: 0.5rem;"></i> إدارة المستخدمين</h2>
-    </div>
-
+<div class="admin-container">
+    
+    <!-- Messages Notification -->
     {% if messages %}
-    <div style="margin-bottom: 2rem;">
         {% for message in messages %}
-        <div style="padding: 1rem; border-radius: 8px; margin-bottom: 1rem; {% if message.tags == 'success' %}background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success);{% else %}background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger);{% endif %}">
+        <div style="padding: 1rem 1.25rem; border-radius: 0.75rem; margin-bottom: 1.5rem; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.75rem; {% if message.tags == 'success' %}background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;{% else %}background-color: #fff1f2; border: 1px solid #fecdd3; color: #9f1239;{% endif %}" role="alert">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %}"></i>
             {{ message }}
         </div>
         {% endfor %}
+    {% endif %}
+
+    <!-- Breadcrumb & Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 0.35rem;">
+                <i class="fas fa-shield-halved" style="color: #0284c7;"></i>
+                <span>الإدارة المركزية</span>
+                <i class="fas fa-chevron-left" style="font-size: 0.65rem;"></i>
+                <span style="color: #090d16;">السجل الوطني للفاعلين والمستخدمين</span>
+            </div>
+            <h1 style="font-size: 1.6rem; font-weight: 900; color: #090d16; margin: 0; letter-spacing: -0.02em;">
+                إدارة المستخدمين وسجل الفاعلين
+            </h1>
+            <p style="font-size: 0.82rem; color: #64748b; margin-top: 0.35rem; font-weight: 600;">
+                فصل تنظيمي كامل بين المصالح والهيئات المتعاقدة وبين المتعاملين الاقتصاديين مع صلاحيات الرقابة والتحكم.
+            </p>
+        </div>
+
+        <!-- Quick Summary Metrics -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <div class="inst-card" style="padding: 0.75rem 1.25rem; margin-bottom: 0; display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 38px; height: 38px; border-radius: 8px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fas fa-building-columns"></i>
+                </div>
+                <div>
+                    <div style="font-size: 0.7rem; font-weight: 700; color: #64748b;">المصالح المتعاقدة</div>
+                    <div style="font-size: 1.1rem; font-weight: 900; color: #0284c7;">{{ count_authorities }}</div>
+                </div>
+            </div>
+            <div class="inst-card" style="padding: 0.75rem 1.25rem; margin-bottom: 0; display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 38px; height: 38px; border-radius: 8px; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div>
+                    <div style="font-size: 0.7rem; font-weight: 700; color: #64748b;">المتعاملين الاقتصاديين</div>
+                    <div style="font-size: 1.1rem; font-weight: 900; color: #059669;">{{ count_suppliers }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Switcher Bar & Real-Time Filter -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+        
+        <!-- Tabs -->
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <button onclick="switchTab('authorities')" id="tab-btn-authorities" class="tab-btn active">
+                <i class="fas fa-building-columns"></i>
+                <span>المصالح المتعاقدة (الهيئات)</span>
+                <span class="count-pill">{{ count_authorities }}</span>
+            </button>
+            <button onclick="switchTab('suppliers')" id="tab-btn-suppliers" class="tab-btn">
+                <i class="fas fa-briefcase"></i>
+                <span>المتعاملون الاقتصاديون (الشركات)</span>
+                <span class="count-pill">{{ count_suppliers }}</span>
+            </button>
+            {% if count_admins > 0 %}
+            <button onclick="switchTab('admins')" id="tab-btn-admins" class="tab-btn">
+                <i class="fas fa-shield-halved"></i>
+                <span>مستخدمو الإدارة المركزية</span>
+                <span class="count-pill">{{ count_admins }}</span>
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Real-Time Search Box -->
+        <div style="position: relative; min-width: 280px;">
+            <i class="fas fa-search" style="position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
+            <input type="text" id="user-search-input" class="search-input" placeholder="بحث بالاسم، الولاية، السجل، أو البريد..." onkeyup="filterActiveTable()">
+        </div>
+    </div>
+
+    <!-- TAB 1: Contracting Authorities (المصالح المتعاقدة) -->
+    <div id="tab-content-authorities" class="tab-content inst-card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 1rem 1.25rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-building-columns" style="color: #0284c7;"></i>
+                <strong style="font-size: 0.9rem; color: #090d16;">سجل المصالح والإدارات العمومية المتعاقدة</strong>
+            </div>
+            <span style="font-size: 0.75rem; color: #64748b; font-weight: 700;">العدد: {{ count_authorities }} مصلحة</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="inst-table" id="table-authorities">
+                <thead>
+                    <tr>
+                        <th>التسمية الرسمية للمصلحة</th>
+                        <th>القطاع والولاية</th>
+                        <th>المسؤول / الحساب</th>
+                        <th>تاريخ الانضمام</th>
+                        <th>حالة الوصول</th>
+                        <th style="text-align: left;">الإجراءات الرقابية</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for target_user in authorities %}
+                    <tr class="searchable-row" data-search="{{ target_user.institution_name }} {{ target_user.sector }} {{ target_user.wilaya }} {{ target_user.username }} {{ target_user.email }}">
+                        <td>
+                            <strong style="display: block; color: #090d16; font-size: 0.88rem;">{{ target_user.institution_name|default:target_user.username }}</strong>
+                            <span style="font-size: 0.75rem; color: #64748b;">اسم المستخدم: {{ target_user.username }}</span>
+                        </td>
+                        <td>
+                            <span style="display: inline-block; padding: 0.15rem 0.5rem; background: #e0f2fe; color: #0369a1; border-radius: 4px; font-weight: 700; font-size: 0.72rem; margin-bottom: 0.2rem;">
+                                {{ target_user.sector|default:"قطاع عام" }}
+                            </span>
+                            <div style="font-size: 0.75rem; color: #64748b;"><i class="fas fa-location-dot" style="color: #94a3b8;"></i> {{ target_user.wilaya|default:"الجزائر" }}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 700; color: #334155;">{{ target_user.get_full_name|default:"مسؤول معتمد" }}</div>
+                            <span style="font-size: 0.75rem; color: #64748b; direction: ltr; display: inline-block;">{{ target_user.email }}</span>
+                        </td>
+                        <td>
+                            <span style="color: #64748b; font-family: monospace;">{{ target_user.date_joined|date:"Y/m/d" }}</span>
+                        </td>
+                        <td>
+                            {% if target_user.is_active %}
+                                <span class="badge-active"><i class="fas fa-check-circle"></i> مفعل ونشط</span>
+                            {% else %}
+                                <span class="badge-banned"><i class="fas fa-ban"></i> موقوف ومحظور</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: left;">
+                            <form action="{% url 'dashboard:toggle_user_status' target_user.id %}" method="POST" style="margin: 0;" onsubmit="return confirm('تأكيد تغيير حالة وصول هذه المصلحة إلى النظام؟');">
+                                {% csrf_token %}
+                                {% if target_user.is_active %}
+                                    <button type="submit" class="btn-action-ban">
+                                        <i class="fas fa-lock"></i> تعليق الحساب
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn-action-unban">
+                                        <i class="fas fa-unlock"></i> استعادة النشاط
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2.5rem; color: #94a3b8;">
+                            <i class="fas fa-building-columns" style="font-size: 2rem; color: #cbd5e1; display: block; margin-bottom: 0.5rem;"></i>
+                            لا توجد مصالح متعاقدة مسجلة حالياً.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB 2: Economic Operators / Suppliers (المتعاملون الاقتصاديون) -->
+    <div id="tab-content-suppliers" class="tab-content inst-card" style="padding: 0; overflow: hidden; display: none;">
+        <div style="padding: 1rem 1.25rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-briefcase" style="color: #059669;"></i>
+                <strong style="font-size: 0.9rem; color: #090d16;">سجل المتعاملين الاقتصاديين والموردين المعتمدين</strong>
+            </div>
+            <span style="font-size: 0.75rem; color: #64748b; font-weight: 700;">العدد: {{ count_suppliers }} متعامل</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="inst-table" id="table-suppliers">
+                <thead>
+                    <tr>
+                        <th>الشركة / المتعامل الاقتصادي</th>
+                        <th>السجل التجاري (RC) والولاية</th>
+                        <th>البريد والتواصل</th>
+                        <th>تاريخ التسجيل</th>
+                        <th>حالة الحساب</th>
+                        <th style="text-align: left;">الإجراءات الرقابية</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for target_user in suppliers %}
+                    <tr class="searchable-row" data-search="{{ target_user.get_full_name }} {{ target_user.company_type }} {{ target_user.commercial_register }} {{ target_user.wilaya }} {{ target_user.username }} {{ target_user.email }}">
+                        <td>
+                            <strong style="display: block; color: #090d16; font-size: 0.88rem;">{{ target_user.get_full_name|default:target_user.username }}</strong>
+                            <span style="font-size: 0.75rem; color: #64748b;">نوع الكيان: {{ target_user.company_type|default:"مؤسسة اقتصادية" }}</span>
+                        </td>
+                        <td>
+                            <span style="display: inline-block; padding: 0.15rem 0.5rem; background: #ecfdf5; color: #065f46; border-radius: 4px; font-weight: 800; font-family: monospace; font-size: 0.75rem; margin-bottom: 0.2rem;">
+                                RC: {{ target_user.commercial_register|default:"غير مسجل" }}
+                            </span>
+                            <div style="font-size: 0.75rem; color: #64748b;"><i class="fas fa-location-dot" style="color: #94a3b8;"></i> {{ target_user.wilaya|default:"الجزائر" }}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 700; color: #334155;">{{ target_user.username }}</div>
+                            <span style="font-size: 0.75rem; color: #64748b; direction: ltr; display: inline-block;">{{ target_user.email }}</span>
+                        </td>
+                        <td>
+                            <span style="color: #64748b; font-family: monospace;">{{ target_user.date_joined|date:"Y/m/d" }}</span>
+                        </td>
+                        <td>
+                            {% if target_user.is_blacklisted %}
+                                <span class="badge-banned"><i class="fas fa-shield-slash"></i> في القائمة السوداء</span>
+                            {% elif target_user.is_active %}
+                                <span class="badge-active"><i class="fas fa-check-circle"></i> مؤهل ومفعل</span>
+                            {% else %}
+                                <span class="badge-banned"><i class="fas fa-ban"></i> حساب محظور</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: left;">
+                            <form action="{% url 'dashboard:toggle_user_status' target_user.id %}" method="POST" style="margin: 0;" onsubmit="return confirm('تأكيد تعديل حالة وصول هذا المتعامل الاقتصادي؟');">
+                                {% csrf_token %}
+                                {% if target_user.is_active %}
+                                    <button type="submit" class="btn-action-ban">
+                                        <i class="fas fa-ban"></i> حظر المتعامل
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn-action-unban">
+                                        <i class="fas fa-unlock"></i> إلغاء الحظر
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2.5rem; color: #94a3b8;">
+                            <i class="fas fa-briefcase" style="font-size: 2rem; color: #cbd5e1; display: block; margin-bottom: 0.5rem;"></i>
+                            لا يوجد متعاملون اقتصاديون مسجلون حالياً.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB 3: Central Admin Users (الإدارة المركزية) -->
+    {% if count_admins > 0 %}
+    <div id="tab-content-admins" class="tab-content inst-card" style="padding: 0; overflow: hidden; display: none;">
+        <div style="padding: 1rem 1.25rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-shield-halved" style="color: #9333ea;"></i>
+                <strong style="font-size: 0.9rem; color: #090d16;">مستخدمو الإدارة المركزية وسلطة الضبط</strong>
+            </div>
+            <span style="font-size: 0.75rem; color: #64748b; font-weight: 700;">العدد: {{ count_admins }}</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="inst-table" id="table-admins">
+                <thead>
+                    <tr>
+                        <th>الاسم الكامل</th>
+                        <th>اسم المستخدم</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>تاريخ المنح</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for target_user in admins %}
+                    <tr class="searchable-row" data-search="{{ target_user.get_full_name }} {{ target_user.username }} {{ target_user.email }}">
+                        <td>
+                            <strong style="color: #090d16;">{{ target_user.get_full_name|default:"مسؤول مركزي" }}</strong>
+                        </td>
+                        <td>
+                            <span style="font-weight: 700; color: #475569;">{{ target_user.username }}</span>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.75rem; color: #64748b; direction: ltr; display: inline-block;">{{ target_user.email }}</span>
+                        </td>
+                        <td>
+                            <span style="color: #64748b; font-family: monospace;">{{ target_user.date_joined|date:"Y/m/d" }}</span>
+                        </td>
+                        <td>
+                            {% if target_user.is_active %}
+                                <span class="badge-active"><i class="fas fa-check-circle"></i> مفعل</span>
+                            {% else %}
+                                <span class="badge-banned"><i class="fas fa-ban"></i> معطل</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     {% endif %}
 
-    <div style="background: rgba(15, 20, 30, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse; text-align: right;">
-            <thead>
-                <tr style="background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <th style="padding: 1rem; color: var(--text-secondary);">الاسم الكامل</th>
-                    <th style="padding: 1rem; color: var(--text-secondary);">الدور (Role)</th>
-                    <th style="padding: 1rem; color: var(--text-secondary);">تاريخ الانضمام</th>
-                    <th style="padding: 1rem; color: var(--text-secondary);">الحالة</th>
-                    <th style="padding: 1rem; color: var(--text-secondary); text-align: left;">إجراءات (حظر)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for target_user in users %}
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-                    <td style="padding: 1rem;">
-                        <strong>{{ target_user.get_full_name|default:target_user.username }}</strong>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ target_user.email }}</div>
-                    </td>
-                    <td style="padding: 1rem;">
-                        {% if target_user.role == 'supplier' %}
-                            <span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">متعامل</span>
-                        {% elif target_user.role == 'authority' %}
-                            <span style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">مصلحة متعاقدة</span>
-                        {% else %}
-                            <span style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">{{ target_user.role }}</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 1rem; color: var(--text-secondary);">{{ target_user.date_joined|date:"Y/m/d" }}</td>
-                    <td style="padding: 1rem;">
-                        {% if target_user.is_active %}
-                            <span style="color: var(--success);"><i class="fas fa-check-circle"></i> نشط</span>
-                        {% else %}
-                            <span style="color: var(--danger);"><i class="fas fa-ban"></i> محظور</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 1rem; text-align: left;">
-                        {% if perms.accounts.manage_all_users %}
-                        <form action="{% url 'dashboard:toggle_user_status' target_user.id %}" method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من تغيير حالة هذا المستخدم؟');">
-                            {% csrf_token %}
-                            {% if target_user.is_active %}
-                                <button type="submit" class="btn btn-secondary" style="border-color: var(--danger); color: var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                                    <i class="fas fa-lock"></i> حظر
-                                </button>
-                            {% else %}
-                                <button type="submit" class="btn btn-secondary" style="border-color: var(--success); color: var(--success); padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                                    <i class="fas fa-unlock"></i> فك الحظر
-                                </button>
-                            {% endif %}
-                        </form>
-                        {% else %}
-                        <span style="color: var(--text-secondary); font-size: 0.85rem;"><i class="fas fa-ban"></i> غير مصرح</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-secondary);">لا يوجد مستخدمين مسجلين بعد.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+</div>
+
+<script>
+    let currentTab = 'authorities';
+
+    function switchTab(tabName) {
+        currentTab = tabName;
+        
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        // Deactivate all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // Show target tab
+        const targetContent = document.getElementById('tab-content-' + tabName);
+        if (targetContent) targetContent.style.display = 'block';
+        
+        // Activate button
+        const targetBtn = document.getElementById('tab-btn-' + tabName);
+        if (targetBtn) targetBtn.classList.add('active');
+
+        // Re-filter if search input has value
+        filterActiveTable();
+    }
+
+    function filterActiveTable() {
+        const query = document.getElementById('user-search-input').value.toLowerCase().trim();
+        const activeTable = document.getElementById('table-' + currentTab);
+        if (!activeTable) return;
+
+        const rows = activeTable.querySelectorAll('.searchable-row');
+        rows.forEach(row => {
+            const text = (row.getAttribute('data-search') || '').toLowerCase();
+            if (query === '' || text.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
 {% endblock %}

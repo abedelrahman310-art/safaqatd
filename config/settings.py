@@ -10,8 +10,8 @@ env = environ.Env(
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-development-key-default')
-DEBUG = env('DEBUG')
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+DEBUG = env('DEBUG', default=True)
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'testserver', '*'])
 
 
 # Heroku and Render CSRF and Security
@@ -35,8 +35,13 @@ INSTALLED_APPS = [
     'apps.dashboard',
     'apps.procurement',
     'apps.ai',
+    'apps.ai_assistant',
     'apps.analytics',
     'apps.suppliers',
+    'apps.ai_regulator',
+    'apps.ai_authority',
+    'apps.ai_supplier',
+    'apps.system_health',
     'simple_history',
     'corsheaders',
     'axes',
@@ -167,11 +172,14 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 CORS_ALLOW_CREDENTIALS = True
 
 # Security Settings for Production
-if not DEBUG and ('herokuapp.com' in str(ALLOWED_HOSTS) or 'onrender.com' in str(ALLOWED_HOSTS)):
+if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_SECURITY_POLICY = {
         'default-src': ("'self'",),
     }
@@ -239,6 +247,12 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
+        'product_analytics': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
+
 

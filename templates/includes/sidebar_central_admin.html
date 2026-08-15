@@ -1,30 +1,86 @@
 <div class="sidebar-menu">
-    <a href="{% url 'dashboard:regulator' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator' %}active{% endif %}">
-        <i class="fas fa-tachometer-alt"></i> اللوحة المركزية
+    <!-- لوحة القيادة -->
+    <div style="font-size: 0.75rem; color: #bae6fd; padding: 10px 15px 5px; font-weight: 700; text-transform: uppercase; margin-top: 10px;">لوحة القيادة</div>
+    <a href="{% url 'dashboard:regulator' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator' %}page{% else %}false{% endif %}" aria-label="نظرة عامة">
+        <i class="fas fa-chart-pie" aria-hidden="true"></i> <span>نظرة عامة</span>
     </a>
-    <a href="{% url 'analytics:dashboard' %}" class="sidebar-item {% if request.resolver_match.app_name == 'analytics' %}active{% endif %}">
-        <i class="fas fa-chart-line"></i> تحليل البيانات
-    </a>
-    {% if perms.accounts.audit_all_tenders %}
-    <a href="{% url 'dashboard:regulator_audit' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_audit' %}active{% endif %}">
-        <i class="fas fa-search-dollar"></i> الرقابة الشاملة
-    </a>
-    {% endif %}
+
+    <!-- إدارة المنصة -->
     {% if perms.accounts.manage_all_users %}
-    <a href="{% url 'dashboard:regulator_users' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_users' %}active{% endif %}">
-        <i class="fas fa-users-cog"></i> إدارة المستخدمين
+    <div style="font-size: 0.75rem; color: #bae6fd; padding: 10px 15px 5px; font-weight: 700; text-transform: uppercase; margin-top: 10px;">إدارة المنصة</div>
+    <a href="{% url 'dashboard:regulator_users' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_users' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator_users' %}page{% else %}false{% endif %}" aria-label="إدارة المستخدمين">
+        <i class="fas fa-users-cog" aria-hidden="true"></i> <span>إدارة المستخدمين</span>
     </a>
-    <a href="{% url 'dashboard:regulator_roles' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_roles' %}active{% endif %}">
-        <i class="fas fa-user-shield"></i> صلاحيات المنصة
+
+    <a href="{% url 'dashboard:regulator_authorities' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_authorities' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator_authorities' %}page{% else %}false{% endif %}" aria-label="إدارة الجهات">
+        <i class="fas fa-building" aria-hidden="true"></i> <span>إدارة الجهات</span>
+    </a>
+    <a href="{% url 'dashboard:regulator_suppliers' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_suppliers' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator_suppliers' %}page{% else %}false{% endif %}" aria-label="إدارة الموردين">
+        <i class="fas fa-truck-loading" aria-hidden="true"></i> <span>إدارة الموردين</span>
     </a>
     {% endif %}
-    <a href="{% url 'dashboard:regulator_planning' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_planning' %}active{% endif %}">
-        <i class="fas fa-project-diagram"></i> قسم البرمجة والتخطيط
+
+    <!-- المشتريات والرقابة -->
+    {% if perms.accounts.audit_all_tenders %}
+    <div style="font-size: 0.75rem; color: #bae6fd; padding: 10px 15px 5px; font-weight: 700; text-transform: uppercase; margin-top: 10px;">المشتريات والرقابة</div>
+    <a href="{% url 'dashboard:regulator_tenders' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_tenders' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator_tenders' %}page{% else %}false{% endif %}" aria-label="الصفقات المركزية">
+        <i class="fas fa-file-contract" aria-hidden="true"></i> <span>الصفقات المركزية</span>
     </a>
-    <a href="{% url 'accounts:settings' %}" class="sidebar-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
-        <i class="fas fa-cog"></i> الإعدادات
+    <a href="{% url 'dashboard:regulator_audit' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_audit' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator_audit' %}page{% else %}false{% endif %}" aria-label="الرقابة والتنبيهات">
+        <i class="fas fa-bell" aria-hidden="true"></i> <span>الرقابة والتنبيهات</span>
     </a>
-    <a href="{% url 'accounts:logout' %}" class="sidebar-item logout" style="margin-top: auto; color: var(--danger);">
-        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+    <a href="{% url 'dashboard:regulator_audit_log' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_audit_log' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator_audit_log' %}page{% else %}false{% endif %}" aria-label="سجل التدقيق">
+        <i class="fas fa-history" aria-hidden="true"></i> <span>سجل التدقيق</span>
+    </a>
+    {% endif %}
+    {% if perms.accounts.view_central_dashboard %}
+    {% if not perms.accounts.audit_all_tenders %}
+    <div style="font-size: 0.75rem; color: #bae6fd; padding: 10px 15px 5px; font-weight: 700; text-transform: uppercase; margin-top: 10px;">المشتريات والرقابة</div>
+    {% endif %}
+    <a href="{% url 'dashboard:regulator_documents' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_documents' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator_documents' %}page{% else %}false{% endif %}" aria-label="إدارة الوثائق">
+        <i class="fas fa-folder-open" aria-hidden="true"></i> <span>إدارة الوثائق</span>
+    </a>
+    {% endif %}
+
+    <!-- الذكاء الاصطناعي الرقابي -->
+    {% if perms.accounts.audit_all_tenders or perms.accounts.view_central_dashboard %}
+    <div style="font-size: 0.75rem; color: #bae6fd; padding: 10px 15px 5px; font-weight: 700; text-transform: uppercase; margin-top: 10px;">الذكاء الاصطناعي الرقابي</div>
+    <a href="{% url 'ai_regulator:radar_dashboard' %}" class="sidebar-item {% if request.resolver_match.app_name == 'ai_regulator' and request.resolver_match.url_name == 'radar_dashboard' %}active{% endif %}" aria-label="رادار التواطؤ والمخاطر">
+        <i class="fas fa-radar" aria-hidden="true"></i> <span>رادار التواطؤ والمخاطر</span>
+    </a>
+    <a href="{% url 'ai_regulator:rfp_auditor' %}" class="sidebar-item {% if request.resolver_match.app_name == 'ai_regulator' and request.resolver_match.url_name == 'rfp_auditor' %}active{% endif %}" aria-label="فاحص دفاتر الشروط">
+        <i class="fas fa-file-shield" aria-hidden="true"></i> <span>فاحص دفاتر الشروط</span>
+    </a>
+    <a href="{% url 'ai_regulator:legal_copilot' %}" class="sidebar-item {% if request.resolver_match.app_name == 'ai_regulator' and request.resolver_match.url_name == 'legal_copilot' %}active{% endif %}" aria-label="المستشار القانوني">
+        <i class="fas fa-scale-balanced" aria-hidden="true"></i> <span>المستشار القانوني</span>
+    </a>
+    {% endif %}
+
+    <!-- التقارير والنظام -->
+    {% if perms.accounts.view_central_dashboard %}
+    <div style="font-size: 0.75rem; color: #bae6fd; padding: 10px 15px 5px; font-weight: 700; text-transform: uppercase; margin-top: 10px;">التقارير والنظام</div>
+    <a href="{% url 'analytics:dashboard' %}" class="sidebar-item {% if request.resolver_match.app_name == 'analytics' %}active{% endif %}" aria-current="{% if request.resolver_match.app_name == 'analytics' %}page{% else %}false{% endif %}" aria-label="التقارير والتحليلات">
+        <i class="fas fa-chart-bar" aria-hidden="true"></i> <span>التقارير والتحليلات</span>
+    </a>
+    <a href="{% url 'accounts:settings' %}" class="sidebar-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'settings' %}page{% else %}false{% endif %}" aria-label="الإعدادات المرجعية">
+        <i class="fas fa-cogs" aria-hidden="true"></i> <span>الإعدادات المرجعية</span>
+    </a>
+    {% endif %}
+    {% if perms.accounts.manage_all_users or perms.accounts.view_central_dashboard %}
+    <a href="{% url 'system_health:dashboard' %}" class="sidebar-item {% if request.resolver_match.app_name == 'system_health' %}active{% endif %}" aria-current="{% if request.resolver_match.app_name == 'system_health' %}page{% else %}false{% endif %}" aria-label="غرفة صحة وأداء المنصة">
+        <i class="fas fa-heartbeat text-rose-400" aria-hidden="true"></i> <span>صحة النظام السيادي</span>
+    </a>
+    {% endif %}
+    {% if perms.accounts.view_central_dashboard %}
+    <a href="{% url 'dashboard:regulator_notifications' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_notifications' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator_notifications' %}page{% else %}false{% endif %}" aria-label="الإشعارات">
+        <i class="fas fa-flag" aria-hidden="true"></i> <span>الإشعارات</span>
+    </a>
+    <a href="{% url 'dashboard:regulator_support' %}" class="sidebar-item {% if request.resolver_match.url_name == 'regulator_support' %}active{% endif %}" aria-current="{% if request.resolver_match.url_name == 'regulator_support' %}page{% else %}false{% endif %}" aria-label="الدعم والمساعدة">
+        <i class="fas fa-headset" aria-hidden="true"></i> <span>الدعم والمساعدة</span>
+    </a>
+    {% endif %}
+
+    <a href="{% url 'accounts:logout' %}" class="sidebar-item logout" style="margin-top: auto; color: var(--danger);" aria-label="تسجيل الخروج">
+        <i class="fas fa-sign-out-alt" aria-hidden="true"></i> <span>تسجيل الخروج</span>
     </a>
 </div>

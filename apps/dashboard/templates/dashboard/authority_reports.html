@@ -9,7 +9,7 @@
 {% block content %}
 <div style="padding: 2rem;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h2 style="margin: 0; color: var(--text-primary);"><i class="fas fa-chart-pie" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> التقارير والإحصائيات</h2>
+        <h2 style="margin: 0; color: var(--text-primary);"><i class="fas fa-chart-pie" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> تقارير أداء المصلحة المتعاقدة</h2>
         <button class="btn btn-secondary" onclick="window.print()" style="font-size: 0.85rem;"><i class="fas fa-print"></i> طباعة التقرير</button>
     </div>
 
@@ -50,16 +50,48 @@
                 <i class="fas fa-users fa-2x" style="color: #8b5cf6;"></i>
             </div>
             <div>
-                <h3 style="margin: 0; font-size: 1.8rem; color: var(--text-primary);">{{ avg_bids }}</h3>
-                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">متوسط المشاركات لكل صفقة</p>
+                <h3 style="margin: 0; font-size: 1.8rem; color: var(--text-primary);">{{ total_bids }}</h3>
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">إجمالي العروض المستلمة</p>
+            </div>
+        </div>
+        
+        <div class="stat-card" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 1.5rem; display: flex; align-items: center;">
+            <div style="background: rgba(239, 68, 68, 0.2); width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-left: 1rem;">
+                <i class="fas fa-exclamation-triangle fa-2x" style="color: #ef4444;"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 1.8rem; color: var(--text-primary);">{{ overdue_tenders_count }}</h3>
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">صفقات متأخرة المعالجة</p>
+            </div>
+        </div>
+
+        <div class="stat-card" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 1.5rem; display: flex; align-items: center;">
+            <div style="background: rgba(59, 130, 246, 0.2); width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-left: 1rem;">
+                <i class="fas fa-clock fa-2x" style="color: var(--accent-primary);"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 1.8rem; color: var(--text-primary);">{{ avg_processing_days }}</h3>
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">متوسط أيام الإنجاز</p>
             </div>
         </div>
     </div>
     
+    <!-- Charts Row -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 1.5rem;">
+            <h3 style="margin-top: 0; color: var(--text-primary);"><i class="fas fa-calendar-alt" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> أداء الفترة الزمنية (الصفقات)</h3>
+            <canvas id="monthlyChart"></canvas>
+        </div>
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 1.5rem;">
+            <h3 style="margin-top: 0; color: var(--text-primary);"><i class="fas fa-sitemap" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> توزيع الصفقات حسب القطاع</h3>
+            <canvas id="sectorChart"></canvas>
+        </div>
+    </div>
+
     <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 2rem;">
         <h3 style="margin-top: 0; color: var(--text-primary); margin-bottom: 1rem;"><i class="fas fa-chart-line" style="color: var(--accent-secondary); margin-left: 0.5rem;"></i> ملخص الأداء العام</h3>
         <p style="color: var(--text-secondary); line-height: 1.6;">
-            يعكس هذا التقرير نشاط المصلحة المتعاقدة عبر منصة "صفقات ذكية". نسبة المنافسة الجيدة تبلغ عادة متوسط 3 عروض فما فوق لكل صفقة. إذا كان المتوسط الموضح أعلاه ({{ avg_bids }}) أقل من المطلوب، ننصح بتمديد الآجال للصققات المستقبلية لزيادة المشاركة.
+            يعكس هذا التقرير نشاط المصلحة المتعاقدة عبر منصة "صفقات ذكية". نسبة المنافسة الجيدة تبلغ عادة متوسط 3 عروض فما فوق لكل صفقة. إذا كان المتوسط الموضح أعلاه ({{ avg_bids }}) أقل من المطلوب، ننصح بتمديد الآجال للصفقات المستقبلية لزيادة المشاركة.
         </p>
     </div>
 </div>
@@ -75,4 +107,65 @@
         * { color: black !important; }
     }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Data injected from Django view
+        const monthLabels = JSON.parse('{{ month_labels_json|escapejs }}');
+        const monthCounts = JSON.parse('{{ month_counts_json|escapejs }}');
+        
+        const sectorLabels = JSON.parse('{{ sector_labels_json|escapejs }}');
+        const sectorCounts = JSON.parse('{{ sector_counts_json|escapejs }}');
+
+        // Monthly Line Chart
+        const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+        new Chart(ctxMonthly, {
+            type: 'line',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'عدد الصفقات',
+                    data: monthCounts,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        // Sector Bar Chart
+        const ctxSector = document.getElementById('sectorChart').getContext('2d');
+        new Chart(ctxSector, {
+            type: 'bar',
+            data: {
+                labels: sectorLabels,
+                datasets: [{
+                    label: 'عدد الصفقات بالقطاع',
+                    data: sectorCounts,
+                    backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

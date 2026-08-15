@@ -1,0 +1,75 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block sidebar %}
+    {% include 'includes/sidebar_authority.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-invoice-dollar text-primary"></i> {{ title }}</h2>
+        <a href="{% url 'procurement:authority_budget_list' %}" class="btn btn-outline-light">
+            <i class="fas fa-arrow-right"></i> عودة للقائمة
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" style="padding: 1rem; border-radius: 8px;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="glass-card p-4">
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label class="form-label" style="color: var(--text-secondary);">السنة المالية *</label>
+                    {{ form.year }}
+                    {% if form.year.errors %}
+                    <div class="text-danger mt-1" style="font-size: 0.85rem;">{{ form.year.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <label class="form-label" style="color: var(--text-secondary);">القطاع *</label>
+                    {{ form.sector }}
+                    {% if form.sector.errors %}
+                    <div class="text-danger mt-1" style="font-size: 0.85rem;">{{ form.sector.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label" style="color: var(--text-secondary);">الميزانية الإجمالية المخصصة للقطاع (دج) *</label>
+                {{ form.total_budget }}
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                    <i class="fas fa-info-circle"></i> يرجى إدخال المبلغ الإجمالي المخصص لتغطية جميع المشاريع المبرمجة لهذه السنة.
+                </small>
+                {% if form.total_budget.errors %}
+                <div class="text-danger mt-1" style="font-size: 0.85rem;">{{ form.total_budget.errors|join:", " }}</div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-3 mt-5">
+                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+                    <i class="fas fa-save"></i> حفظ الميزانية والبدء
+                </button>
+                <a href="{% url 'procurement:authority_budget_list' %}" class="btn" style="background: rgba(255, 255, 255, 0.1); color: var(--text-primary); border: 1px solid var(--glass-border); padding: 0.75rem 2rem;">إلغاء</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,1 +1,104 @@
-<!-- Empty footer -->
+{% load static %}
+<style>
+    .landing-footer {
+        background-color: #0f172a;
+        color: #e2e8f0;
+        padding: 3rem 0 1rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        font-family: 'Cairo', sans-serif;
+    }
+
+    .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+        width: 100%;
+        max-width: 1200px;
+        margin-inline: auto;
+        padding-inline: 1.5rem;
+    }
+
+    .footer-col h3 {
+        color: #ffffff;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+
+    .footer-col ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-col ul li {
+        margin-bottom: 0.5rem;
+    }
+
+    .footer-col a {
+        color: #e2e8f0;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .footer-col a:hover, .footer-col a:focus {
+        color: #ffffff;
+        text-decoration: underline;
+    }
+
+    .footer-bottom {
+        text-align: center;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.9rem;
+        width: 100%;
+        max-width: 1200px;
+        margin-inline: auto;
+        padding-inline: 1.5rem;
+    }
+</style>
+<footer class="landing-footer">
+    <div class="footer-grid">
+        <div class="footer-col">
+            <h3>صفقات ذكية</h3>
+            <p style="font-size: 0.9rem; margin-top: 1rem; line-height: 1.6;">نظام موحد وموثوق لإدارة ومراقبة الصفقات بشفافية وفعالية، مصمم لتلبية متطلبات المؤسسات والهيئات الرسمية.</p>
+        </div>
+        
+        <div class="footer-col">
+            <h3>روابط سريعة</h3>
+            <ul>
+                <li><a href="{% url 'core:index' %}">الرئيسية</a></li>
+                <li><a href="{% url 'core:about' %}">عن المنصة</a></li>
+                {% if not request.user.is_authenticated %}
+                    <li><a href="{% url 'accounts:login' %}">تسجيل الدخول</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <div class="footer-col">
+            <h3>حسابات</h3>
+            <ul>
+                {% if not request.user.is_authenticated %}
+                    <li><a href="{% url 'accounts:register_authority' %}">تسجيل مصلحة متعاقدة</a></li>
+                    <li><a href="{% url 'accounts:register_supplier' %}">تسجيل متعامل اقتصادي</a></li>
+                    <li><a href="{% url 'accounts:register_central_admin' %}">تسجيل إدارة مركزية / رقابة</a></li>
+                {% else %}
+                    {% if request.user.role == 'regulator' %}
+                        <li><a href="{% url 'dashboard:regulator' %}">لوحة القيادة</a></li>
+                    {% elif request.user.role == 'authority' %}
+                        <li><a href="{% url 'dashboard:authority' %}">لوحة القيادة</a></li>
+                    {% elif request.user.role == 'supplier' %}
+                        <li><a href="{% url 'dashboard:supplier' %}">لوحة القيادة</a></li>
+                    {% else %}
+                        <li><a href="{% url 'dashboard:regulator' %}">لوحة القيادة</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'accounts:logout' %}">تسجيل الخروج</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        &copy; 2026 منصة صفقات ذكية. جميع الحقوق محفوظة.
+    </div>
+</footer>

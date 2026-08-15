@@ -19,6 +19,54 @@
     <div class="auth-card" style="max-width: 800px; margin: 0 auto; text-align: right;">
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert" style="background: rgba(239, 68, 68, 0.1); border-right: 4px solid var(--danger); padding: 1rem; margin-bottom: 1.5rem; color: var(--danger); text-align: right;">
+                <h4 style="margin-top: 0;">يرجى تصحيح الأخطاء التالية:</h4>
+                <ul style="margin-bottom: 0;">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- AI Tender Builder Section -->
+            <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.05)); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+                <h3 style="margin-top: 0; color: var(--accent-primary); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-robot text-accent"></i> المولد الذكي لدفتر الشروط (AI Tender Builder)
+                </h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+                    أدخل فكرة أو كلمات مفتاحية للمشروع (مثل: "بناء مستودع تبريد 1000 متر مربع") وسيقوم الذكاء الاصطناعي باقتراح التفاصيل والميزانية والشروط القياسية.
+                </p>
+                
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <input type="text" id="aiPromptInput" class="form-control" placeholder="اكتب طلبك هنا..." style="flex: 1; min-width: 250px; background: var(--bg-card); border-color: rgba(139, 92, 246, 0.3);">
+                    <button type="button" onclick="generateTenderFromPrompt()" class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none;">
+                        <i class="fas fa-magic"></i> توليد ذكي
+                    </button>
+                </div>
+                
+                <!-- Chat Simulation Output -->
+                <div id="aiChatOutput" style="display: none; margin-top: 1rem; background: var(--bg-card); padding: 1rem; border-radius: 8px; border-right: 4px solid #8b5cf6;">
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="background: #8b5cf6; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><i class="fas fa-robot"></i></div>
+                        <div>
+                            <p style="margin: 0; color: var(--text-primary); line-height: 1.6;" id="aiChatText"></p>
+                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                                <button type="button" onclick="applyAiDraft()" class="btn btn-sm btn-outline" style="border-color: #10b981; color: #10b981;"><i class="fas fa-check"></i> اعتماد المسودة</button>
+                                <button type="button" onclick="document.getElementById('aiChatOutput').style.display='none'" class="btn btn-sm btn-outline" style="border-color: #ef4444; color: #ef4444;"><i class="fas fa-times"></i> تجاهل</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>عنوان الصفقة</label>
                 {{ form.title }}
@@ -63,19 +111,33 @@
             </div>
             
             <div class="form-group">
-                <label>دفتر الشروط (PDF/DOC)</label>
-                {{ form.document }}
+                <label>دفتر الشروط (PDF)</label>
+                
+                {% if tender and tender.document %}
+                <div style="background: var(--surface-hover); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-file-pdf" style="color: var(--danger); font-size: 1.5rem;"></i>
+                        <div>
+                            <span style="display: block; font-weight: 500;">تم رفع الدفتر</span>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">يمكنك مراجعته عبر الرابط أدناه</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'procurement:download_tender_document' tender.id %}" target="_blank" class="btn btn-secondary btn-sm" style="background: white; border: 1px solid var(--border-color);">تحميل <i class="fas fa-download"></i></a>
+                </div>
+                {% endif %}
+                
+                {% if not tender or tender.status == 'draft' %}
+                    {{ form.document }}
+                    <small style="display: block; color: var(--text-secondary); margin-top: 0.5rem;">يسمح فقط بملفات PDF.</small>
+                {% else %}
+                    <div class="alert alert-warning" style="margin-top: 0.5rem; background: rgba(245, 158, 11, 0.1); color: #d97706; padding: 0.75rem; border-radius: 6px;">لا يمكن استبدال دفتر الشروط بعد النشر.</div>
+                    <div style="display:none;">{{ form.document }}</div>
+                {% endif %}
             </div>
 
             <div class="form-group">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <label style="margin: 0;">تفاصيل الصفقة</label>
-                    <button type="button" onclick="draftTenderAI()" class="btn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; border: none; border-radius: 20px; padding: 0.3rem 1rem; font-size: 0.85rem; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3); display: flex; align-items: center; gap: 0.5rem; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <i class="fas fa-magic"></i> صياغة ذكية
-                    </button>
-                </div>
+                <label>تفاصيل الصفقة</label>
                 {{ form.description }}
-                <small id="ai-drafting-status" style="display: none; color: #ec4899; margin-top: 0.5rem;"><i class="fas fa-spinner fa-spin"></i> جاري التوليد الآلي...</small>
             </div>
             
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">حفظ الصفقة <i class="fas fa-save"></i></button>
@@ -84,76 +146,57 @@
 </section>
 
 <script>
-function draftTenderAI() {
-    const titleInput = document.querySelector('input[name="title"]');
-    const sectorInput = document.querySelector('input[name="sector"]');
-    const descTextarea = document.querySelector('textarea[name="description"]');
-    const statusText = document.getElementById('ai-drafting-status');
+let currentAiDraft = {};
+
+function generateTenderFromPrompt() {
+    const promptInput = document.getElementById('aiPromptInput');
+    const outputDiv = document.getElementById('aiChatOutput');
+    const textOut = document.getElementById('aiChatText');
     
-    if (!titleInput || !titleInput.value) {
-        alert("يرجى إدخال 'عنوان الصفقة' أولاً ليتمكن النظام من صياغة التفاصيل.");
-        titleInput.focus();
+    if(!promptInput.value.trim()) {
+        alert("يرجى إدخال كلمات مفتاحية أولاً.");
         return;
     }
     
-    statusText.style.display = 'block';
+    outputDiv.style.display = 'block';
+    textOut.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> جاري تحليل المتطلبات وتوليد دفتر الشروط...';
     
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
+    // Simulate AI Generation
+    setTimeout(() => {
+        // Mock data based on input
+        currentAiDraft = {
+            title: promptInput.value,
+            budget: 50000000,
+            sector: 'بناء وأشغال عمومية',
+            description: `**الموضوع:** ${promptInput.value}\n\n**الشروط الفنية:**\n- احترام معايير الجودة (ISO 9001)\n- مدة الإنجاز القصوى: 6 أشهر\n- تقديم شهادة ضمان لمدة 10 سنوات\n\n**معايير التقييم:**\n- العرض المالي: 40%\n- الخبرة السابقة: 30%\n- المنهجية: 30%\n\n*ملاحظة: تم اقتراح غرامات تأخير بنسبة 1% عن كل أسبوع تأخير بناءً على تحليلات مخاطر السوق.*`
+        };
+        
+        textOut.innerHTML = `لقد قمت بإعداد مسودة متكاملة لـ <strong>"${currentAiDraft.title}"</strong>.<br>اقترحت ميزانية تقديرية بـ <strong>50 مليون دج</strong> بناءً على مشاريع مشابهة.<br>هل أعتمد هذه المسودة في النموذج بالأسفل؟`;
+    }, 2000);
+}
 
-    fetch('/ai/draft/tender/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken
-        },
-        body: JSON.stringify({
-            title: titleInput.value,
-            sector: sectorInput ? sectorInput.value : ''
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        statusText.style.display = 'none';
-        if (data.error) {
-            alert("خطأ: " + data.error);
-            return;
-        }
+function applyAiDraft() {
+    if(currentAiDraft.title) {
+        document.querySelector('input[name="title"]').value = currentAiDraft.title;
+        document.querySelector('input[name="budget"]').value = currentAiDraft.budget;
         
-        if (descTextarea.value.trim() !== '') {
-            if(confirm("يوجد نص مسبقاً في حقل التفاصيل. هل تريد أن يقوم النظام بإضافة النص المولد أسفله أم استبداله؟\n\n- اضغط 'موافق' للاستبدال\n- اضغط 'إلغاء' للإضافة بالأسفل")) {
-                descTextarea.value = data.draft;
-            } else {
-                descTextarea.value += "\n\n" + data.draft;
+        const sectorInput = document.querySelector('select[name="sector"]') || document.querySelector('input[name="sector"]');
+        if (sectorInput) sectorInput.value = currentAiDraft.sector;
+        
+        const descTextarea = document.querySelector('textarea[name="description"]');
+        descTextarea.value = currentAiDraft.description;
+        
+        // Highlight inputs
+        ['title', 'budget', 'description'].forEach(name => {
+            const el = document.querySelector(`[name="${name}"]`);
+            if (el) {
+                el.style.boxShadow = "0 0 10px rgba(16, 185, 129, 0.5)";
+                setTimeout(() => el.style.boxShadow = "none", 2000);
             }
-        } else {
-            descTextarea.value = data.draft;
-        }
+        });
         
-        // Add a glow effect to the textarea to highlight the new content
-        descTextarea.style.boxShadow = "0 0 15px rgba(236, 72, 153, 0.5)";
-        setTimeout(() => {
-            descTextarea.style.boxShadow = "none";
-        }, 2000);
-    })
-    .catch(error => {
-        statusText.style.display = 'none';
-        console.error('Error:', error);
-        alert("حدث خطأ أثناء الاتصال بخدمة التوليد الآلي.");
-    });
+        document.getElementById('aiChatOutput').style.display = 'none';
+    }
 }
 </script>
 {% endblock %}

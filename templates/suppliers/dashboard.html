@@ -2,18 +2,12 @@
 
 {% block title %}لوحة المورد | صفقات ذكية{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/supplier_sidebar.css' %}">
+{% endblock %}
+
 {% block sidebar %}
-<div class="sidebar-menu">
-    <a href="{% url 'suppliers:dashboard' %}" class="sidebar-item active">
-        <i class="fas fa-home"></i> نظرة عامة
-    </a>
-    <a href="{% url 'suppliers:tenders_list' %}" class="sidebar-item">
-        <i class="fas fa-search"></i> البحث عن الصفقات
-    </a>
-    <a href="#" class="sidebar-item">
-        <i class="fas fa-file-contract"></i> عروضي المقدمة
-    </a>
-</div>
+{% include 'includes/supplier_sidebar.html' %}
 {% endblock %}
 
 {% block content %}

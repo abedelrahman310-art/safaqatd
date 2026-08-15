@@ -1,4 +1,4 @@
-const CACHE_NAME = 'safakat-pwa-cache-v1';
+const CACHE_NAME = 'safakat-pwa-cache-v2';
 const urlsToCache = [
   '/',
   '/static/core/css/main.css',

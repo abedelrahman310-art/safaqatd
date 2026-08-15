@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from . import views_award
+from . import views_contract
 
 app_name = 'procurement'
 
@@ -16,9 +18,11 @@ urlpatterns = [
     
     # Secure Download
     path('bids/<int:bid_id>/download/<str:document_type>/', views.secure_bid_download, name='secure_bid_download'),
+    path('tenders/<int:tender_id>/document/download/', views.download_tender_document, name='download_tender_document'),
     
     path('tenders/<int:tender_id>/bid/', views.bid_create, name='bid_create'),
     path('tenders/<int:tender_id>/', views.tender_detail, name='tender_detail'),
+    path('bids/<int:bid_id>/receipt/', views.bid_receipt, name='bid_receipt'),
     path('tenders/<int:tender_id>/report/', views.generate_report_view, name='generate_report_view'),
     path('tenders/<int:tender_id>/payment/', views.payment_checkout, name='payment_checkout'),
     path('tenders/<int:tender_id>/satim/', views.satim_gateway_view, name='satim_gateway'),
@@ -38,4 +42,22 @@ urlpatterns = [
     # Virtual Opening Room
     path('tenders/<int:tender_id>/opening-room/', views.virtual_opening_room, name='virtual_opening_room'),
     path('tenders/<int:tender_id>/live-opening/', views.supplier_live_opening, name='supplier_live_opening'),
+    
+    # Procurement Planning (Budgets & Operations)
+    path('authority/budgets/', views.authority_budget_list, name='authority_budget_list'),
+    path('authority/budgets/create/', views.budget_create, name='budget_create'),
+    path('authority/budgets/<int:budget_id>/', views.budget_detail, name='budget_detail'),
+    path('authority/budgets/<int:budget_id>/submit/', views.budget_submit, name='budget_submit'),
+    path('authority/projects/<int:project_id>/launch-tender/', views.launch_tender_from_project, name='launch_tender_from_project'),
+
+    # Award & Contract URLs
+    path('awards/', views_award.AwardListView.as_view(), name='award_list'),
+    path('awards/<int:pk>/', views_award.AwardDetailView.as_view(), name='award_detail'),
+    path('awards/approve/<int:tender_id>/<int:bid_id>/', views_award.AwardApproveView.as_view(), name='award_approve'),
+    
+    path('contracts/', views_contract.ContractListView.as_view(), name='contract_list'),
+    path('contracts/<int:pk>/', views_contract.ContractDetailView.as_view(), name='contract_detail'),
+    path('contracts/<int:pk>/update/', views_contract.ContractUpdateView.as_view(), name='contract_update'),
+    path('contracts/<int:pk>/approve/', views_contract.ContractApproveView.as_view(), name='contract_approve'),
+    path('contracts/<int:contract_id>/amend/', views_contract.ContractAmendmentCreateView.as_view(), name='contract_amendment_create'),
 ]
